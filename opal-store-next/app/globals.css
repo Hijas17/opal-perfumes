@@ -1,0 +1,345 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Tailwind 4 theme — design tokens
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-gold:  #a67b30;
+  --color-cream: #f9f6f0;
+
+  --font-display: var(--font-playfair);
+  --font-sans:    var(--font-inter);
+
+  --radius-card: 4px;
+  --radius-btn:  2px;
+
+  --shadow-card:       0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Base styles
+   ─────────────────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  color: #1a1a1a;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+}
+
+/* Convenience utility — referenced as className="font-display" */
+.font-display {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Product card image crossfade + slide-up CTA
+   ─────────────────────────────────────────────────────────────────────────── */
+.product-img-primary { opacity: 1; transition: opacity 300ms ease; }
+.product-img-hover   { opacity: 0; transition: opacity 300ms ease; }
+.product-card:hover .product-img-primary { opacity: 0; }
+.product-card:hover .product-img-hover   { opacity: 1; }
+
+.product-card-btn {
+  transform: translateY(100%);
+  transition: transform 300ms ease;
+}
+.product-card:hover .product-card-btn { transform: translateY(0%); }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Hero bottle float animation + glow
+   ─────────────────────────────────────────────────────────────────────────── */
+@keyframes floatBottle {
+  0%   { transform: translateY(0px) rotate(-2deg); }
+  50%  { transform: translateY(-22px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(-2deg); }
+}
+
+@keyframes floatGlow {
+  0%   { opacity: 0.4; transform: scaleX(1); }
+  50%  { opacity: 0.15; transform: scaleX(0.75); }
+  100% { opacity: 0.4; transform: scaleX(1); }
+}
+
+.hero-bottle {
+  animation: floatBottle 5s ease-in-out infinite;
+  filter: drop-shadow(0 30px 40px rgba(166, 123, 48, 0.35));
+}
+
+.hero-bottle-glow {
+  animation: floatGlow 5s ease-in-out infinite;
+}
+
+/* Rising fragrance particles */
+@keyframes heroParticle {
+  0%   { opacity: 0;    transform: translateY(0px)   scale(1);    }
+  12%  { opacity: 0.65; }
+  88%  { opacity: 0.08; }
+  100% { opacity: 0;    transform: translateY(-85px) scale(0.1); }
+}
+.hero-particle {
+  animation: heroParticle 3.6s ease-out infinite;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Search overlay fade
+   ─────────────────────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.search-overlay-enter { animation: fadeIn 200ms ease forwards; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Rich text content (admin-edited HTML)
+   ─────────────────────────────────────────────────────────────────────────── */
+.rich-text h1, .rich-text h2, .rich-text h3 {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+.rich-text p  { margin-bottom: 0.875rem; line-height: 1.75; color: #4b4b4b; }
+.rich-text ul { list-style: disc;    padding-left: 1.5rem; margin-bottom: 0.875rem; }
+.rich-text ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 0.875rem; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Apple-grade hero typography + CTAs
+   ─────────────────────────────────────────────────────────────────────────── */
+.opal-eyebrow {
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-size:    clamp(0.7rem, 0.85vw, 0.85rem);
+  font-weight:  600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #a67b30;
+  margin-bottom: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.opal-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 2rem;
+  height: 1px;
+  background: #a67b30;
+  opacity: 0.7;
+}
+
+.opal-display {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+  font-size:    clamp(3.25rem, 9vw, 8.5rem);
+  font-weight:  600;
+  font-style:   italic;
+  line-height:  0.95;
+  letter-spacing: -0.015em;
+  color: #2a1000;
+}
+.opal-display--outline {
+  -webkit-text-stroke: 1.5px #a67b30;
+  color: transparent;
+  font-style: italic;
+}
+
+.opal-subtext {
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-size:    clamp(0.95rem, 1.05vw, 1.15rem);
+  line-height:  1.6;
+  color: #6b3c1a;
+}
+
+/* Body text for scroll scenes (matches Scene 1's subtext size) */
+.opal-body {
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-size:    clamp(0.95rem, 1.05vw, 1.15rem);
+  line-height:  1.6;
+  color: #4a2510;
+  font-weight:  400;
+}
+.opal-body--lead {
+  font-size:    clamp(1.05rem, 1.15vw, 1.25rem);
+  line-height:  1.7;
+  color: #2a1000;
+  letter-spacing: -0.005em;
+}
+
+.opal-cta-primary {
+  display: inline-block;
+  background: #a67b30;
+  color: #ffffff;
+  padding: 1rem 2.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              background 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(166, 123, 48, 0.25);
+}
+.opal-cta-primary:hover {
+  background: #8a6420;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(166, 123, 48, 0.35);
+}
+
+.opal-cta-ghost {
+  display: inline-block;
+  border: 1px solid rgba(42, 16, 0, 0.3);
+  color: rgba(42, 16, 0, 0.75);
+  padding: 1rem 2.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  transition: border-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.opal-cta-ghost:hover {
+  border-color: #a67b30;
+  color: #a67b30;
+  transform: translateY(-2px);
+}
+
+/* Subtle pulse on the scroll indicator line */
+.opal-scroll-line {
+  animation: opalScrollPulse 2.4s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes opalScrollPulse {
+  0%, 100% { transform: scaleY(1);   opacity: 0.6; }
+  50%      { transform: scaleY(0.4); opacity: 1; }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Preloader — Apple-style initial-load brand reveal
+   ─────────────────────────────────────────────────────────────────────────── */
+.opal-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  opacity: 1;
+  transition: opacity 700ms cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: opacity;
+}
+.opal-preloader[data-fading="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opal-preloader__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.opal-preloader__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.opal-preloader__name {
+  font-family: var(--font-playfair), 'Playfair Display', serif;
+  font-size: clamp(3rem, 7vw, 4.75rem);
+  font-weight: 600;
+  font-style: italic;
+  color: #a67b30;
+  letter-spacing: 0.01em;
+  line-height: 1;
+
+  opacity: 0;
+  transform: translateY(10px);
+  animation: opalLogoIn 800ms cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards;
+}
+
+.opal-preloader__line {
+  display: block;
+  height: 1px;
+  width: 0;
+  background: linear-gradient(90deg, transparent 0%, #a67b30 50%, transparent 100%);
+
+  animation: opalLineDraw 700ms cubic-bezier(0.65, 0, 0.35, 1) 700ms forwards;
+}
+
+.opal-preloader__sub {
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #a67b30;
+  letter-spacing: 0.55em;        /* Apple-grade tracking */
+  text-transform: uppercase;
+  padding-left: 0.55em;          /* visually compensate for letter-spacing */
+
+  opacity: 0;
+  animation: opalSubIn 700ms cubic-bezier(0.16, 1, 0.3, 1) 1000ms forwards;
+}
+
+.opal-preloader__dots {
+  display: flex;
+  gap: 0.4rem;
+
+  opacity: 0;
+  animation: opalSubIn 600ms ease-out 1200ms forwards;
+}
+.opal-preloader__dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #a67b30;
+  opacity: 0.3;
+  animation: opalDotPulse 1.4s ease-in-out infinite;
+}
+.opal-preloader__dots span:nth-child(2) { animation-delay: 0.2s; }
+.opal-preloader__dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes opalLogoIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes opalLineDraw {
+  to { width: 4.5rem; }
+}
+
+@keyframes opalSubIn {
+  to { opacity: 1; }
+}
+
+@keyframes opalDotPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.3); }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .opal-preloader__name,
+  .opal-preloader__line,
+  .opal-preloader__sub,
+  .opal-preloader__dots,
+  .opal-preloader__dots span {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+  .opal-preloader { transition-duration: 0.01ms !important; }
+}

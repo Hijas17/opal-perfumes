@@ -1,0 +1,66 @@
+# ─── Dependencies ──────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+**/vendor/
+**/.pnp.*
+
+# ─── Build output ──────────────────────────────────────────────────────────
+.next/
+**/.next/
+out/
+**/out/
+dist/
+**/dist/
+build/
+**/build/
+
+# ─── Environment / secrets ─────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ─── Uploads (admin-managed; shouldn't be in source control) ──────────────
+opal-api/uploads/*
+!opal-api/uploads/.gitkeep
+
+# ─── Logs ──────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── IDEs / OS ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Claude / agent metadata ───────────────────────────────────────────────
+.claude/
+CLAUDE.md
+AGENTS.md
+**/CLAUDE.md
+**/AGENTS.md
+
+# ─── Next.js artifacts ─────────────────────────────────────────────────────
+.next/cache/
+next-env.d.ts.bak
+
+# ─── PHP / Composer ────────────────────────────────────────────────────────
+composer.lock.bak
+
+# ─── TypeScript ────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Misc ──────────────────────────────────────────────────────────────────
+.turbo/
+coverage/
+*.tmp
+*.temp
+
+# ─── Deprecated apps (kept on disk, excluded from repo) ───────────────────
+opal-store/

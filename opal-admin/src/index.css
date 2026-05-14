@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Backgrounds */
+    --background:    0 0% 100%;
+    --foreground:    20 14.3% 4.1%;
+
+    /* Card */
+    --card:          0 0% 100%;
+    --card-foreground: 20 14.3% 4.1%;
+
+    /* Popover */
+    --popover:       0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+
+    /* Gold primary */
+    --primary:       36 55% 41%;      /* #a67b30 */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary (light warm gray) */
+    --secondary:     30 10% 94%;
+    --secondary-foreground: 20 14.3% 4.1%;
+
+    /* Muted */
+    --muted:         30 10% 94%;
+    --muted-foreground: 25 5.3% 44.7%;
+
+    /* Accent */
+    --accent:        36 55% 95%;
+    --accent-foreground: 36 55% 25%;
+
+    /* Destructive */
+    --destructive:   0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border / Input / Ring */
+    --border:        20 5.9% 90%;
+    --input:         20 5.9% 90%;
+    --ring:          36 55% 41%;      /* gold focus ring */
+
+    /* Border radius */
+    --radius: 0.5rem;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    margin: 0;
+    padding: 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+  }
+}
+
+/* Quill editor overrides */
+.ql-toolbar {
+  border-top-left-radius: 6px !important;
+  border-top-right-radius: 6px !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.ql-container {
+  border-bottom-left-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+  border-color: hsl(var(--border)) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  min-height: 150px;
+}
+
+.ql-editor {
+  min-height: 150px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
