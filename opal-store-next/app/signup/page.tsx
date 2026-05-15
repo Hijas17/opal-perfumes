@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import AuthFormShell from '@/components/AuthFormShell'
 import SignupForm from './SignupForm'
@@ -17,7 +18,10 @@ export default function SignupPage() {
       altLabel="Sign in"
       altHref="/login"
     >
-      <SignupForm />
+      {/* Suspense required because SignupForm calls useSearchParams(). */}
+      <Suspense fallback={null}>
+        <SignupForm />
+      </Suspense>
     </AuthFormShell>
   )
 }

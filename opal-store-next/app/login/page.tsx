@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import AuthFormShell from '@/components/AuthFormShell'
 import LoginForm from './LoginForm'
@@ -17,7 +18,11 @@ export default function LoginPage() {
       altLabel="Create an account"
       altHref="/signup"
     >
-      <LoginForm />
+      {/* Suspense required because LoginForm calls useSearchParams(),
+          which suspends during static prerendering. */}
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
     </AuthFormShell>
   )
 }
