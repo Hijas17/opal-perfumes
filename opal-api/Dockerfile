@@ -33,11 +33,25 @@ RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' \
 # ── Composer ──────────────────────────────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# ── Entrypoint (runs composer install at start if vendor/ is missing) ─────────
+WORKDIR /var/www/html
+
+# ── Bake the application + vendor into the image (production deploys) ─────────
+# In local dev, docker-compose mounts ./opal-api → /var/www/html, which shadows
+# these COPY layers — so the same Dockerfile works in dev and prod.
+#
+# composer.json & lock copy in their own layer to maximise Docker cache hits
+# when only source code (not deps) changes.
+COPY composer.json composer.lock /var/www/html/
+RUN composer install --no-interaction --no-dev --no-scripts --no-autoloader --prefer-dist
+COPY . /var/www/html/
+RUN composer dump-autoload --optimize --no-dev \
+    && mkdir -p /var/www/html/uploads \
+    && chown -R www-data:www-data /var/www/html/uploads \
+    && chmod -R 775 /var/www/html/uploads
+
+# ── Entrypoint (runs composer install on first start if vendor/ is missing) ───
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-WORKDIR /var/www/html
 
 EXPOSE 80
 

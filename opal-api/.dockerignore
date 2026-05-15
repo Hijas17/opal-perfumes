@@ -1,0 +1,30 @@
+# Keep the build context small + the image clean
+
+# Dependencies installed in container
+vendor/
+
+# Runtime-mutable data — should live on a persistent volume, NOT in the image
+uploads/
+
+# Local dev artefacts
+.env
+.env.local
+.env.*.local
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Git
+.git/
+.gitignore
+
+# AI / agent metadata
+CLAUDE.md
+AGENTS.md
+.claude/
