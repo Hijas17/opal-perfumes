@@ -1,10 +1,16 @@
 FROM php:8.4-apache
 
 # ── System dependencies ───────────────────────────────────────────────────────
+# `ca-certificates` + `update-ca-certificates` ensures the PHP MongoDB driver
+# can validate MongoDB Atlas's TLS certs (without this, you'll see
+# "TLS handshake failed: tlsv1 alert internal error" when connecting to Atlas).
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
+    ca-certificates \
+    openssl \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Fast PHP extension installer (pre-compiled binaries) ──────────────────────
