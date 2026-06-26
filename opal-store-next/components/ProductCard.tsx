@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { getImageUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { showPrices } from '@/lib/config'
 import type { Product } from '@/lib/types'
 
 const LABEL_STYLES: Record<string, string> = {
@@ -36,7 +37,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   const categorySlug = product.subcategory_slug || product.category?.slug || 'all'
   const detailPath   = `/products/${categorySlug}/${product.slug}`
-  const price        = formatPrice(product.price, product.currency)
+  const price        = showPrices ? formatPrice(product.price, product.currency) : null
 
   return (
     <Link href={detailPath} className="block group" prefetch>

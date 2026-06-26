@@ -119,7 +119,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── About Snippet ───────────────────────────────────────────────── */}
-      <section className="bg-[#fce7de] py-20 px-4">
+      <section className="bg-[#faf1da] py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-4">Our Heritage</p>
           <h2 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-6">{s.brand_name || 'Opal Perfumes'}</h2>
@@ -136,7 +136,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── CTA Strip ───────────────────────────────────────────────────── */}
-      <section className="bg-[#df9e82] py-16 px-4">
+      <section className="bg-gold py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold text-white mb-4">
             {s.cta_message || 'Find Your Perfect Fragrance'}

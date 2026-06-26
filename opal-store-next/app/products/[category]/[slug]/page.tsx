@@ -3,13 +3,15 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { getProduct } from '@/lib/api'
+import { getProduct, getSettings } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { showPrices, useWhatsAppInquiry } from '@/lib/config'
 import ProductGallery from '@/components/ProductGallery'
 import SocialShare from '@/components/SocialShare'
 import AddToCartButton from '@/components/AddToCartButton'
+import InquireOnWhatsAppButton from '@/components/InquireOnWhatsAppButton'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -76,7 +78,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const catSlug = p.subcategory_slug || p.category?.slug || routeCatSlug || 'all'
   const catName = p.subcategory_name || p.category?.name || ''
-  const priceStr = formatPrice(p.price, p.currency)
+  const priceStr = showPrices ? formatPrice(p.price, p.currency) : null
+
+  // Fetch site settings only when we need the WhatsApp number (saves a roundtrip otherwise)
+  const settings = useWhatsAppInquiry ? await getSettings() : null
+  const whatsappNumber = settings?.whatsapp_number ?? ''
   const labelKey = p.label?.toLowerCase()
   const labelStyle = labelKey ? LABEL_STYLES[labelKey] : null
 
@@ -115,7 +121,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
     'sku': p.slug,
     'brand': { '@type': 'Brand', 'name': 'Opal Perfumes' },
     'category': catName || 'Perfume',
-    ...(p.price && {
+    // Only emit Offer/price in structured data when we're publicly displaying prices.
+    // Prevents Google from showing a price in search results that contradicts our site.
+    ...(showPrices && p.price && {
       'offers': {
         '@type': 'Offer',
         'priceCurrency': p.currency || 'AED',
@@ -234,9 +242,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Primary CTA — Add to cart */}
+            {/* Primary CTA — WhatsApp inquiry (during pre-launch) or Add to cart (when commerce is open) */}
             <div className="mb-3">
-              <AddToCartButton productId={p.id || p._id || ''} productName={p.name} />
+              {useWhatsAppInquiry ? (
+                <InquireOnWhatsAppButton
+                  whatsappNumber={whatsappNumber}
+                  productName={p.name}
+                  brandName={settings?.brand_name || 'Opal Perfumes'}
+                />
+              ) : (
+                <AddToCartButton productId={p.id || p._id || ''} productName={p.name} />
+              )}
             </div>
             {/* Secondary — contact us */}
             <p className="text-xs text-gray-500 mb-6 text-center">
