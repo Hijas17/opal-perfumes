@@ -85,7 +85,7 @@ $settings = [
     'contact_email'       => 'hello@opalperfumes.com',
     'contact_phone'       => '+1 (800) 000-0000',
     'address'             => '123 Luxury Lane, Dubai, UAE',
-    'whatsapp_number'     => '+10000000000',
+    'whatsapp_number'     => '+971508213885',
 
     // Social
     'facebook_url'        => 'https://facebook.com/opalperfumes',

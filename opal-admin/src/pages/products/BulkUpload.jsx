@@ -23,6 +23,7 @@ const COLUMNS = [
   { key: 'top_notes',             label: 'top_notes',             required: false },
   { key: 'middle_notes',          label: 'middle_notes',          required: false },
   { key: 'base_notes',            label: 'base_notes',            required: false },
+  { key: 'seo_keywords',          label: 'seo_keywords',          required: false },
   { key: 'display_order',         label: 'display_order',         required: false },
 ]
 
@@ -46,6 +47,7 @@ const SAMPLE_ROWS = [
     top_notes:             'Bergamot, Saffron',
     middle_notes:          'Rose, Oud',
     base_notes:            'Amber, Musk',
+    seo_keywords:          'amber oud perfume, arabian fragrance dubai, luxury attar',
     display_order:         1,
   },
   {
@@ -67,6 +69,7 @@ const SAMPLE_ROWS = [
     top_notes:             '',
     middle_notes:          '',
     base_notes:            '',
+    seo_keywords:          '',
     display_order:         2,
   },
 ]
@@ -183,6 +186,7 @@ export default function BulkUpload() {
       primary_image_url: 'Google Drive: https://drive.google.com/uc?id=FILE_ID',
       gallery_image_urls: 'Comma-separated URLs',
       purchase_links: '[{"platform":"Noon","url":"https://..."}]',
+      seo_keywords: 'Comma-separated SEO keywords for this product',
       display_order: 'Integer (lower = first)',
     }
     XLSX.utils.sheet_add_json(ws, [notes], { header: COLUMNS.map(c => c.key), skipHeader: true, origin: -1 })

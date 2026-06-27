@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import * as NavigationMenu from '@radix-ui/react-navigation-menu'
 import { ChevronDown, Search, Menu, X, ShoppingBag, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useWhatsAppInquiry } from '@/lib/config'
 import type { Category } from '@/lib/types'
 import { useSearchOverlay } from './SearchProvider'
 import { useAuth } from './AuthProvider'
@@ -42,9 +41,16 @@ export default function Navbar({ categories }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm" style={{ height: '70px' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="font-display text-2xl font-semibold text-gold tracking-wide flex-shrink-0">
-          Opal Perfumes
+        {/* Logo — plain <img> for instant first-paint (no next/image optimisation
+            pipeline, which stalls in dev mode). The asset is tiny (~125 KB). */}
+        <Link href="/" aria-label="Opal Perfumes — home" className="flex items-center flex-shrink-0">
+          <img
+            src="/logo.png"
+            alt="Opal Perfumes"
+            width={752}
+            height={730}
+            className="h-14 w-auto"
+          />
         </Link>
 
         {/* Desktop Nav — Radix NavigationMenu */}
@@ -113,17 +119,15 @@ export default function Navbar({ categories }: NavbarProps) {
             <Search className="w-5 h-5" />
           </button>
 
-          {/* Cart icon with badge — hidden while inquiry-only mode is on */}
-          {!useWhatsAppInquiry && (
-            <Link href="/cart" className="relative text-gray-700 hover:text-gold transition-colors duration-300" aria-label="View cart">
-              <ShoppingBag className="w-5 h-5" />
-              {cart.item_count > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
-                  {cart.item_count}
-                </span>
-              )}
-            </Link>
-          )}
+          {/* Cart icon with badge */}
+          <Link href="/cart" className="relative text-gray-700 hover:text-gold transition-colors duration-300" aria-label="View cart">
+            <ShoppingBag className="w-5 h-5" />
+            {cart.item_count > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
+                {cart.item_count}
+              </span>
+            )}
+          </Link>
 
           {/* User menu */}
           <div className="relative">
@@ -172,16 +176,14 @@ export default function Navbar({ categories }: NavbarProps) {
           <button type="button" onClick={openSearch} className="text-gray-700 hover:text-gold" aria-label="Open search">
             <Search className="w-5 h-5" />
           </button>
-          {!useWhatsAppInquiry && (
-            <Link href="/cart" className="relative text-gray-700 hover:text-gold" aria-label="View cart">
-              <ShoppingBag className="w-5 h-5" />
-              {cart.item_count > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
-                  {cart.item_count}
-                </span>
-              )}
-            </Link>
-          )}
+          <Link href="/cart" className="relative text-gray-700 hover:text-gold" aria-label="View cart">
+            <ShoppingBag className="w-5 h-5" />
+            {cart.item_count > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
+                {cart.item_count}
+              </span>
+            )}
+          </Link>
           <button type="button" onClick={() => setMobileOpen((o) => !o)}
             className="text-gray-700 hover:text-gold" aria-label="Toggle mobile menu" aria-expanded={mobileOpen}>
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

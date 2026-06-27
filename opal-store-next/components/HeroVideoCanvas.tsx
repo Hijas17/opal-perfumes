@@ -16,23 +16,26 @@ import { useEffect, useRef, useState } from 'react'
 import { useMotionValueEvent, type MotionValue } from 'motion/react'
 
 const TOTAL_FRAMES = 192
-const FRAME_PATH   = (i: number) => `/hero-frames-cut/frame_${String(i).padStart(3, '0')}.webp`
+const FRAME_PATH   = (i: number) => `/hero-frames-v2/frame_${String(i).padStart(3, '0')}.webp`
 
 interface HeroVideoCanvasProps {
   /** Scroll progress 0–1 — drives which frame is drawn */
   progress: MotionValue<number>
-  /** Native width of the underlying frames (px). 720 in our case. */
+  /** Native width of the underlying frames (px). 1080 in our case. */
   width?:  number
-  /** Native height of the underlying frames (px). 406 in our case. */
+  /** Native height of the underlying frames (px). 608 in our case. */
   height?: number
   className?: string
+  /** Extra inline styles (merged after defaults; useful for mask-image). */
+  style?: React.CSSProperties
 }
 
 export default function HeroVideoCanvas({
   progress,
-  width  = 720,
-  height = 406,
+  width  = 1080,
+  height = 608,
   className = '',
+  style,
 }: HeroVideoCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagesRef = useRef<HTMLImageElement[]>([])
@@ -92,6 +95,7 @@ export default function HeroVideoCanvas({
         // Fade in once the first frame is painted
         opacity: ready ? 1 : 0,
         transition: 'opacity 600ms ease',
+        ...style,
       }}
       aria-hidden
     />

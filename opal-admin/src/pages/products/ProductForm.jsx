@@ -191,6 +191,7 @@ export default function ProductForm() {
     is_featured:       false,
     display_order:     '',
     status:            'draft',
+    seo_keywords:      '',
   })
 
   const [primaryFile,      setPrimaryFile]      = useState(null)
@@ -228,6 +229,7 @@ export default function ProductForm() {
           is_featured:       p.is_featured || false,
           display_order:     p.display_order != null ? String(p.display_order) : '',
           status:            p.status      || 'draft',
+          seo_keywords:      Array.isArray(p.seo_keywords) ? p.seo_keywords.join(', ') : (p.seo_keywords || ''),
         })
         setCurrentImages(p.images || { primary: null, hover: null, ingredients: null, gallery: [] })
         setGalleryCurrentKept(p.images?.gallery || [])
@@ -272,6 +274,7 @@ export default function ProductForm() {
     fd.append('is_featured',  form.is_featured ? '1' : '0')
     if (form.display_order !== '') fd.append('display_order', form.display_order)
     fd.append('status', form.status)
+    fd.append('seo_keywords', form.seo_keywords)
     fd.append('purchase_links', JSON.stringify(purchaseLinks.filter((l) => l.platform.trim() && l.url.trim())))
 
     if (primaryFile)     fd.append('primary_image',     primaryFile)
@@ -449,6 +452,24 @@ export default function ProductForm() {
               Show on home page (Featured)
             </label>
           </div>
+        </div>
+      </SectionCard>
+
+      {/* SEO */}
+      <SectionCard title="SEO">
+        <div className="space-y-1.5">
+          <Label>Keywords</Label>
+          <Textarea
+            name="seo_keywords"
+            value={form.seo_keywords}
+            onChange={handleChange}
+            rows={2}
+            placeholder="oud perfume dubai, arabian fragrance, gift for him"
+            className="resize-none"
+          />
+          <p className="text-xs text-muted-foreground">
+            Comma-separated keywords used in the page&apos;s <code>&lt;meta name=&quot;keywords&quot;&gt;</code> tag to help search engines understand this product.
+          </p>
         </div>
       </SectionCard>
 

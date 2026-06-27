@@ -219,6 +219,8 @@ class ProductController
                 'base'   => $body['scent_base']    ?? '',
             ];
 
+            $seoKeywords = $this->parseSeoKeywords($body['seo_keywords'] ?? null);
+
             $now = new \MongoDB\BSON\UTCDateTime();
             $doc = [
                 'name'              => $name,
@@ -227,6 +229,7 @@ class ProductController
                 'short_description' => $body['short_description'] ?? '',
                 'full_description'  => $body['full_description']  ?? '',
                 'scent_notes'       => $scentNotes,
+                'seo_keywords'      => $seoKeywords,
                 'price'             => isset($body['price']) ? (float)$body['price'] : 0.0,
                 'currency'          => $body['currency'] ?? 'USD',
                 'purchase_links'    => $purchaseLinks,
@@ -320,6 +323,9 @@ class ProductController
             }
             if (isset($body['label'])) {
                 $updateFields['label'] = $body['label'];
+            }
+            if (isset($body['seo_keywords'])) {
+                $updateFields['seo_keywords'] = $this->parseSeoKeywords($body['seo_keywords']);
             }
 
             // Scent notes
@@ -671,6 +677,7 @@ class ProductController
                         'middle' => trim($row['middle_notes'] ?? ''),
                         'base'   => trim($row['base_notes']   ?? ''),
                     ],
+                    'seo_keywords'   => $this->parseSeoKeywords($row['seo_keywords'] ?? null),
                     'price'          => $price,
                     'currency'       => $currency,
                     'purchase_links' => $purchaseLinks,
@@ -749,6 +756,16 @@ class ProductController
 
         $scentNotes = (array)($product['scent_notes'] ?? []);
 
+        $seoKeywords = [];
+        if (isset($product['seo_keywords'])) {
+            foreach ((array)$product['seo_keywords'] as $kw) {
+                $kw = trim((string)$kw);
+                if ($kw !== '') {
+                    $seoKeywords[] = $kw;
+                }
+            }
+        }
+
         return [
             'id'                => (string)$product['_id'],
             'name'              => $product['name']              ?? '',
@@ -763,6 +780,7 @@ class ProductController
                 'middle' => $scentNotes['middle'] ?? '',
                 'base'   => $scentNotes['base']   ?? '',
             ],
+            'seo_keywords'      => $seoKeywords,
             'price'             => (float)($product['price']      ?? 0),
             'currency'          => $product['currency']           ?? 'USD',
             'purchase_links'    => $purchaseLinks,
@@ -791,6 +809,29 @@ class ProductController
             'name_desc'  => ['name' => -1],
             default      => ['created_at' => -1], // newest
         };
+    }
+
+    /**
+     * Normalise an SEO-keywords input into a clean string[] for storage.
+     * Accepts either a comma/newline-separated string or an array of strings.
+     */
+    private function parseSeoKeywords(mixed $raw): array
+    {
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+        $items = is_array($raw) ? $raw : preg_split('/[,\n]+/', (string)$raw);
+        $clean = [];
+        $seen  = [];
+        foreach ($items as $kw) {
+            $kw = trim((string)$kw);
+            if ($kw === '') continue;
+            $key = strtolower($kw);
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+            $clean[] = $kw;
+        }
+        return $clean;
     }
 
     private function generateSlug(string $text): string

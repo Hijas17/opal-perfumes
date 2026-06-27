@@ -9,6 +9,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { getImageUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
+import { showPrices } from '@/lib/config'
 
 export default function CartView() {
   const { isLoggedIn, loading: authLoading } = useAuth()
@@ -102,7 +103,9 @@ export default function CartView() {
                     <Link href={link} className="font-display font-medium text-base text-[#1a1a1a] hover:text-gold transition-colors line-clamp-2">
                       {item.name}
                     </Link>
-                    <p className="text-sm text-gold font-semibold mt-1">{formatPrice(item.price, item.currency)}</p>
+                    {showPrices && (
+                      <p className="text-sm text-gold font-semibold mt-1">{formatPrice(item.price, item.currency)}</p>
+                    )}
 
                     <div className="mt-auto flex items-center justify-between gap-3">
                       <div className="flex items-center border border-gray-200 rounded-full">
@@ -125,9 +128,11 @@ export default function CartView() {
                     </div>
                   </div>
 
-                  <div className="hidden sm:flex flex-col items-end justify-between">
-                    <p className="font-medium text-[#1a1a1a]">{formatPrice(lineTotal, item.currency)}</p>
-                  </div>
+                  {showPrices && (
+                    <div className="hidden sm:flex flex-col items-end justify-between">
+                      <p className="font-medium text-[#1a1a1a]">{formatPrice(lineTotal, item.currency)}</p>
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -139,13 +144,19 @@ export default function CartView() {
               <h2 className="font-display text-xl font-semibold text-[#1a1a1a] mb-4">Order Summary</h2>
               <dl className="space-y-2 text-sm mb-4">
                 <div className="flex justify-between"><dt className="text-gray-600">Items</dt><dd className="font-medium">{cart.item_count}</dd></div>
-                <div className="flex justify-between"><dt className="text-gray-600">Subtotal</dt><dd className="font-medium">{formatPrice(cart.subtotal, cart.currency)}</dd></div>
-                <div className="flex justify-between"><dt className="text-gray-600">Shipping</dt><dd className="font-medium text-green-700">Free</dd></div>
+                {showPrices && (
+                  <>
+                    <div className="flex justify-between"><dt className="text-gray-600">Subtotal</dt><dd className="font-medium">{formatPrice(cart.subtotal, cart.currency)}</dd></div>
+                    <div className="flex justify-between"><dt className="text-gray-600">Shipping</dt><dd className="font-medium text-green-700">Free</dd></div>
+                  </>
+                )}
               </dl>
-              <div className="border-t border-gray-200 pt-3 mb-6 flex justify-between text-base">
-                <span className="font-semibold">Total</span>
-                <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
-              </div>
+              {showPrices && (
+                <div className="border-t border-gray-200 pt-3 mb-6 flex justify-between text-base">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
+                </div>
+              )}
               <button type="button" onClick={() => router.push('/checkout')}
                 className="w-full bg-gold text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors">
                 Checkout

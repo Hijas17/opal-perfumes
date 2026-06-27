@@ -46,8 +46,15 @@ export default async function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* Brand */}
           <div>
-            <Link href="/" className="font-display text-2xl font-semibold text-gold">
-              {s.brand_name || 'Opal Perfumes'}
+            <Link href="/" aria-label={`${s.brand_name || 'Opal Perfumes'} — home`} className="inline-flex items-center">
+              {/* Plain <img> — see Navbar.tsx for rationale */}
+              <img
+                src="/logo.png"
+                alt={s.brand_name || 'Opal Perfumes'}
+                width={752}
+                height={730}
+                className="h-16 w-auto"
+              />
             </Link>
             {s.footer_tagline && (
               <p className="mt-3 text-sm text-gray-400 leading-relaxed">{s.footer_tagline}</p>

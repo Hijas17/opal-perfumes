@@ -3,15 +3,14 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { getProduct, getSettings } from '@/lib/api'
+import { getProduct } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { showPrices, useWhatsAppInquiry } from '@/lib/config'
+import { showPrices } from '@/lib/config'
 import ProductGallery from '@/components/ProductGallery'
 import SocialShare from '@/components/SocialShare'
 import AddToCartButton from '@/components/AddToCartButton'
-import InquireOnWhatsAppButton from '@/components/InquireOnWhatsAppButton'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -44,16 +43,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ) || `Buy ${p.name} — a luxury ${catName || 'Arabian'} fragrance by Opal Perfumes. Available in UAE.`
 
   const url = `/products/${catSlug}/${slug}`
+  // Admin-supplied SEO keywords take precedence; we still append the defaults so
+  // every product has the brand/category baseline indexed.
+  const adminKeywords = Array.isArray(p.seo_keywords) ? p.seo_keywords.filter(Boolean) : []
+  const defaultKeywords = [
+    p.name,
+    `${catName || 'perfume'} UAE`,
+    `buy ${p.name} UAE`,
+    `luxury ${catName?.toLowerCase() || 'fragrance'} Dubai`,
+    'Arabian perfumes', 'Opal Perfumes',
+  ]
+  const seen = new Set<string>()
+  const keywords = [...adminKeywords, ...defaultKeywords].filter((kw) => {
+    const k = kw.toLowerCase()
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
   return {
     title: `${p.name} — ${catName || 'Luxury Perfume'} UAE`,
     description,
-    keywords: [
-      p.name,
-      `${catName || 'perfume'} UAE`,
-      `buy ${p.name} UAE`,
-      `luxury ${catName?.toLowerCase() || 'fragrance'} Dubai`,
-      'Arabian perfumes', 'Opal Perfumes',
-    ],
+    keywords,
     alternates: { canonical: url },
     openGraph: {
       type: 'website',
@@ -80,9 +90,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const catName = p.subcategory_name || p.category?.name || ''
   const priceStr = showPrices ? formatPrice(p.price, p.currency) : null
 
-  // Fetch site settings only when we need the WhatsApp number (saves a roundtrip otherwise)
-  const settings = useWhatsAppInquiry ? await getSettings() : null
-  const whatsappNumber = settings?.whatsapp_number ?? ''
   const labelKey = p.label?.toLowerCase()
   const labelStyle = labelKey ? LABEL_STYLES[labelKey] : null
 
@@ -242,17 +249,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Primary CTA — WhatsApp inquiry (during pre-launch) or Add to cart (when commerce is open) */}
+            {/* Primary CTA — add to cart; final inquiry happens at checkout */}
             <div className="mb-3">
-              {useWhatsAppInquiry ? (
-                <InquireOnWhatsAppButton
-                  whatsappNumber={whatsappNumber}
-                  productName={p.name}
-                  brandName={settings?.brand_name || 'Opal Perfumes'}
-                />
-              ) : (
-                <AddToCartButton productId={p.id || p._id || ''} productName={p.name} />
-              )}
+              <AddToCartButton productId={p.id || p._id || ''} productName={p.name} />
             </div>
             {/* Secondary — contact us */}
             <p className="text-xs text-gray-500 mb-6 text-center">

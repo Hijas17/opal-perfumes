@@ -38,6 +38,7 @@ export interface Product {
   full_description?: string
 
   scent_notes?: ScentNotes
+  seo_keywords?: string[]
   size_volume?: string
 
   price?: number | string | null

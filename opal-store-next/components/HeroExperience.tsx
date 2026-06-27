@@ -85,13 +85,79 @@ export default function HeroExperience({
       {/* Sticky stage: stays pinned to top of viewport while we scroll */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-white">
 
-        {/* ── Video canvas — always pinned to the RIGHT half ────────── */}
-        <div className="absolute inset-y-0 right-0 w-full lg:w-1/2 flex items-center justify-center pointer-events-none">
-          <HeroVideoCanvas
-            progress={scrollYProgress}
-            className="w-full max-w-[640px] h-auto px-6"
-          />
+        {/* ── Video canvas — RIGHT-ALIGNED, capped at 860px so the bottle
+            looks smaller and sits further right inside the container.
+            The leftover space inside the 80% container now lives on the
+            LEFT of the canvas, providing extra room for the text-area
+            gradient + left edge fade. */}
+        <div className="absolute inset-y-0 right-0 w-full lg:w-[80%] flex items-center justify-end pointer-events-none">
+          {/* Tight box around the canvas — overlays MUST live inside this
+              wrapper so their top-0/right-0/bottom-0/left-0 anchor to the
+              actual canvas edges. Before, overlays were positioned to the
+              outer flex container, which left empty space between them
+              and the (centred) canvas — making the fades invisible. */}
+          <div className="relative w-full max-w-[860px]">
+            <HeroVideoCanvas
+              progress={scrollYProgress}
+              className="block w-full h-auto max-h-[78vh] object-contain relative z-0"
+            />
+
+            {/* Edge fades — physical white overlays feather the canvas
+                rectangle into the page background on ALL FOUR sides.
+                Gradient curve drops opacity FAST after the edge so the
+                cloud is concentrated where the frame line would be, not
+                bleeding into the bottle. Stops:
+                  0%   → solid white (kills any rectangle outline)
+                  12%  → 80% white  (still very opaque)
+                  40%  → 20% white  (light haze)
+                  75%  → transparent (clear from here inward) */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-40"
+              style={{
+                background:
+                  'linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 z-[5] w-44"
+              style={{
+                background:
+                  'linear-gradient(to left, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-56"
+              style={{
+                background:
+                  'linear-gradient(to top, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-56"
+              style={{
+                background:
+                  'linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
+              }}
+            />
+          </div>
         </div>
+
+        {/* ── Left fade-to-white gradient ─────────────────────────────
+            Solid white covers the leftmost ~22% of viewport, then fades to
+            transparent over the next ~18% so any explosion debris that
+            reaches the left edge of the (smaller) video disappears into
+            white instead of looking cropped. */}
+        <div
+          className="absolute inset-y-0 left-0 w-full sm:w-[55%] lg:w-[40%] pointer-events-none z-10"
+          style={{
+            background:
+              'linear-gradient(to right, rgb(255,255,255) 0%, rgb(255,255,255) 55%, rgba(255,255,255,0) 100%)',
+          }}
+        />
 
         {/* ── Scene 1 — Hero (only one with the massive display headline) ─ */}
         <Scene opacity={sceneOneOpacity} y={sceneOneY}>

@@ -250,47 +250,14 @@ h1, h2, h3, h4, h5, h6 {
   gap: 2rem;
 }
 
-.opal-preloader__brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.opal-preloader__name {
-  font-family: var(--font-playfair), 'Playfair Display', serif;
-  font-size: clamp(3rem, 7vw, 4.75rem);
-  font-weight: 600;
-  font-style: italic;
-  color: #a67b30;
-  letter-spacing: 0.01em;
-  line-height: 1;
-
+.opal-preloader__logo {
+  /* Width is capped responsively — the asset is 752×730 (basically square) */
+  width: clamp(160px, 22vw, 240px);
+  height: auto;
+  /* Soft scale + fade in entrance */
   opacity: 0;
-  transform: translateY(10px);
-  animation: opalLogoIn 800ms cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards;
-}
-
-.opal-preloader__line {
-  display: block;
-  height: 1px;
-  width: 0;
-  background: linear-gradient(90deg, transparent 0%, #a67b30 50%, transparent 100%);
-
-  animation: opalLineDraw 700ms cubic-bezier(0.65, 0, 0.35, 1) 700ms forwards;
-}
-
-.opal-preloader__sub {
-  font-family: var(--font-inter), 'Inter', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: #a67b30;
-  letter-spacing: 0.55em;        /* Apple-grade tracking */
-  text-transform: uppercase;
-  padding-left: 0.55em;          /* visually compensate for letter-spacing */
-
-  opacity: 0;
-  animation: opalSubIn 700ms cubic-bezier(0.16, 1, 0.3, 1) 1000ms forwards;
+  transform: scale(0.92);
+  animation: opalLogoIn 900ms cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards;
 }
 
 .opal-preloader__dots {
@@ -314,12 +281,8 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes opalLogoIn {
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
-}
-
-@keyframes opalLineDraw {
-  to { width: 4.5rem; }
 }
 
 @keyframes opalSubIn {
@@ -333,9 +296,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .opal-preloader__name,
-  .opal-preloader__line,
-  .opal-preloader__sub,
+  .opal-preloader__logo,
   .opal-preloader__dots,
   .opal-preloader__dots span {
     animation-duration: 0.01ms !important;

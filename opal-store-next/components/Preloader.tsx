@@ -51,11 +51,16 @@ export default function Preloader() {
       className="opal-preloader"
     >
       <div className="opal-preloader__inner">
-        <div className="opal-preloader__brand">
-          <span className="opal-preloader__name">Opal</span>
-          <span className="opal-preloader__line" />
-          <span className="opal-preloader__sub">Perfumes</span>
-        </div>
+        {/* Plain <img> (not next/image) so the logo paints in the very first
+            render — the whole point of the preloader is instant visibility,
+            before Next.js's optimised image pipeline finishes. */}
+        <img
+          src="/logo.png"
+          alt="Opal Perfumes"
+          width={752}
+          height={730}
+          className="opal-preloader__logo"
+        />
         <div className="opal-preloader__dots" aria-label="Loading">
           <span /><span /><span />
         </div>
