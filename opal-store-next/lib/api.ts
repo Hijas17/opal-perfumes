@@ -12,7 +12,14 @@ import type {
   SiteSettings,
 } from './types'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+// Server-side requests (Server Components, generateMetadata, sitemap) prefer
+// API_URL_INTERNAL — typically a loopback like http://127.0.0.1:8000/api when
+// the API runs on the same host. Browsers always use NEXT_PUBLIC_API_URL
+// because only NEXT_PUBLIC_* is inlined into the client bundle.
+const API_URL =
+  (typeof window === 'undefined' && process.env.API_URL_INTERNAL) ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:8000/api'
 
 interface FetchOptions {
   revalidate?: number | false
