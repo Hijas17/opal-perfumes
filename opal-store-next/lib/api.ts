@@ -63,14 +63,22 @@ function unwrap<T>(payload: ApiEnvelope<T> | T): T {
 // ─── Public reads ────────────────────────────────────────────────────────────
 
 export async function getSettings(): Promise<SiteSettings> {
-  const raw = await apiGet<ApiEnvelope<SiteSettings>>('/settings', { revalidate: 300, tags: ['settings'] })
-  return unwrap(raw) || {}
+  try {
+    const raw = await apiGet<ApiEnvelope<SiteSettings>>('/settings', { revalidate: 300, tags: ['settings'] })
+    return unwrap(raw) || {}
+  } catch {
+    return {}
+  }
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const raw = await apiGet<ApiEnvelope<Category[]>>('/categories', { revalidate: 600, tags: ['categories'] })
-  const data = unwrap(raw)
-  return Array.isArray(data) ? data : []
+  try {
+    const raw = await apiGet<ApiEnvelope<Category[]>>('/categories', { revalidate: 600, tags: ['categories'] })
+    const data = unwrap(raw)
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
 }
 
 export interface ProductQuery {
@@ -90,12 +98,16 @@ export async function getProducts(query: ProductQuery = {}): Promise<Product[]> 
   if (query.limit)    params.set('limit',    String(query.limit))
   const qs = params.toString()
 
-  const raw = await apiGet<ApiEnvelope<Product[]>>(
-    `/products${qs ? `?${qs}` : ''}`,
-    { revalidate: 60, tags: ['products'] }
-  )
-  const data = unwrap(raw)
-  return Array.isArray(data) ? data : []
+  try {
+    const raw = await apiGet<ApiEnvelope<Product[]>>(
+      `/products${qs ? `?${qs}` : ''}`,
+      { revalidate: 60, tags: ['products'] }
+    )
+    const data = unwrap(raw)
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {

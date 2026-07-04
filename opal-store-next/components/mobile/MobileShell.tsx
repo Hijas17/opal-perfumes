@@ -6,7 +6,6 @@ import type { Category, SiteSettings } from '@/lib/types'
 import MobileNavbar from './MobileNavbar'
 import MobileMenuDrawer from './MobileMenuDrawer'
 import MobileCartDrawer from './MobileCartDrawer'
-import WhatsAppFloat from './WhatsAppFloat'
 
 interface ShellState {
   openMenu: () => void
@@ -80,7 +79,6 @@ export default function MobileShell({ categories, settings }: Props) {
           onClose={closeAll}
           whatsappNumber={settings.whatsapp_number}
         />
-        <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
       </div>
     </MobileShellContext.Provider>
   )

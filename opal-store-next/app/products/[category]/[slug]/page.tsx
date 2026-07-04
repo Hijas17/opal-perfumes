@@ -116,46 +116,62 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const scentNotes = p.scent_notes || {}
   const hasScent = scentNotes.top || scentNotes.middle || scentNotes.base
 
-  // ── JSON-LD Product schema ─────────────────────────────────────────────
+  // ── JSON-LD Product + BreadcrumbList schema ────────────────────────────
   const productImage = imgs.primary ? getImageUrl(imgs.primary) : undefined
   const productUrl = `${SITE_URL}/products/${catSlug}/${slug}`
+
+  const breadcrumbItems = [
+    { '@type': 'ListItem', 'position': 1, 'name': 'Home',     'item': SITE_URL },
+    { '@type': 'ListItem', 'position': 2, 'name': 'Products', 'item': `${SITE_URL}/products` },
+  ]
+  if (catName) {
+    breadcrumbItems.push({
+      '@type': 'ListItem', 'position': 3, 'name': catName, 'item': `${SITE_URL}/products/${catSlug}`,
+    })
+  }
+  breadcrumbItems.push({
+    '@type': 'ListItem',
+    'position': catName ? 4 : 3,
+    'name': p.name,
+    'item': productUrl,
+  })
+
   const productJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Product',
-    'name': p.name,
-    'description': p.short_description || `${p.name} — a luxury ${catName || 'Arabian'} fragrance.`,
-    'image': productImage,
-    'sku': p.slug,
-    'brand': { '@type': 'Brand', 'name': 'Opal Perfumes' },
-    'category': catName || 'Perfume',
-    // Only emit Offer/price in structured data when we're publicly displaying prices.
-    // Prevents Google from showing a price in search results that contradicts our site.
-    ...(showPrices && p.price && {
-      'offers': {
-        '@type': 'Offer',
-        'priceCurrency': p.currency || 'AED',
-        'price': parseFloat(String(p.price)).toFixed(2),
-        'availability': p.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        'url': productUrl,
-        'seller': { '@type': 'Organization', 'name': 'Opal Perfumes' },
+    '@graph': [
+      {
+        '@type': 'Product',
+        'name': p.name,
+        'description': p.short_description || `${p.name} — a luxury ${catName || 'Arabian'} fragrance.`,
+        'image': productImage,
+        'sku': p.slug,
+        'brand': { '@type': 'Brand', 'name': 'Opal Perfume' },
+        'category': catName || 'Perfume',
+        // Only emit Offer/price in structured data when we're publicly displaying prices.
+        // Prevents Google from showing a price in search results that contradicts our site.
+        ...(showPrices && p.price && {
+          'offers': {
+            '@type': 'Offer',
+            'priceCurrency': p.currency || 'AED',
+            'price': parseFloat(String(p.price)).toFixed(2),
+            'availability': p.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            'url': productUrl,
+            'seller': { '@type': 'Organization', 'name': 'Opal Perfume' },
+          },
+        }),
+        ...(hasScent && {
+          'additionalProperty': [
+            scentNotes.top    && { '@type': 'PropertyValue', 'name': 'Top Notes',    'value': scentNotes.top },
+            scentNotes.middle && { '@type': 'PropertyValue', 'name': 'Middle Notes', 'value': scentNotes.middle },
+            scentNotes.base   && { '@type': 'PropertyValue', 'name': 'Base Notes',   'value': scentNotes.base },
+          ].filter(Boolean),
+        }),
       },
-    }),
-    ...(hasScent && {
-      'additionalProperty': [
-        scentNotes.top    && { '@type': 'PropertyValue', 'name': 'Top Notes',    'value': scentNotes.top },
-        scentNotes.middle && { '@type': 'PropertyValue', 'name': 'Middle Notes', 'value': scentNotes.middle },
-        scentNotes.base   && { '@type': 'PropertyValue', 'name': 'Base Notes',   'value': scentNotes.base },
-      ].filter(Boolean),
-    }),
-    'breadcrumb': {
-      '@type': 'BreadcrumbList',
-      'itemListElement': [
-        { '@type': 'ListItem', 'position': 1, 'name': 'Home',     'item': SITE_URL },
-        { '@type': 'ListItem', 'position': 2, 'name': 'Products', 'item': `${SITE_URL}/products` },
-        catName && { '@type': 'ListItem', 'position': 3, 'name': catName, 'item': `${SITE_URL}/products/${catSlug}` },
-        { '@type': 'ListItem', 'position': catName ? 4 : 3, 'name': p.name, 'item': productUrl },
-      ].filter(Boolean),
-    },
+      {
+        '@type': 'BreadcrumbList',
+        'itemListElement': breadcrumbItems,
+      },
+    ],
   }
 
   return (

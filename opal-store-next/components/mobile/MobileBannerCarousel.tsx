@@ -39,13 +39,13 @@ export default function MobileBannerCarousel({ banners }: Props) {
         className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {banners.map((banner, i) => (
-          <div key={i} className="flex-none w-full snap-start px-4">
+          <div key={i} className="flex-none w-full snap-start">
             {banner.href ? (
-              <Link href={banner.href} className="block relative aspect-[3/2] overflow-hidden">
+              <Link href={banner.href} className="block relative aspect-[8/3] overflow-hidden">
                 <Image src={banner.src} alt={banner.alt} fill sizes="100vw" className="object-cover" />
               </Link>
             ) : (
-              <div className="relative aspect-[3/2] overflow-hidden">
+              <div className="relative aspect-[8/3] overflow-hidden">
                 <Image src={banner.src} alt={banner.alt} fill sizes="100vw" className="object-cover" />
               </div>
             )}

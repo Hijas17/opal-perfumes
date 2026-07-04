@@ -9,6 +9,7 @@ import AuthProvider from '@/components/AuthProvider'
 import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
 import MobileShell from '@/components/mobile/MobileShell'
+import WhatsAppFloat from '@/components/mobile/WhatsAppFloat'
 import { getCategories, getSettings } from '@/lib/api'
 
 // ─── Fonts (zero-CLS via next/font) ───────────────────────────────────────
@@ -33,31 +34,37 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default:  'Opal Perfumes — Luxury Arabian Fragrances in UAE',
-    template: '%s | Opal Perfumes',
+    default:  'Opal Perfume — The Art of Arabian Perfumery in UAE',
+    template: '%s | Opal Perfume',
   },
   description:
-    'Discover premium luxury perfumes, buhoor and Arabian fragrances in UAE. Opal Perfumes crafts exquisite oriental scents, oud and French perfumes for men and women.',
+    'Opal Perfume — a curated collection of luxury Arabian fragrances, oud and buhoor handcrafted in the UAE. Every bottle a story, every scent a signature.',
   keywords: [
-    'perfumes UAE', 'best perfumes UAE', 'luxury fragrances UAE', 'Arabian perfumes UAE',
-    'best fragrances in UAE', 'oud perfumes Dubai', 'buhoor UAE', 'oriental fragrances',
-    'Arabic perfumes online', 'luxury scents Dubai',
+    'Opal Perfume', 'Opal Perfume UAE', 'Arabian perfumes UAE', 'luxury fragrances UAE',
+    'oud perfumes Dubai', 'best perfumes UAE', 'buhoor UAE', 'oriental fragrances',
+    'Arabic perfumes online', 'luxury scents Dubai', 'niche perfumes UAE',
+    'Emirati luxury perfumes',
   ],
-  authors: [{ name: 'Opal Perfumes' }],
+  authors: [{ name: 'Opal Perfume' }],
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    siteName: 'Opal Perfumes',
+    siteName: 'Opal Perfume',
     locale: 'en_AE',
-    title: 'Opal Perfumes — Luxury Arabian Fragrances in UAE',
-    description: 'Discover premium luxury perfumes, buhoor and Arabian fragrances in UAE.',
+    title: 'Opal Perfume — The Art of Arabian Perfumery in UAE',
+    description: 'A curated collection of luxury Arabian fragrances, oud and buhoor. Every bottle a story, every scent a signature.',
     images: ['/og-cover.jpg'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Opal Perfumes — Luxury Arabian Fragrances in UAE',
-    description: 'Discover premium luxury perfumes, buhoor and Arabian fragrances in UAE.',
+    title: 'Opal Perfume — The Art of Arabian Perfumery in UAE',
+    description: 'A curated collection of luxury Arabian fragrances, oud and buhoor. Every bottle a story, every scent a signature.',
     images: ['/og-cover.jpg'],
+  },
+  verification: {
+    // Set NEXT_PUBLIC_GOOGLE_VERIFICATION in .env.production to the token
+    // from Google Search Console (the value in the meta-tag verification method).
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
   },
   other: {
     'geo.region':    'AE',
@@ -78,10 +85,10 @@ const siteJsonLd = {
   '@graph': [
     {
       '@type': 'Organization',
-      'name': 'Opal Perfumes',
+      'name': 'Opal Perfume',
       'url':  SITE_URL,
       'logo': `${SITE_URL}/logo.png`,
-      'description': 'Luxury Arabian perfumes, buhoor and oriental fragrances crafted for elegance. Based in UAE.',
+      'description': 'A curated collection of luxury Arabian fragrances, oud and buhoor handcrafted in the UAE. The art of Arabian perfumery.',
       'address': { '@type': 'PostalAddress', 'addressCountry': 'AE', 'addressRegion': 'Dubai' },
       'sameAs': [
         'https://instagram.com/opalperfumes',
@@ -91,7 +98,7 @@ const siteJsonLd = {
     },
     {
       '@type': 'WebSite',
-      'name': 'Opal Perfumes',
+      'name': 'Opal Perfume',
       'url':  SITE_URL,
       'potentialAction': {
         '@type': 'SearchAction',
@@ -126,6 +133,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <MobileShell categories={categories} settings={settings} />
               <main className="flex-1">{children}</main>
               <Footer />
+              <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
             </SearchProvider>
           </CartProvider>
         </AuthProvider>

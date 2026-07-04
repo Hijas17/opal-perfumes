@@ -24,24 +24,46 @@ export default async function ProductsListingView({ categorySlug, sort = '' }: P
   const currentCategory = categories.find((c) => c.slug === categorySlug)
   const pageTitle = categorySlug ? currentCategory?.name || categorySlug : 'All Products'
 
-  // ── JSON-LD CollectionPage + ItemList ────────────────────────────────
+  // ── JSON-LD CollectionPage + ItemList + BreadcrumbList ───────────────
   const seoUrl    = categorySlug ? `/products/${categorySlug}` : '/products'
+
+  const breadcrumbItems = [
+    { '@type': 'ListItem', 'position': 1, 'name': 'Home',     'item': SITE_URL },
+    { '@type': 'ListItem', 'position': 2, 'name': 'Products', 'item': `${SITE_URL}/products` },
+  ]
+  if (categorySlug && currentCategory) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      'position': 3,
+      'name': currentCategory.name,
+      'item': `${SITE_URL}/products/${currentCategory.slug}`,
+    })
+  }
+
   const listJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    'name': pageTitle,
-    'url':  `${SITE_URL}${seoUrl}`,
-    'mainEntity': {
-      '@type': 'ItemList',
-      'name': pageTitle,
-      'numberOfItems': products.length,
-      'itemListElement': products.slice(0, 10).map((p, i) => ({
-        '@type': 'ListItem',
-        'position': i + 1,
-        'url': `${SITE_URL}/products/${p.subcategory_slug || categorySlug || 'all'}/${p.slug}`,
-        'name': p.name,
-      })),
-    },
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        'name': pageTitle,
+        'url':  `${SITE_URL}${seoUrl}`,
+        'mainEntity': {
+          '@type': 'ItemList',
+          'name': pageTitle,
+          'numberOfItems': products.length,
+          'itemListElement': products.slice(0, 10).map((p, i) => ({
+            '@type': 'ListItem',
+            'position': i + 1,
+            'url': `${SITE_URL}/products/${p.subcategory_slug || categorySlug || 'all'}/${p.slug}`,
+            'name': p.name,
+          })),
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        'itemListElement': breadcrumbItems,
+      },
+    ],
   }
 
   return (

@@ -9,22 +9,24 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings()
+  const brand = s.brand_name || 'Opal Perfume'
   const description =
-    `${s.brand_name || 'Opal Perfumes'} — ${s.hero_subtext || 'Handcrafted luxury perfumes and buhoor in UAE. Discover the finest Arabian fragrances, oud and oriental scents crafted for elegance.'}`
+    s.hero_subtext ||
+    `${brand} — a curated collection of luxury Arabian fragrances, oud and buhoor handcrafted in the UAE. Every bottle a story, every scent a signature.`
 
   return {
     description,
     keywords: [
-      'best perfumes UAE', 'luxury fragrances UAE', 'Arabian perfumes UAE',
-      'best fragrances in UAE', 'oud perfumes Dubai', 'buhoor UAE',
+      'Opal Perfume', 'Opal Perfume UAE', 'Arabian perfumes UAE', 'luxury fragrances UAE',
+      'oud perfumes Dubai', 'best perfumes UAE', 'buhoor UAE',
       'oriental fragrances', 'Arabic perfumes online', 'luxury perfumes Dubai',
-      'top perfume brands UAE',
+      'niche perfumes UAE', 'Emirati luxury perfumes',
     ],
     alternates: { canonical: '/' },
     openGraph: {
       url: SITE_URL,
       type: 'website',
-      title: 'Opal Perfumes — Luxury Arabian Fragrances in UAE',
+      title: `${brand} — The Art of Arabian Perfumery in UAE`,
       description,
     },
   }
@@ -46,9 +48,9 @@ export default async function HomePage() {
       {
         '@type': 'LocalBusiness',
         '@id': `${SITE_URL}/#org`,
-        'name': s.brand_name || 'Opal Perfumes',
+        'name': s.brand_name || 'Opal Perfume',
         'image': `${SITE_URL}/og-cover.jpg`,
-        'description': 'Luxury Arabian perfumes, buhoor and oriental fragrances in UAE.',
+        'description': 'A curated collection of luxury Arabian fragrances, oud and buhoor handcrafted in the UAE.',
         'url': SITE_URL,
         'address': { '@type': 'PostalAddress', 'addressCountry': 'AE', 'addressRegion': 'Dubai' },
         'priceRange': '$$–$$$',
@@ -89,7 +91,7 @@ export default async function HomePage() {
           heroTagline={s.hero_tagline || 'Luxury Fragrances'}
           heroHeadline={s.hero_headline || 'Discover\nyour scent.'}
           heroSubtext={s.hero_subtext || 'Handcrafted luxury perfumes that tell your story. Each bottle a masterpiece.'}
-          brandName={s.brand_name || 'Opal Perfumes'}
+          brandName={s.brand_name || 'Opal Perfume'}
         />
       </div>
 
@@ -130,7 +132,7 @@ export default async function HomePage() {
       <section className="hidden md:block bg-[#faf1da] py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-4">Our Heritage</p>
-          <h2 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-6">{s.brand_name || 'Opal Perfumes'}</h2>
+          <h2 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-6">{s.brand_name || 'Opal Perfume'}</h2>
           <p className="text-gray-600 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
             {s.about_snippet || 'Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance and identity. Our perfumes are more than scents — they are stories waiting to be told.'}
           </p>
