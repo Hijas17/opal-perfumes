@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { getSettings } from '@/lib/api'
-import { useWhatsAppInquiry } from '@/lib/config'
+import { useWhatsAppInquiry, authDisabled } from '@/lib/config'
 import CheckoutForm from './CheckoutForm'
 
 export const metadata: Metadata = {
@@ -10,6 +11,9 @@ export const metadata: Metadata = {
 }
 
 export default async function CheckoutPage() {
+  // With auth disabled, the WhatsApp inquiry happens directly from the cart drawer
+  // (no delivery-details form needed). Send visitors back to /cart.
+  if (authDisabled) redirect('/cart')
   // Only fetch site settings (for WhatsApp number/brand) when we're in inquiry mode —
   // saves a roundtrip on real-checkout deployments. Falls back gracefully if the
   // settings call fails so the page still renders and the env fallback can kick in.

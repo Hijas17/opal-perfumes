@@ -251,7 +251,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Primary CTA — add to cart; final inquiry happens at checkout */}
             <div className="mb-3">
-              <AddToCartButton productId={p.id || p._id || ''} productName={p.name} />
+              <AddToCartButton product={p} />
             </div>
             {/* Secondary — contact us */}
             <p className="text-xs text-gray-500 mb-6 text-center">

@@ -82,6 +82,7 @@ export async function getProducts(query: ProductQuery = {}): Promise<Product[]> 
   if (query.sort)     params.set('sort',     query.sort)
   if (query.limit)    params.set('limit',    String(query.limit))
   const qs = params.toString()
+
   const raw = await apiGet<ApiEnvelope<Product[]>>(
     `/products${qs ? `?${qs}` : ''}`,
     { revalidate: 60, tags: ['products'] }

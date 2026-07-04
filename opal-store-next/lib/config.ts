@@ -16,6 +16,9 @@ export const showPrices = process.env.NEXT_PUBLIC_SHOW_PRICES !== 'false'
 /** Default false — set NEXT_PUBLIC_USE_WHATSAPP_INQUIRY=true to swap cart flow for WhatsApp. */
 export const useWhatsAppInquiry = process.env.NEXT_PUBLIC_USE_WHATSAPP_INQUIRY === 'true'
 
+/** Default false — set NEXT_PUBLIC_DISABLE_AUTH=true to hide login/signup/account UI and gate routes. */
+export const authDisabled = process.env.NEXT_PUBLIC_DISABLE_AUTH === 'true'
+
 /** Fallback number when site_settings.whatsapp_number is unset. Strip non-digits at consume time. */
 export const whatsappFallback = process.env.NEXT_PUBLIC_WHATSAPP_FALLBACK ?? ''
 
@@ -26,4 +29,16 @@ export const whatsappFallback = process.env.NEXT_PUBLIC_WHATSAPP_FALLBACK ?? ''
 export function buildWhatsAppUrl(rawNumber: string, message: string): string {
   const digits = rawNumber.replace(/\D/g, '')
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+}
+
+interface CartInquiryItem {
+  name: string
+  quantity: number
+}
+
+/** Compose a WhatsApp message listing every cart item for inquiry. */
+export function buildCartInquiryMessage(items: CartInquiryItem[]): string {
+  if (items.length === 0) return "Hi! I'd like to know more about your perfumes."
+  const lines = items.map((it, i) => `${i + 1}. ${it.name} × ${it.quantity}`)
+  return `Hi! I'd like to inquire about the following items:\n\n${lines.join('\n')}`
 }

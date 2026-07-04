@@ -2,52 +2,27 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
-import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { getImageUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
-import { showPrices } from '@/lib/config'
+import { showPrices, buildWhatsAppUrl, buildCartInquiryMessage, whatsappFallback } from '@/lib/config'
+import WhatsAppIcon from '@/components/WhatsAppIcon'
+import type { SiteSettings } from '@/lib/types'
 
-export default function CartView() {
-  const { isLoggedIn, loading: authLoading } = useAuth()
+interface Props {
+  settings: SiteSettings
+}
+
+export default function CartView({ settings }: Props) {
   const { cart, loading, update, remove } = useCart()
-  const router = useRouter()
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  // Loading auth state
-  if (authLoading) {
-    return (
-      <div className="pt-[70px] min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  // Not logged in
-  if (!isLoggedIn) {
-    return (
-      <div className="pt-[70px] min-h-screen bg-cream">
-        <div className="max-w-md mx-auto px-4 py-24 text-center">
-          <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-gray-300" />
-          <h1 className="font-display text-3xl font-semibold text-[#1a1a1a] mb-3">Your cart</h1>
-          <p className="text-gray-500 mb-8">Sign in to view your cart and check out.</p>
-          <div className="flex gap-3 justify-center">
-            <Link href="/login?next=/cart"
-              className="inline-block bg-gold text-white px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors">
-              Sign In
-            </Link>
-            <Link href="/signup?next=/cart"
-              className="inline-block border border-gold text-gold px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-gold hover:text-white transition-all">
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const waNumber = settings.whatsapp_number || whatsappFallback
+  const waHref = waNumber
+    ? buildWhatsAppUrl(waNumber, buildCartInquiryMessage(cart.items))
+    : null
 
   // Empty cart
   if (!loading && cart.items.length === 0) {
@@ -157,10 +132,15 @@ export default function CartView() {
                   <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
                 </div>
               )}
-              <button type="button" onClick={() => router.push('/checkout')}
-                className="w-full bg-gold text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors">
-                Checkout
-              </button>
+              {waHref ? (
+                <a href={waHref} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2.5 w-full bg-[#1a1a1a] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-black transition-colors">
+                  <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
+                  Send Inquiry via WhatsApp
+                </a>
+              ) : (
+                <p className="text-xs text-red-500 text-center">WhatsApp number not configured.</p>
+              )}
               <Link href="/products" className="block text-center text-sm text-gray-500 mt-4 hover:text-gold transition-colors">
                 Continue shopping
               </Link>

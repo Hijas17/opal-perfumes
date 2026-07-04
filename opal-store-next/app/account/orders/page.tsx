@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { authDisabled } from '@/lib/config'
 import OrdersList from './OrdersList'
 
 export const metadata: Metadata = {
@@ -7,5 +9,6 @@ export const metadata: Metadata = {
 }
 
 export default function OrdersPage() {
+  if (authDisabled) redirect('/')
   return <OrdersList />
 }

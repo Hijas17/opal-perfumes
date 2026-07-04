@@ -8,7 +8,8 @@ import SearchProvider from '@/components/SearchProvider'
 import AuthProvider from '@/components/AuthProvider'
 import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
-import { getCategories } from '@/lib/api'
+import MobileShell from '@/components/mobile/MobileShell'
+import { getCategories, getSettings } from '@/lib/api'
 
 // ─── Fonts (zero-CLS via next/font) ───────────────────────────────────────
 const playfair = Playfair_Display({
@@ -102,8 +103,7 @@ const siteJsonLd = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Categories are needed by Navbar (client) — fetch once, server-side, pass as prop
-  const categories = await getCategories()
+  const [categories, settings] = await Promise.all([getCategories(), getSettings()])
 
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${playfair.variable} ${inter.variable}`}>
@@ -120,7 +120,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthProvider>
           <CartProvider>
             <SearchProvider>
-              <Navbar categories={categories} />
+              <div className="hidden md:block">
+                <Navbar categories={categories} />
+              </div>
+              <MobileShell categories={categories} settings={settings} />
               <main className="flex-1">{children}</main>
               <Footer />
             </SearchProvider>

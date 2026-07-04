@@ -1,35 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { ShoppingBag, Check } from 'lucide-react'
-import { useAuth } from './AuthProvider'
 import { useCart } from './CartProvider'
+import type { Product } from '@/lib/types'
 
 interface Props {
-  productId: string
-  productName?: string
+  product: Product
   /** When true, render a smaller compact variant */
   compact?: boolean
 }
 
-export default function AddToCartButton({ productId, compact = false }: Props) {
-  const { isLoggedIn } = useAuth()
+export default function AddToCartButton({ product, compact = false }: Props) {
   const { add } = useCart()
-  const router   = useRouter()
-  const [busy, setBusy]    = useState(false)
-  const [done, setDone]    = useState(false)
-  const [error, setError]  = useState('')
+  const [busy, setBusy]   = useState(false)
+  const [done, setDone]   = useState(false)
+  const [error, setError] = useState('')
 
   async function handleClick() {
-    if (!isLoggedIn) {
-      router.push(`/login?next=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`)
-      return
-    }
     setError('')
     setBusy(true)
     try {
-      await add(productId, 1)
+      await add(product, 1)
       setDone(true)
       setTimeout(() => setDone(false), 1500)
     } catch (err) {

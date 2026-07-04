@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getSettings } from '@/lib/api'
 import CartView from './CartView'
 
 export const metadata: Metadata = {
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function CartPage() {
-  return <CartView />
+export default async function CartPage() {
+  const settings = await getSettings()
+  return <CartView settings={settings} />
 }

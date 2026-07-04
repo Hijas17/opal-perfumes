@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getSettings, getProducts } from '@/lib/api'
 import ProductCard from '@/components/ProductCard'
 import HeroExperience from '@/components/HeroExperience'
+import MobileHome from '@/components/mobile/MobileHome'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -77,16 +78,23 @@ export default async function HomePage() {
         }}
       />
 
-      {/* ── Hero (Apple-style scroll experience) ────────────────────────── */}
-      <HeroExperience
-        heroTagline={s.hero_tagline || 'Luxury Fragrances'}
-        heroHeadline={s.hero_headline || 'Discover\nyour scent.'}
-        heroSubtext={s.hero_subtext || 'Handcrafted luxury perfumes that tell your story. Each bottle a masterpiece.'}
-        brandName={s.brand_name || 'Opal Perfumes'}
-      />
+      {/* ── Mobile Home (below md) ──────────────────────────────────────── */}
+      <div className="md:hidden">
+        <MobileHome settings={s} products={products} />
+      </div>
 
-      {/* ── Featured Products ───────────────────────────────────────────── */}
-      <section className="bg-white py-20 px-4">
+      {/* ── Desktop Hero (md+) ──────────────────────────────────────────── */}
+      <div className="hidden md:block">
+        <HeroExperience
+          heroTagline={s.hero_tagline || 'Luxury Fragrances'}
+          heroHeadline={s.hero_headline || 'Discover\nyour scent.'}
+          heroSubtext={s.hero_subtext || 'Handcrafted luxury perfumes that tell your story. Each bottle a masterpiece.'}
+          brandName={s.brand_name || 'Opal Perfumes'}
+        />
+      </div>
+
+      {/* ── Featured Products (desktop only — mobile has its own carousel) ── */}
+      <section className="hidden md:block bg-white py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Curated For You</p>
@@ -118,8 +126,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── About Snippet ───────────────────────────────────────────────── */}
-      <section className="bg-[#faf1da] py-20 px-4">
+      {/* ── About Snippet (desktop only — mobile home has its own) ────────── */}
+      <section className="hidden md:block bg-[#faf1da] py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-4">Our Heritage</p>
           <h2 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-6">{s.brand_name || 'Opal Perfumes'}</h2>
@@ -135,8 +143,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA Strip ───────────────────────────────────────────────────── */}
-      <section className="bg-gold py-16 px-4">
+      {/* ── CTA Strip (desktop only) ────────────────────────────────────── */}
+      <section className="hidden md:block bg-gold py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold text-white mb-4">
             {s.cta_message || 'Find Your Perfect Fragrance'}

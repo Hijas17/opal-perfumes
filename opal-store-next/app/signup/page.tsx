@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import AuthFormShell from '@/components/AuthFormShell'
+import { authDisabled } from '@/lib/config'
 import SignupForm from './SignupForm'
 
 export const metadata: Metadata = {
@@ -10,6 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default function SignupPage() {
+  if (authDisabled) redirect('/')
   return (
     <AuthFormShell
       title="Create your account"

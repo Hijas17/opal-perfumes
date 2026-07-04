@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import * as NavigationMenu from '@radix-ui/react-navigation-menu'
 import { ChevronDown, Search, Menu, X, ShoppingBag, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { authDisabled } from '@/lib/config'
 import type { Category } from '@/lib/types'
 import { useSearchOverlay } from './SearchProvider'
 import { useAuth } from './AuthProvider'
@@ -47,9 +48,9 @@ export default function Navbar({ categories }: NavbarProps) {
           <img
             src="/logo.png"
             alt="Opal Perfumes"
-            width={752}
-            height={730}
-            className="h-14 w-auto"
+            width={702}
+            height={205}
+            className="h-12 w-auto"
           />
         </Link>
 
@@ -130,6 +131,7 @@ export default function Navbar({ categories }: NavbarProps) {
           </Link>
 
           {/* User menu */}
+          {!authDisabled && (
           <div className="relative">
             {isLoggedIn ? (
               <>
@@ -169,6 +171,7 @@ export default function Navbar({ categories }: NavbarProps) {
               </Link>
             )}
           </div>
+          )}
         </div>
 
         {/* Mobile: search + cart + hamburger */}
@@ -228,6 +231,7 @@ export default function Navbar({ categories }: NavbarProps) {
             <Link href="/contact" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold transition-colors">
               Contact Us
             </Link>
+            {!authDisabled && (
             <div className="border-t border-gray-100 mt-2 pt-2">
               {isLoggedIn ? (
                 <>
@@ -253,6 +257,7 @@ export default function Navbar({ categories }: NavbarProps) {
                 </>
               )}
             </div>
+            )}
           </div>
         </div>
       )}
