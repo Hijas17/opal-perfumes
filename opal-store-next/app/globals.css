@@ -22,6 +22,9 @@
    ─────────────────────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+  /* Overscroll past the footer reveals html's bg, not body's — set it to the
+     footer color so the bounce area matches instead of flashing white. */
+  background-color: #1a1a1a;
 }
 
 body {

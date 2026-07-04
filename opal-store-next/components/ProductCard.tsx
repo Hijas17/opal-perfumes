@@ -41,9 +41,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
   return (
     <Link href={detailPath} className="block group" prefetch>
-      <div className="product-card relative bg-white rounded-[var(--radius-card)] overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 cursor-pointer">
+      {/* On mobile the tile is flat (no card bg/shadow/radius) — matches the reference
+          storefront layout where products sit directly on the page background.
+          From md up we get the card treatment: white bg, rounded, hover shadow. */}
+      <div className="product-card relative overflow-hidden transition-shadow duration-300 cursor-pointer md:bg-white md:rounded-[var(--radius-card)] md:shadow-[var(--shadow-card)] md:hover:shadow-[var(--shadow-card-hover)]">
         {/* Image Container */}
-        <div className="aspect-square relative overflow-hidden bg-cream">
+        <div className="aspect-square relative overflow-hidden bg-[#f5f5f5] md:bg-cream">
           {primarySrc ? (
             <>
               <Image
@@ -73,13 +76,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
 
           {labelText && (
-            <span className={cn('absolute top-3 left-3 text-xs font-medium px-2 py-0.5 rounded-sm', labelStyle)}>
+            <span className={cn(
+              // Right-aligned on mobile like the reference layout; keeps the desktop left-aligned card look.
+              'absolute top-3 right-3 md:right-auto md:left-3 text-xs font-medium px-2 py-0.5 rounded-sm',
+              labelStyle,
+            )}>
               {labelText}
             </span>
           )}
 
-          {/* Slide-up View Details */}
-          <div className="absolute bottom-0 left-0 right-0 overflow-hidden">
+          {/* Slide-up View Details — desktop card affordance only */}
+          <div className="hidden md:block absolute bottom-0 left-0 right-0 overflow-hidden">
             <div className="product-card-btn bg-gold text-white text-center text-xs font-medium py-2.5 tracking-wider uppercase">
               View Details
             </div>
@@ -87,13 +94,18 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
 
         {/* Body */}
-        <div className="p-4">
-          <h3 className="font-display text-[#1a1a1a] font-medium text-base leading-snug line-clamp-2">
+        <div className="py-3 text-center md:p-4 md:text-left">
+          {product.category?.name && (
+            <p className="text-[10px] md:text-xs tracking-widest uppercase text-gray-500 md:hidden">
+              {product.category.name}
+            </p>
+          )}
+          <h3 className="mt-1 md:mt-0 font-display text-[#1a1a1a] font-medium text-sm md:text-base leading-snug line-clamp-2">
             {product.name}
           </h3>
           {price && <p className="mt-1.5 text-sm text-gold font-semibold">{price}</p>}
           {product.short_description && (
-            <p className="mt-1 text-xs text-gray-500 line-clamp-2 leading-relaxed">
+            <p className="hidden md:block mt-1 text-xs text-gray-500 line-clamp-2 leading-relaxed">
               {product.short_description}
             </p>
           )}

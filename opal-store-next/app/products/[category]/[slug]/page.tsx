@@ -11,6 +11,10 @@ import { showPrices } from '@/lib/config'
 import ProductGallery from '@/components/ProductGallery'
 import SocialShare from '@/components/SocialShare'
 import AddToCartButton from '@/components/AddToCartButton'
+import ExpandableDescription from '@/components/ExpandableDescription'
+import WhatsAppIcon from '@/components/WhatsAppIcon'
+import { buildWhatsAppUrl, whatsappFallback } from '@/lib/config'
+import { getSettings } from '@/lib/api'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -83,8 +87,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { category: routeCatSlug, slug } = await params
-  const p = await fetchProduct(slug)
+  const [p, settings] = await Promise.all([fetchProduct(slug), getSettings()])
   if (!p) notFound()
+
+  const waNumber = settings.whatsapp_number || whatsappFallback
+  const productPageUrl = `${SITE_URL}/products/${p.subcategory_slug || p.category?.slug || routeCatSlug || 'all'}/${p.slug}`
+  const waHref = waNumber
+    ? buildWhatsAppUrl(
+        waNumber,
+        `Hi! I'd like to inquire about ${p.name}.\n${productPageUrl}`,
+      )
+    : null
 
   const catSlug = p.subcategory_slug || p.category?.slug || routeCatSlug || 'all'
   const catName = p.subcategory_name || p.category?.name || ''
@@ -236,8 +249,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div className="border-t border-gray-100 my-6" />
 
             {p.full_description && (
-              <div className="rich-text text-gray-600 leading-relaxed mb-8"
-                   dangerouslySetInnerHTML={{ __html: p.full_description }} />
+              <ExpandableDescription html={p.full_description} />
             )}
 
             {hasScent && (
@@ -265,11 +277,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Primary CTA — add to cart; final inquiry happens at checkout */}
+            {/* Primary CTA — add to cart */}
             <div className="mb-3">
               <AddToCartButton product={p} />
             </div>
-            {/* Secondary — contact us */}
+            {/* Secondary CTA — direct WhatsApp inquiry with this specific product */}
+            {waHref && (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2.5 w-full bg-[#1a1a1a] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-black transition-colors mb-3"
+              >
+                <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
+                Inquire via WhatsApp
+              </a>
+            )}
             <p className="text-xs text-gray-500 mb-6 text-center">
               Have questions?{' '}
               <Link href={`/contact?product=${encodeURIComponent(p.name)}`} className="text-gold hover:underline">
