@@ -153,20 +153,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             : 'min-h-screen flex flex-col bg-white text-[#1a1a1a]'
         }
       >
-        {comingSoon ? (
-          // ── TEMPORARY: dark Coming Soon shell (minimal header, no store chrome) ──
-          <>
-            <ComingSoonHeader />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
-          </>
-        ) : (
-          <>
-            <Preloader />
-            <AuthProvider>
-              <CartProvider>
-                <SearchProvider>
+        {/* Context providers stay mounted in both modes — they render no product
+            UI on their own, and gated pages (e.g. /cart) still need them to
+            prerender at build time (the proxy only redirects at runtime). */}
+        <AuthProvider>
+          <CartProvider>
+            <SearchProvider>
+              {comingSoon ? (
+                // ── TEMPORARY: dark Coming Soon shell (minimal header, no store chrome) ──
+                <>
+                  <ComingSoonHeader />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
+                </>
+              ) : (
+                <>
+                  <Preloader />
                   <div className="hidden md:block">
                     <Navbar categories={categories} />
                   </div>
@@ -174,11 +177,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <main className="flex-1">{children}</main>
                   <Footer />
                   <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
-                </SearchProvider>
-              </CartProvider>
-            </AuthProvider>
-          </>
-        )}
+                </>
+              )}
+            </SearchProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   )
