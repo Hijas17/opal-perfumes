@@ -395,6 +395,44 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-cs-display), var(--font-playfair), 'Playfair Display', serif;
 }
 
+/* ── Ambient golden "light-leak" background — black + gold, slow video-like drift.
+   Two fixed, blurred gold fields behind all content (z-index:-1 sits above the
+   body's own dark background but below the page content). ── */
+.coming-soon::before,
+.coming-soon::after {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.coming-soon::before {
+  background:
+    radial-gradient(38% 42% at 30% 35%, rgba(216, 180, 92, 0.30), transparent 60%),
+    radial-gradient(30% 36% at 72% 66%, rgba(166, 123, 48, 0.24), transparent 62%);
+  filter: blur(44px);
+  animation: csLeakA 10s ease-in-out infinite alternate;
+}
+.coming-soon::after {
+  background:
+    radial-gradient(34% 40% at 76% 24%, rgba(240, 210, 136, 0.18), transparent 60%),
+    radial-gradient(42% 48% at 24% 82%, rgba(200, 160, 77, 0.20), transparent 62%);
+  filter: blur(54px);
+  mix-blend-mode: screen;
+  animation: csLeakB 13s ease-in-out infinite alternate;
+}
+@keyframes csLeakA {
+  0%   { transform: translate3d(-4%, -2%, 0) scale(1);    opacity: 0.9; }
+  50%  { transform: translate3d(3%, 4%, 0)   scale(1.15); opacity: 1;   }
+  100% { transform: translate3d(-2%, 2%, 0)  scale(1.05); opacity: 0.8; }
+}
+@keyframes csLeakB {
+  0%   { transform: translate3d(3%, 2%, 0)   scale(1.1);  opacity: 0.65; }
+  50%  { transform: translate3d(-3%, -3%, 0) scale(1);    opacity: 0.9;  }
+  100% { transform: translate3d(2%, -1%, 0)  scale(1.15); opacity: 0.55; }
+}
+
 /* Eyebrow: fixed tick line with a travelling gold gleam */
 .cs-eyebrow {
   font-size: 0.72rem;
@@ -523,4 +561,6 @@ h1, h2, h3, h4, h5, h6 {
   .coming-soon .cs-eyebrow .cs-tick::after,
   .coming-soon .cs-rise { animation: none !important; }
   .coming-soon .cs-rise { opacity: 1; transform: none; }
+  .coming-soon::before,
+  .coming-soon::after { animation: none !important; }
 }

@@ -8,7 +8,7 @@ import Link from 'next/link'
 
 export default function ComingSoonHeader() {
   return (
-    <header className="sticky top-0 z-20 border-b border-[#221f19] bg-[rgba(14,13,11,0.72)] backdrop-blur-md">
+    <header className="sticky top-0 z-20 bg-transparent backdrop-blur-sm">
       <div className="mx-auto max-w-[1120px] px-6 h-[74px] flex items-center justify-between">
         <Link href="/" aria-label="Opal Perfume — home" className="flex items-center">
           {/* Plain <img> — gold-on-transparent logo, same rationale as Navbar */}

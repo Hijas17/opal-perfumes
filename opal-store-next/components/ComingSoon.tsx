@@ -59,7 +59,7 @@ export default function ComingSoon({ settings: s }: ComingSoonProps) {
       </section>
 
       {/* ── Contact ──────────────────────────────────────────────────────── */}
-      <section id="contact" className="border-t border-[#221f19] py-24 px-6">
+      <section id="contact" className="py-24 px-6">
         <div className="mx-auto max-w-[1120px]">
           <div className="mb-14 flex flex-col items-center gap-4 text-center">
             <span className="cs-eyebrow"><span className="cs-tick" />Get in Touch</span>

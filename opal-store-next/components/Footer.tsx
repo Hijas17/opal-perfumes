@@ -46,7 +46,7 @@ export default async function Footer() {
   const s: SiteSettings = settings || {}
 
   return (
-    <footer className={comingSoon ? 'bg-[#0b0a08] text-gray-300' : 'bg-[#1a1a1a] text-gray-300'}>
+    <footer className={comingSoon ? 'bg-transparent text-gray-300' : 'bg-[#1a1a1a] text-gray-300'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className={`grid grid-cols-1 gap-10 ${comingSoon ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
           {/* Brand */}
@@ -156,7 +156,7 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-600">
+        <div className={`mt-10 pt-6 text-center text-xs text-gray-600 ${comingSoon ? '' : 'border-t border-gray-800'}`}>
           &copy; {new Date().getFullYear()} {s.brand_name || 'Opal Perfumes'}. All Rights Reserved.
         </div>
       </div>
