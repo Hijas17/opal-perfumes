@@ -19,6 +19,12 @@ export const useWhatsAppInquiry = process.env.NEXT_PUBLIC_USE_WHATSAPP_INQUIRY =
 /** Default false — set NEXT_PUBLIC_DISABLE_AUTH=true to hide login/signup/account UI and gate routes. */
 export const authDisabled = process.env.NEXT_PUBLIC_DISABLE_AUTH === 'true'
 
+/**
+ * Default false — set NEXT_PUBLIC_COMING_SOON=true to show the temporary dark "Coming Soon"
+ * shell and gate the whole storefront (see proxy.ts). Flip off + rebuild to restore the store.
+ */
+export const comingSoon = process.env.NEXT_PUBLIC_COMING_SOON === 'true'
+
 /** Fallback number when site_settings.whatsapp_number is unset. Strip non-digits at consume time. */
 export const whatsappFallback = process.env.NEXT_PUBLIC_WHATSAPP_FALLBACK ?? ''
 

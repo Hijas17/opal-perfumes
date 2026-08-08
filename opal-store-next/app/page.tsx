@@ -4,6 +4,8 @@ import { getSettings, getProducts } from '@/lib/api'
 import ProductCard from '@/components/ProductCard'
 import HeroExperience from '@/components/HeroExperience'
 import MobileHome from '@/components/mobile/MobileHome'
+import ComingSoon from '@/components/ComingSoon'
+import { comingSoon } from '@/lib/config'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -33,6 +35,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
+  // TEMPORARY — Coming Soon shell. Guarded before any product fetch so featured
+  // products aren't requested while the store is gated.
+  if (comingSoon) {
+    const s = await getSettings()
+    return <ComingSoon settings={s} />
+  }
+
   // Both fetches happen in parallel on the server
   const [s, allFeatured] = await Promise.all([
     getSettings(),

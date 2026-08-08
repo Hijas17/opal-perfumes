@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Inter } from 'next/font/google'
+import { Playfair_Display, Inter, Cormorant_Garamond, Jost } from 'next/font/google'
 import './globals.css'
 
 import Navbar from '@/components/Navbar'
@@ -10,7 +10,9 @@ import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
 import MobileShell from '@/components/mobile/MobileShell'
 import WhatsAppFloat from '@/components/mobile/WhatsAppFloat'
+import ComingSoonHeader from '@/components/ComingSoonHeader'
 import { getCategories, getSettings } from '@/lib/api'
+import { comingSoon } from '@/lib/config'
 
 // ─── Fonts (zero-CLS via next/font) ───────────────────────────────────────
 const playfair = Playfair_Display({
@@ -24,6 +26,22 @@ const playfair = Playfair_Display({
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+  weight: ['300', '400', '500', '600'],
+})
+
+// ─── Coming Soon shell fonts (used only inside .coming-soon) ───────────────
+const csDisplay = Cormorant_Garamond({
+  subsets: ['latin'],
+  variable: '--font-cs-display',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+})
+
+const csBody = Jost({
+  subsets: ['latin'],
+  variable: '--font-cs-body',
   display: 'swap',
   weight: ['300', '400', '500', '600'],
 })
@@ -110,10 +128,16 @@ const siteJsonLd = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [categories, settings] = await Promise.all([getCategories(), getSettings()])
+  // Categories only feed the Navbar/MobileShell, which are hidden in Coming Soon mode.
+  const [categories, settings] = await Promise.all([
+    comingSoon ? Promise.resolve([]) : getCategories(),
+    getSettings(),
+  ])
+
+  const fontVars = `${playfair.variable} ${inter.variable} ${csDisplay.variable} ${csBody.variable}`
 
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={fontVars}>
       <head>
         <script
           type="application/ld+json"
@@ -122,21 +146,39 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-white text-[#1a1a1a]">
-        <Preloader />
-        <AuthProvider>
-          <CartProvider>
-            <SearchProvider>
-              <div className="hidden md:block">
-                <Navbar categories={categories} />
-              </div>
-              <MobileShell categories={categories} settings={settings} />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
-            </SearchProvider>
-          </CartProvider>
-        </AuthProvider>
+      <body
+        className={
+          comingSoon
+            ? 'coming-soon min-h-screen flex flex-col'
+            : 'min-h-screen flex flex-col bg-white text-[#1a1a1a]'
+        }
+      >
+        {comingSoon ? (
+          // ── TEMPORARY: dark Coming Soon shell (minimal header, no store chrome) ──
+          <>
+            <ComingSoonHeader />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
+          </>
+        ) : (
+          <>
+            <Preloader />
+            <AuthProvider>
+              <CartProvider>
+                <SearchProvider>
+                  <div className="hidden md:block">
+                    <Navbar categories={categories} />
+                  </div>
+                  <MobileShell categories={categories} settings={settings} />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
+                </SearchProvider>
+              </CartProvider>
+            </AuthProvider>
+          </>
+        )}
       </body>
     </html>
   )

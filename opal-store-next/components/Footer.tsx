@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { getSettings, getCategories } from '@/lib/api'
+import { comingSoon } from '@/lib/config'
 import type { SiteSettings } from '@/lib/types'
 
 function FacebookIcon() {
@@ -37,13 +38,17 @@ function WhatsAppIcon() {
 }
 
 export default async function Footer() {
-  const [settings, categories] = await Promise.all([getSettings(), getCategories()])
+  // In Coming Soon mode the Quick Links column is dropped, so categories aren't needed.
+  const [settings, categories] = await Promise.all([
+    getSettings(),
+    comingSoon ? Promise.resolve([]) : getCategories(),
+  ])
   const s: SiteSettings = settings || {}
 
   return (
-    <footer className="bg-[#1a1a1a] text-gray-300">
+    <footer className={comingSoon ? 'bg-[#0b0a08] text-gray-300' : 'bg-[#1a1a1a] text-gray-300'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className={`grid grid-cols-1 gap-10 ${comingSoon ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
           {/* Brand */}
           <div>
             <Link href="/" aria-label={`${s.brand_name || 'Opal Perfumes'} — home`} className="inline-flex items-center">
@@ -90,7 +95,8 @@ export default async function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links — hidden in Coming Soon mode (no product/store links) */}
+          {!comingSoon && (
           <div>
             <h4 className="font-display text-white text-base font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2.5 text-sm">
@@ -108,6 +114,7 @@ export default async function Footer() {
               <li><Link href="/contact" className="hover:text-gold transition-colors duration-300">Contact Us</Link></li>
             </ul>
           </div>
+          )}
 
           {/* Contact */}
           <div>

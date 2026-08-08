@@ -22,9 +22,9 @@
    ─────────────────────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
-  /* Overscroll past the footer reveals html's bg, not body's — set it to the
-     footer color so the bounce area matches instead of flashing white. */
-  background-color: #1a1a1a;
+  /* Disable the rubber-band bounce past the page edges — no white strip
+     under the footer, no pull-to-refresh-style overscroll glow. */
+  overscroll-behavior: none;
 }
 
 body {
@@ -362,4 +362,165 @@ h1, h2, h3, h4, h5, h6 {
   .wa-float,
   .wa-float__halo,
   .wa-float__glyph { animation: none !important; transition: none !important; }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   TEMPORARY — dark "Coming Soon" shell (gated by NEXT_PUBLIC_COMING_SOON).
+   All rules are scoped under .coming-soon so nothing leaks into the storefront.
+   Remove this block when the shell is retired.
+   ─────────────────────────────────────────────────────────────────────────── */
+.coming-soon {
+  --cs-bg:      #0e0d0b;
+  --cs-panel:   #17150f;
+  --cs-panel-2: #1e1b13;
+  --cs-line:    #2a2620;
+  --cs-line-soft: #221f19;
+  --cs-gold:    #c8a04d;
+  --cs-gold-hi: #f0d288;
+  --cs-gold-deep: #a67b30;
+  --cs-gold-soft: rgba(200, 160, 77, 0.14);
+  --cs-ink:     #efe9dd;
+  --cs-muted:   #a49a86;
+  --cs-muted-2: #726a5a;
+
+  background: var(--cs-bg);
+  color: var(--cs-ink);
+  /* Cormorant Garamond for display, Jost for body — loaded in layout.tsx */
+  font-family: var(--font-cs-body), var(--font-inter), 'Inter', sans-serif;
+}
+.coming-soon h1,
+.coming-soon h2,
+.coming-soon h3,
+.coming-soon h4 {
+  font-family: var(--font-cs-display), var(--font-playfair), 'Playfair Display', serif;
+}
+
+/* Eyebrow: fixed tick line with a travelling gold gleam */
+.cs-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--cs-gold);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.cs-eyebrow .cs-tick {
+  position: relative;
+  width: 2.4rem;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(200, 160, 77, 0.35);
+}
+.cs-eyebrow .cs-tick::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 60%;
+  background: linear-gradient(90deg, transparent, var(--cs-gold-hi), transparent);
+  animation: csTickGleam 3.2s ease-in-out infinite;
+}
+@keyframes csTickGleam {
+  0%        { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(280%); }
+}
+
+/* Hero droplet — slow breathing (mirrors the preloader's feel) */
+.cs-droplet { animation: opalLogoBreathe 6s ease-in-out infinite; }
+
+/* Gold headline word — slow "molten" gradient drift */
+.cs-goldword {
+  color: transparent;
+  background: linear-gradient(100deg,
+    var(--cs-gold-deep), var(--cs-gold-hi), var(--cs-gold), var(--cs-gold-hi), var(--cs-gold-deep));
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-style: italic;
+  animation: csGoldFlow 10s ease-in-out infinite;
+}
+@keyframes csGoldFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Soft radial glow behind the hero — near-subliminal pulse */
+.cs-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(620px 400px at 50% 34%, rgba(200, 160, 77, 0.16), transparent 70%);
+  animation: csGlowPulse 8s ease-in-out infinite;
+}
+@keyframes csGlowPulse {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+
+/* Fixed shimmer divider */
+.cs-shimmer {
+  width: 120px;
+  height: 1px;
+  margin: 2.4rem auto 0;
+  position: relative;
+  background: linear-gradient(90deg, transparent, var(--cs-line), transparent);
+}
+.cs-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, var(--cs-gold), transparent);
+  animation: csSlide 3.4s ease-in-out infinite;
+}
+@keyframes csSlide {
+  0%        { transform: translateX(-20px); opacity: 0; }
+  30%, 70%  { opacity: 1; }
+  100%      { transform: translateX(120px); opacity: 0; }
+}
+
+/* One-time fade-up on load */
+.cs-rise {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: csRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.cs-rise.cs-d1 { animation-delay: 0.08s; }
+.cs-rise.cs-d2 { animation-delay: 0.16s; }
+.cs-rise.cs-d3 { animation-delay: 0.24s; }
+.cs-rise.cs-d4 { animation-delay: 0.32s; }
+@keyframes csRise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Get-in-touch arrow nudge */
+.cs-arrow { transition: transform 0.3s; }
+.cs-link:hover .cs-arrow { transform: translateX(5px); }
+
+/* Subtle dotted grain, masked to the hero centre */
+.cs-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(200, 160, 77, 0.05) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent);
+  mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coming-soon .cs-droplet,
+  .coming-soon .cs-goldword,
+  .coming-soon .cs-glow,
+  .coming-soon .cs-shimmer::after,
+  .coming-soon .cs-eyebrow .cs-tick::after,
+  .coming-soon .cs-rise { animation: none !important; }
+  .coming-soon .cs-rise { opacity: 1; transform: none; }
 }

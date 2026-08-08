@@ -13,7 +13,21 @@ interface FormState {
   honeypot: string
 }
 
-export default function ContactForm() {
+interface ContactFormProps {
+  /** 'dark' restyles the form for the dark Coming Soon shell. Defaults to 'light'. */
+  variant?: 'light' | 'dark'
+}
+
+export default function ContactForm({ variant = 'light' }: ContactFormProps) {
+  const dark = variant === 'dark'
+
+  // Class fragments that differ between the light storefront and the dark shell.
+  const headingCls = dark ? 'text-[#efe9dd]' : 'text-[#1a1a1a]'
+  const labelCls = dark ? 'text-[#a49a86]' : 'text-gray-700'
+  const inputCls = dark
+    ? 'w-full border border-[#2a2620] bg-[#1e1b13] rounded px-3.5 py-2.5 text-sm text-[#efe9dd] placeholder-[#726a5a] focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200'
+    : 'w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200'
+
   const searchParams = useSearchParams()
   const productSubject = searchParams.get('product')
 
@@ -77,8 +91,8 @@ export default function ContactForm() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="font-display text-2xl font-semibold text-[#1a1a1a] mb-2">Message Sent!</h3>
-        <p className="text-gray-500 mb-6">Thank you for reaching out. We&rsquo;ll get back to you as soon as possible.</p>
+        <h3 className={`font-display text-2xl font-semibold mb-2 ${headingCls}`}>Message Sent!</h3>
+        <p className={`mb-6 ${dark ? 'text-[#a49a86]' : 'text-gray-500'}`}>Thank you for reaching out. We&rsquo;ll get back to you as soon as possible.</p>
         <button type="button" onClick={() => setSuccess(false)} className="text-gold text-sm font-medium hover:underline">
           Send another message
         </button>
@@ -88,7 +102,7 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <h3 className="font-display text-xl font-semibold text-[#1a1a1a] mb-6">Send us a message</h3>
+      <h3 className={`font-display text-xl font-semibold mb-6 ${headingCls}`}>Send us a message</h3>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm mb-5">{error}</div>
@@ -102,34 +116,34 @@ export default function ContactForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Name <span className="text-red-500">*</span></label>
+          <label className={`block text-sm font-medium mb-1.5 ${labelCls}`}>Name <span className="text-red-500">*</span></label>
           <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="Your full name" required
-            className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200" />
+            className={inputCls} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
+          <label className={`block text-sm font-medium mb-1.5 ${labelCls}`}>Email <span className="text-red-500">*</span></label>
           <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="your@email.com" required
-            className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200" />
+            className={inputCls} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+          <label className={`block text-sm font-medium mb-1.5 ${labelCls}`}>Phone</label>
           <input type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+971 XX XXX XXXX"
-            className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200" />
+            className={inputCls} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Subject</label>
+          <label className={`block text-sm font-medium mb-1.5 ${labelCls}`}>Subject</label>
           <input type="text" name="subject" value={form.subject} onChange={handleChange} placeholder="How can we help?"
-            className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200" />
+            className={inputCls} />
         </div>
       </div>
 
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Message <span className="text-red-500">*</span></label>
+        <label className={`block text-sm font-medium mb-1.5 ${labelCls}`}>Message <span className="text-red-500">*</span></label>
         <textarea name="message" value={form.message} onChange={handleChange} rows={5} placeholder="Tell us about your inquiry..." required
-          className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200 resize-none" />
+          className={`${inputCls} resize-none`} />
       </div>
 
       <button type="submit" disabled={submitting}
