@@ -10,12 +10,18 @@ primary_region = 'fra'
   dockerfile = 'Dockerfile'
 
 [env]
-  ADMIN_NOTIFICATION_EMAIL = 'admin@opalperfumes.com'
+  ADMIN_NOTIFICATION_EMAIL = 'info@opalperfume.com'
   JWT_EXPIRY = '86400'
-  MAIL_FROM = 'noreply@opalperfumes.com'
+  MAIL_FROM = 'info@opalperfume.com'
+  MAIL_FROM_NAME = 'Customer Enquiry'
   MAX_FILE_SIZE = '52428800'
   MONGO_DB = 'opal_perfumes'
+  SMTP_HOST = 'smtp.hostinger.com'
+  SMTP_PORT = '465'
+  SMTP_SECURE = 'ssl'
+  SMTP_USER = 'info@opalperfume.com'
   UPLOAD_DIR = 'uploads'
+  # SMTP_PASS is a secret — set it with: fly secrets set SMTP_PASS='...' -a opal-api
 
 [[mounts]]
   source = 'opal_uploads'
