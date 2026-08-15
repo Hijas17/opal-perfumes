@@ -16,7 +16,7 @@ export default function ExpandableDescription({ html, collapsedHeight = 160 }: P
   return (
     <div className="mb-8">
       <div
-        className="rich-text text-gray-600 leading-relaxed relative overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        className="rich-text text-muted leading-relaxed relative overflow-hidden transition-[max-height] duration-500 ease-in-out"
         style={{ maxHeight: expanded ? '4000px' : `${collapsedHeight}px` }}
       >
         <div dangerouslySetInnerHTML={{ __html: html }} />

@@ -41,7 +41,7 @@ export default function AddToCartButton({ product, compact = false }: Props) {
         type="button"
         onClick={handleClick}
         disabled={busy || done}
-        className={`inline-flex items-center justify-center gap-2 w-full bg-gold text-white ${sizing} font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors disabled:opacity-80`}
+        className={`inline-flex items-center justify-center gap-2 w-full bg-gold text-white ${sizing} font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors disabled:opacity-80`}
       >
         {done ? (
           <>

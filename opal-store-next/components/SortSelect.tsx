@@ -30,12 +30,12 @@ export default function SortSelect({ defaultValue = '' }: { defaultValue?: strin
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="sort" className="text-sm text-gray-600 whitespace-nowrap">Sort by:</label>
+      <label htmlFor="sort" className="text-sm text-muted whitespace-nowrap">Sort by:</label>
       <select
         id="sort"
         defaultValue={defaultValue}
         onChange={handleChange}
-        className="text-sm border border-gray-200 rounded-[var(--radius-btn)] px-3 py-1.5 text-[#1a1a1a] outline-none focus:border-gold transition-colors"
+        className="text-sm border border-line rounded-[var(--radius-btn)] btn-3d px-3 py-1.5 bg-surface-2 text-ink outline-none focus:border-gold transition-colors"
       >
         {SORT_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>

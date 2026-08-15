@@ -33,7 +33,7 @@ export default function MobileBannerCarousel({ banners }: Props) {
   if (banners.length === 0) return null
 
   return (
-    <section className="bg-white py-4">
+    <section className="py-4">
       <div
         ref={scrollerRef}
         className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -60,7 +60,7 @@ export default function MobileBannerCarousel({ banners }: Props) {
               key={i}
               className={cn(
                 'w-2 h-2 rounded-full',
-                i === active ? 'bg-[#1a1a1a]' : 'bg-gray-300',
+                i === active ? 'bg-gold' : 'bg-muted-2',
               )}
             />
           ))}

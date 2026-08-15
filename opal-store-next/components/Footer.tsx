@@ -46,7 +46,7 @@ export default async function Footer() {
   const s: SiteSettings = settings || {}
 
   return (
-    <footer className={comingSoon ? 'bg-transparent text-gray-300' : 'bg-[#1a1a1a] text-gray-300'}>
+    <footer className={comingSoon ? 'bg-transparent text-muted-2' : 'bg-transparent text-muted-2'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className={`grid grid-cols-1 gap-10 ${comingSoon ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
           {/* Brand */}
@@ -62,35 +62,35 @@ export default async function Footer() {
               />
             </Link>
             {s.footer_tagline && (
-              <p className="mt-3 text-sm text-gray-400 leading-relaxed">{s.footer_tagline}</p>
+              <p className="mt-3 text-sm text-muted-2 leading-relaxed">{s.footer_tagline}</p>
             )}
             <div className="flex gap-4 mt-5">
               {s.facebook_url && (
                 <a href={s.facebook_url} target="_blank" rel="noopener noreferrer"
-                   className="text-gray-500 hover:text-gold transition-colors duration-300" aria-label="Facebook">
+                   className="text-muted hover:text-gold transition-colors duration-300" aria-label="Facebook">
                   <FacebookIcon />
                 </a>
               )}
               {s.instagram_url && (
                 <a href={s.instagram_url} target="_blank" rel="noopener noreferrer"
-                   className="text-gray-500 hover:text-gold transition-colors duration-300" aria-label="Instagram">
+                   className="text-muted hover:text-gold transition-colors duration-300" aria-label="Instagram">
                   <InstagramIcon />
                 </a>
               )}
               {s.youtube_url && (
                 <a href={s.youtube_url} target="_blank" rel="noopener noreferrer"
-                   className="text-gray-500 hover:text-gold transition-colors duration-300" aria-label="YouTube">
+                   className="text-muted hover:text-gold transition-colors duration-300" aria-label="YouTube">
                   <YouTubeIcon />
                 </a>
               )}
               {s.whatsapp_number && (
                 <a href={`https://wa.me/${s.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-                   className="text-gray-500 hover:text-gold transition-colors duration-300" aria-label="WhatsApp">
+                   className="text-muted hover:text-gold transition-colors duration-300" aria-label="WhatsApp">
                   <WhatsAppIcon />
                 </a>
               )}
               {!s.facebook_url && !s.instagram_url && !s.youtube_url && !s.whatsapp_number && (
-                <span className="text-xs text-gray-600 italic">No social links configured</span>
+                <span className="text-xs text-muted italic">No social links configured</span>
               )}
             </div>
           </div>
@@ -98,7 +98,7 @@ export default async function Footer() {
           {/* Quick Links — hidden in Coming Soon mode (no product/store links) */}
           {!comingSoon && (
           <div>
-            <h4 className="font-display text-white text-base font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-display text-gold text-base font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/products" className="hover:text-gold transition-colors duration-300">All Products</Link>
@@ -118,7 +118,7 @@ export default async function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-display text-white text-base font-semibold mb-4">Contact</h4>
+            <h4 className="font-display text-gold text-base font-semibold mb-4">Contact</h4>
             <ul className="space-y-3 text-sm">
               {s.contact_email && (
                 <li className="flex items-start gap-2">
@@ -150,13 +150,13 @@ export default async function Footer() {
                 </li>
               )}
               {!s.contact_email && !s.contact_phone && !s.address && (
-                <li className="text-gray-600 text-xs italic">Contact info not configured</li>
+                <li className="text-muted text-xs italic">Contact info not configured</li>
               )}
             </ul>
           </div>
         </div>
 
-        <div className={`mt-10 pt-6 text-center text-xs text-gray-600 ${comingSoon ? '' : 'border-t border-gray-800'}`}>
+        <div className={`mt-10 pt-6 text-center text-xs text-muted ${comingSoon ? '' : 'border-t border-line'}`}>
           &copy; {new Date().getFullYear()} {s.brand_name || 'Opal Perfumes'}. All Rights Reserved.
         </div>
       </div>

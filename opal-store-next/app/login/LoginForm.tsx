@@ -38,17 +38,17 @@ export default function LoginForm() {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">{error}</div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+        <label className="block text-sm font-medium text-muted mb-1.5">Email</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
-          className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent" />
+          className="w-full border border-line rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+        <label className="block text-sm font-medium text-muted mb-1.5">Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password"
-          className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent" />
+          className="w-full border border-line rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent" />
       </div>
       <button type="submit" disabled={submitting}
-        className="w-full bg-gold text-white py-3 px-8 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors disabled:opacity-60">
+        className="w-full bg-gold text-white py-3 px-8 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors disabled:opacity-60">
         {submitting ? 'Signing in…' : 'Sign In'}
       </button>
     </form>

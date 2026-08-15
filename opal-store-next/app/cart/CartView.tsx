@@ -27,13 +27,13 @@ export default function CartView({ settings }: Props) {
   // Empty cart
   if (!loading && cart.items.length === 0) {
     return (
-      <div className="pt-[70px] min-h-screen bg-cream">
+      <div className="pt-[70px] min-h-screen">
         <div className="max-w-md mx-auto px-4 py-24 text-center">
-          <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-gray-300" />
-          <h1 className="font-display text-3xl font-semibold text-[#1a1a1a] mb-3">Your cart is empty</h1>
-          <p className="text-gray-500 mb-8">Browse our collection and find your signature scent.</p>
+          <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-muted-2" />
+          <h1 className="font-display text-3xl font-semibold text-ink mb-3">Your cart is empty</h1>
+          <p className="text-muted mb-8">Browse our collection and find your signature scent.</p>
           <Link href="/products"
-            className="inline-block bg-gold text-white px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors">
+            className="inline-block bg-gold text-white px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors">
             Shop Perfumes
           </Link>
         </div>
@@ -53,9 +53,9 @@ export default function CartView({ settings }: Props) {
   }
 
   return (
-    <div className="pt-[70px] min-h-screen bg-white">
+    <div className="pt-[70px] min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-8">Your Cart</h1>
+        <h1 className="font-display text-4xl font-semibold text-ink mb-8">Your Cart</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Items */}
@@ -67,7 +67,7 @@ export default function CartView({ settings }: Props) {
               const isBusy = busyId === item.product_id
 
               return (
-                <div key={item.product_id} className="flex gap-4 bg-white border border-gray-100 rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-card)]">
+                <div key={item.product_id} className="flex gap-4 bg-surface border border-line rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-card)]">
                   <Link href={link} className="flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 bg-cream rounded-[var(--radius-card)] overflow-hidden relative">
                     {img ? (
                       <Image src={img} alt={item.name} fill sizes="112px" className="object-cover" />
@@ -75,7 +75,7 @@ export default function CartView({ settings }: Props) {
                   </Link>
 
                   <div className="flex-1 min-w-0 flex flex-col">
-                    <Link href={link} className="font-display font-medium text-base text-[#1a1a1a] hover:text-gold transition-colors line-clamp-2">
+                    <Link href={link} className="font-display font-medium text-base text-ink hover:text-gold transition-colors line-clamp-2">
                       {item.name}
                     </Link>
                     {showPrices && (
@@ -83,21 +83,21 @@ export default function CartView({ settings }: Props) {
                     )}
 
                     <div className="mt-auto flex items-center justify-between gap-3">
-                      <div className="flex items-center border border-gray-200 rounded-full">
+                      <div className="flex items-center border border-line rounded-full">
                         <button type="button" onClick={() => changeQty(item.product_id, item.quantity - 1)}
                           disabled={isBusy || item.quantity <= 1}
-                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gold disabled:opacity-30">
+                          className="w-8 h-8 flex items-center justify-center text-muted hover:text-gold disabled:opacity-30">
                           <Minus className="w-3.5 h-3.5" />
                         </button>
                         <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
                         <button type="button" onClick={() => changeQty(item.product_id, item.quantity + 1)}
                           disabled={isBusy}
-                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gold disabled:opacity-30">
+                          className="w-8 h-8 flex items-center justify-center text-muted hover:text-gold disabled:opacity-30">
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
                       <button type="button" onClick={() => removeItem(item.product_id)} disabled={isBusy}
-                        className="text-gray-400 hover:text-red-500 transition-colors" aria-label="Remove">
+                        className="text-muted-2 hover:text-red-500 transition-colors" aria-label="Remove">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -105,7 +105,7 @@ export default function CartView({ settings }: Props) {
 
                   {showPrices && (
                     <div className="hidden sm:flex flex-col items-end justify-between">
-                      <p className="font-medium text-[#1a1a1a]">{formatPrice(lineTotal, item.currency)}</p>
+                      <p className="font-medium text-ink">{formatPrice(lineTotal, item.currency)}</p>
                     </div>
                   )}
                 </div>
@@ -116,32 +116,32 @@ export default function CartView({ settings }: Props) {
           {/* Summary */}
           <div className="lg:col-span-1">
             <div className="bg-cream rounded-[var(--radius-card)] p-6 sticky top-24">
-              <h2 className="font-display text-xl font-semibold text-[#1a1a1a] mb-4">Order Summary</h2>
+              <h2 className="font-display text-xl font-semibold text-ink mb-4">Order Summary</h2>
               <dl className="space-y-2 text-sm mb-4">
-                <div className="flex justify-between"><dt className="text-gray-600">Items</dt><dd className="font-medium">{cart.item_count}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted">Items</dt><dd className="font-medium">{cart.item_count}</dd></div>
                 {showPrices && (
                   <>
-                    <div className="flex justify-between"><dt className="text-gray-600">Subtotal</dt><dd className="font-medium">{formatPrice(cart.subtotal, cart.currency)}</dd></div>
-                    <div className="flex justify-between"><dt className="text-gray-600">Shipping</dt><dd className="font-medium text-green-700">Free</dd></div>
+                    <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd className="font-medium">{formatPrice(cart.subtotal, cart.currency)}</dd></div>
+                    <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="font-medium text-green-700">Free</dd></div>
                   </>
                 )}
               </dl>
               {showPrices && (
-                <div className="border-t border-gray-200 pt-3 mb-6 flex justify-between text-base">
+                <div className="border-t border-line pt-3 mb-6 flex justify-between text-base">
                   <span className="font-semibold">Total</span>
                   <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
                 </div>
               )}
               {waHref ? (
                 <a href={waHref} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2.5 w-full bg-[#1a1a1a] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-black transition-colors">
+                  className="flex items-center justify-center gap-2.5 w-full bg-gold text-[#1a1206] py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors">
                   <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                   Send Inquiry via WhatsApp
                 </a>
               ) : (
                 <p className="text-xs text-red-500 text-center">WhatsApp number not configured.</p>
               )}
-              <Link href="/products" className="block text-center text-sm text-gray-500 mt-4 hover:text-gold transition-colors">
+              <Link href="/products" className="block text-center text-sm text-muted mt-4 hover:text-gold transition-colors">
                 Continue shopping
               </Link>
             </div>

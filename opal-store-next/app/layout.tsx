@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Inter, Cormorant_Garamond, Jost } from 'next/font/google'
+import { Cinzel, Montserrat, Cormorant_Garamond, Jost } from 'next/font/google'
 import './globals.css'
 
 import Navbar from '@/components/Navbar'
@@ -14,18 +14,18 @@ import ComingSoonHeader from '@/components/ComingSoonHeader'
 import { getCategories, getSettings } from '@/lib/api'
 import { comingSoon } from '@/lib/config'
 
-// ─── Fonts (zero-CLS via next/font) ───────────────────────────────────────
-const playfair = Playfair_Display({
+// ─── Brand fonts (zero-CLS via next/font) ─────────────────────────────────
+// Cinzel = headings (all-caps classic serif); Montserrat = body/labels.
+const cinzel = Cinzel({
   subsets: ['latin'],
-  variable: '--font-playfair',
+  variable: '--font-cinzel',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
+  weight: ['400', '500', '600'],
 })
 
-const inter = Inter({
+const montserrat = Montserrat({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-montserrat',
   display: 'swap',
   weight: ['300', '400', '500', '600'],
 })
@@ -94,7 +94,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#ffffff',
+  themeColor: '#0e0d0b',
 }
 
 // ─── Site-wide JSON-LD (Organization + WebSite) ───────────────────────────
@@ -134,7 +134,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getSettings(),
   ])
 
-  const fontVars = `${playfair.variable} ${inter.variable} ${csDisplay.variable} ${csBody.variable}`
+  const fontVars = `${cinzel.variable} ${montserrat.variable} ${csDisplay.variable} ${csBody.variable}`
 
   return (
     <html lang="en" data-scroll-behavior="smooth" className={fontVars}>
@@ -150,7 +150,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         className={
           comingSoon
             ? 'coming-soon min-h-screen flex flex-col'
-            : 'min-h-screen flex flex-col bg-white text-[#1a1a1a]'
+            : 'opal-dark min-h-screen flex flex-col bg-bg text-ink'
         }
       >
         {/* Context providers stay mounted in both modes — they render no product

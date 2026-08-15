@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSettings, getProducts } from '@/lib/api'
 import ProductCard from '@/components/ProductCard'
-import HeroExperience from '@/components/HeroExperience'
+import HeroStatic from '@/components/HeroStatic'
 import MobileHome from '@/components/mobile/MobileHome'
 import ComingSoon from '@/components/ComingSoon'
 import { comingSoon } from '@/lib/config'
@@ -96,26 +96,25 @@ export default async function HomePage() {
 
       {/* ── Desktop Hero (md+) ──────────────────────────────────────────── */}
       <div className="hidden md:block">
-        <HeroExperience
+        <HeroStatic
           heroTagline={s.hero_tagline || 'Luxury Fragrances'}
           heroHeadline={s.hero_headline || 'Discover\nyour scent.'}
           heroSubtext={s.hero_subtext || 'Handcrafted luxury perfumes that tell your story. Each bottle a masterpiece.'}
-          brandName={s.brand_name || 'Opal Perfume'}
         />
       </div>
 
       {/* ── Featured Products (desktop only — mobile has its own carousel) ── */}
-      <section className="hidden md:block bg-white py-20 px-4">
+      <section className="hidden md:block py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Curated For You</p>
-            <h2 className="font-display text-4xl font-semibold text-[#1a1a1a]">Featured Collection</h2>
+            <h2 className="font-display text-4xl font-semibold text-gold">Featured Collection</h2>
             <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
           </div>
 
           {products.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <svg className="w-12 h-12 mx-auto mb-4 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-center py-16 text-muted-2">
+              <svg className="w-12 h-12 mx-auto mb-4 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
               <p className="font-display text-lg">No featured products yet</p>
@@ -130,7 +129,7 @@ export default async function HomePage() {
 
           <div className="text-center mt-12">
             <Link href="/products"
-              className="inline-block border-2 border-gold text-gold px-10 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-gold hover:text-white transition-all duration-300">
+              className="inline-block border-2 border-gold text-gold px-10 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-[#1a1206] transition-all duration-300">
               View All Products
             </Link>
           </div>
@@ -138,11 +137,11 @@ export default async function HomePage() {
       </section>
 
       {/* ── About Snippet (desktop only — mobile home has its own) ────────── */}
-      <section className="hidden md:block bg-[#faf1da] py-20 px-4">
+      <section className="hidden md:block py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-4">Our Heritage</p>
-          <h2 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-6">{s.brand_name || 'Opal Perfume'}</h2>
-          <p className="text-gray-600 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
+          <h2 className="font-display text-4xl font-semibold text-gold mb-6">{s.brand_name || 'Opal Perfume'}</h2>
+          <p className="text-muted text-lg leading-relaxed max-w-2xl mx-auto mb-8">
             {s.about_snippet || 'Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance and identity. Our perfumes are more than scents — they are stories waiting to be told.'}
           </p>
           <Link href="/about" className="inline-flex items-center gap-2 text-gold font-medium text-sm tracking-wider uppercase hover:gap-3 transition-all duration-300">
@@ -155,15 +154,15 @@ export default async function HomePage() {
       </section>
 
       {/* ── CTA Strip (desktop only) ────────────────────────────────────── */}
-      <section className="hidden md:block bg-gold py-16 px-4">
+      <section className="hidden md:block py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold text-white mb-4">
+          <h2 className="font-display text-3xl sm:text-4xl font-semibold text-gold mb-4">
             {s.cta_message || 'Find Your Perfect Fragrance'}
           </h2>
-          <p className="text-white/80 mb-8 text-base leading-relaxed">
+          <p className="text-muted mb-8 text-base leading-relaxed">
             Our fragrance experts are ready to help you discover your signature scent.
           </p>
-          <Link href="/contact" className="inline-block bg-white text-gold px-10 py-4 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-gray-100 transition-colors duration-300">
+          <Link href="/contact" className="inline-block bg-gold text-[#1a1206] px-10 py-4 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors duration-300">
             Contact Us
           </Link>
         </div>

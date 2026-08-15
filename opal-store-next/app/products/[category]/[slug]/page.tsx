@@ -20,7 +20,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 const LABEL_STYLES: Record<string, string> = {
   'new':              'bg-gold text-white',
-  'bestseller':       'bg-[#1a1a1a] text-white',
+  'bestseller':       'bg-gold text-[#1a1206]',
   'limited edition':  'bg-purple-700 text-white',
   'featured':         'bg-blue-600 text-white',
 }
@@ -188,7 +188,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="pt-[70px] min-h-screen bg-white">
+    <div className="pt-[70px] min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c') }}
@@ -196,7 +196,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-gray-500 mb-8">
+        <nav className="flex items-center gap-2 text-xs text-muted mb-8">
           <Link href="/"         className="hover:text-gold transition-colors">Home</Link>
           <span>/</span>
           <Link href="/products" className="hover:text-gold transition-colors">Products</Link>
@@ -207,7 +207,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </>
           )}
           <span>/</span>
-          <span className="text-[#1a1a1a] truncate max-w-[180px]">{p.name}</span>
+          <span className="text-ink truncate max-w-[180px]">{p.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
@@ -229,24 +229,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </span>
             )}
 
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold text-[#1a1a1a] leading-tight mb-4">
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold text-ink leading-tight mb-4">
               {p.name}
             </h1>
 
             {priceStr && <p className="text-2xl text-gold font-semibold mb-4">{priceStr}</p>}
 
             {p.short_description && (
-              <p className="text-gray-600 text-base leading-relaxed mb-6">{p.short_description}</p>
+              <p className="text-muted text-base leading-relaxed mb-6">{p.short_description}</p>
             )}
 
             {p.size_volume && (
               <div className="flex items-center gap-2 mb-6">
-                <span className="text-xs text-gray-400 uppercase tracking-widest">Volume:</span>
-                <span className="text-sm font-medium text-[#1a1a1a]">{p.size_volume}</span>
+                <span className="text-xs text-muted-2 uppercase tracking-widest">Volume:</span>
+                <span className="text-sm font-medium text-ink">{p.size_volume}</span>
               </div>
             )}
 
-            <div className="border-t border-gray-100 my-6" />
+            <div className="border-t border-line my-6" />
 
             {p.full_description && (
               <ExpandableDescription html={p.full_description} />
@@ -254,7 +254,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {hasScent && (
               <div className="bg-cream rounded-[var(--radius-card)] p-6 mb-8">
-                <h3 className="font-display text-base font-semibold text-[#1a1a1a] text-center mb-4">Scent Notes</h3>
+                <h3 className="font-display text-base font-semibold text-ink text-center mb-4">Scent Notes</h3>
                 <div className="grid grid-cols-3 gap-4 divide-x divide-gray-200">
                   <ScentNote label="Top"    notes={scentNotes.top} />
                   <ScentNote label="Middle" notes={scentNotes.middle} />
@@ -265,11 +265,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {purchaseLinks.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Available On</p>
+                <p className="text-xs text-muted-2 uppercase tracking-widest mb-3">Available On</p>
                 <div className="flex flex-wrap gap-3">
                   {purchaseLinks.map((link, i) => (
                     <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                       className="inline-block border-2 border-gold text-gold px-6 py-2.5 text-sm font-medium rounded-[var(--radius-btn)] hover:bg-gold hover:text-white transition-all duration-300">
+                       className="inline-block border-2 border-gold text-gold px-6 py-2.5 text-sm font-medium rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-white transition-all duration-300">
                       Buy on {link.platform || `Platform ${i + 1}`}
                     </a>
                   ))}
@@ -287,13 +287,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 w-full bg-[#1a1a1a] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-black transition-colors mb-3"
+                className="flex items-center justify-center gap-2.5 w-full bg-gold text-[#1a1206] py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors mb-3"
               >
                 <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                 Inquire via WhatsApp
               </a>
             )}
-            <p className="text-xs text-gray-500 mb-6 text-center">
+            <p className="text-xs text-muted mb-6 text-center">
               Have questions?{' '}
               <Link href={`/contact?product=${encodeURIComponent(p.name)}`} className="text-gold hover:underline">
                 Contact us
@@ -312,8 +312,8 @@ function ScentNote({ label, notes }: { label: string; notes?: string | null }) {
   if (!notes) return null
   return (
     <div className="text-center">
-      <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-sm text-[#1a1a1a] font-medium">{notes}</p>
+      <p className="text-xs text-muted-2 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-sm text-ink font-medium">{notes}</p>
     </div>
   )
 }

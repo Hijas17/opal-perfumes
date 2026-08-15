@@ -54,7 +54,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
 
       <aside
         className={cn(
-          'fixed top-0 right-0 bottom-0 z-50 w-[92%] max-w-[440px] bg-white shadow-xl',
+          'fixed top-0 right-0 bottom-0 z-50 w-[92%] max-w-[440px] bg-surface shadow-xl',
           'transition-transform duration-300 ease-out flex flex-col',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
@@ -62,25 +62,25 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
         aria-modal="true"
         aria-label="Shopping cart"
       >
-        <header className="px-5 pt-5 pb-3 border-b border-gray-100">
+        <header className="px-5 pt-5 pb-3 border-b border-line">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl font-bold text-[#1a1a1a]">Shopping Cart</h2>
+            <h2 className="font-display text-2xl font-bold text-ink">Shopping Cart</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close cart"
-              className="p-1 text-[#1a1a1a] hover:text-gold transition-colors"
+              className="p-1 text-ink hover:text-gold transition-colors"
             >
               <X className="w-6 h-6" strokeWidth={2} />
             </button>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted mt-1">
             {cart.item_count} {cart.item_count === 1 ? 'item' : 'items'}
           </p>
         </header>
 
         {showPrices && (
-          <div className="px-5 py-4 text-sm text-gray-600 border-b border-gray-100">
+          <div className="px-5 py-4 text-sm text-muted border-b border-line">
             Free shipping for all orders over {currency}. {FREE_SHIPPING_THRESHOLD.toFixed(2)}!
           </div>
         )}
@@ -88,7 +88,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
         <div className="flex-1 overflow-y-auto">
           {isEmpty ? (
             <div className="flex items-center justify-center px-6 py-16">
-              <p className="text-gray-400 text-base">Your cart is empty</p>
+              <p className="text-muted-2 text-base">Your cart is empty</p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-100">
@@ -109,7 +109,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
                       <Link
                         href={link}
                         onClick={onClose}
-                        className="font-display font-medium text-sm text-[#1a1a1a] line-clamp-2"
+                        className="font-display font-medium text-sm text-ink line-clamp-2"
                       >
                         {item.name}
                       </Link>
@@ -119,12 +119,12 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
                         </p>
                       )}
                       <div className="mt-auto flex items-center justify-between gap-3 pt-2">
-                        <div className="flex items-center border border-gray-200 rounded-full">
+                        <div className="flex items-center border border-line rounded-full">
                           <button
                             type="button"
                             onClick={() => changeQty(item.product_id, item.quantity - 1)}
                             disabled={isBusy || item.quantity <= 1}
-                            className="w-7 h-7 flex items-center justify-center text-gray-500 disabled:opacity-30"
+                            className="w-7 h-7 flex items-center justify-center text-muted disabled:opacity-30"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="w-3.5 h-3.5" />
@@ -134,7 +134,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
                             type="button"
                             onClick={() => changeQty(item.product_id, item.quantity + 1)}
                             disabled={isBusy}
-                            className="w-7 h-7 flex items-center justify-center text-gray-500 disabled:opacity-30"
+                            className="w-7 h-7 flex items-center justify-center text-muted disabled:opacity-30"
                             aria-label="Increase quantity"
                           >
                             <Plus className="w-3.5 h-3.5" />
@@ -145,7 +145,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
                           onClick={() => removeItem(item.product_id)}
                           disabled={isBusy}
                           aria-label="Remove item"
-                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-muted-2 hover:text-red-500 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -158,12 +158,12 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
           )}
         </div>
 
-        <footer className="border-t border-gray-100 p-5 space-y-3">
+        <footer className="border-t border-line p-5 space-y-3">
           {isEmpty ? (
             <Link
               href="/products"
               onClick={onClose}
-              className="block w-full border border-gray-200 bg-gray-50 text-[#1a1a1a] py-4 text-center text-sm font-semibold tracking-widest uppercase"
+              className="block w-full border border-line bg-surface-2 text-ink py-4 text-center text-sm font-semibold tracking-widest uppercase"
             >
               Continue Shopping
             </Link>
@@ -171,7 +171,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
             <>
               {showPrices && (
                 <div className="flex justify-between text-base">
-                  <span className="font-semibold text-[#1a1a1a]">Subtotal</span>
+                  <span className="font-semibold text-ink">Subtotal</span>
                   <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
                 </div>
               )}
@@ -181,7 +181,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={onClose}
-                  className="flex items-center justify-center gap-2.5 w-full bg-[#1a1a1a] text-white py-4 text-center text-sm font-semibold tracking-widest uppercase rounded-[var(--radius-btn)] hover:bg-black transition-colors"
+                  className="flex items-center justify-center gap-2.5 w-full bg-gold text-[#1a1206] py-4 text-center text-sm font-semibold tracking-widest uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors"
                 >
                   <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                   Send Inquiry via WhatsApp
@@ -192,7 +192,7 @@ export default function MobileCartDrawer({ open, onClose, whatsappNumber }: Prop
               <button
                 type="button"
                 onClick={onClose}
-                className="block w-full border border-gray-200 py-3.5 text-center text-sm text-gray-600"
+                className="block w-full border border-line py-3.5 text-center text-sm text-muted"
               >
                 Continue Shopping
               </button>

@@ -8,7 +8,7 @@ import type { Product } from '@/lib/types'
 
 const LABEL_STYLES: Record<string, string> = {
   'new':              'bg-gold text-white',
-  'bestseller':       'bg-[#1a1a1a] text-white',
+  'bestseller':       'bg-gold text-[#1a1206]',
   'limited edition':  'bg-purple-700 text-white',
   'featured':         'bg-blue-600 text-white',
 }
@@ -44,9 +44,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* On mobile the tile is flat (no card bg/shadow/radius) — matches the reference
           storefront layout where products sit directly on the page background.
           From md up we get the card treatment: white bg, rounded, hover shadow. */}
-      <div className="product-card relative overflow-hidden transition-shadow duration-300 cursor-pointer md:bg-white md:rounded-[var(--radius-card)] md:shadow-[var(--shadow-card)] md:hover:shadow-[var(--shadow-card-hover)]">
+      <div className="product-card relative overflow-hidden transition-shadow duration-300 cursor-pointer md:bg-surface md:rounded-[var(--radius-card)] md:shadow-[var(--shadow-card)] md:hover:shadow-[var(--shadow-card-hover)]">
         {/* Image Container */}
-        <div className="aspect-square relative overflow-hidden bg-[#f5f5f5] md:bg-cream">
+        <div className="aspect-square relative overflow-hidden bg-cream md:bg-cream">
           {primarySrc ? (
             <>
               <Image
@@ -69,7 +69,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-cream">
-              <svg className="w-16 h-16 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-16 h-16 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -96,16 +96,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         {/* Body */}
         <div className="py-3 text-center md:p-4 md:text-left">
           {product.category?.name && (
-            <p className="text-[10px] md:text-xs tracking-widest uppercase text-gray-500 md:hidden">
+            <p className="text-[10px] md:text-xs tracking-widest uppercase text-muted md:hidden">
               {product.category.name}
             </p>
           )}
-          <h3 className="mt-1 md:mt-0 font-display text-[#1a1a1a] font-medium text-sm md:text-base leading-snug line-clamp-2">
+          <h3 className="mt-1 md:mt-0 font-display text-ink font-medium text-sm md:text-base leading-snug line-clamp-2">
             {product.name}
           </h3>
           {price && <p className="mt-1.5 text-sm text-gold font-semibold">{price}</p>}
           {product.short_description && (
-            <p className="hidden md:block mt-1 text-xs text-gray-500 line-clamp-2 leading-relaxed">
+            <p className="hidden md:block mt-1 text-xs text-muted line-clamp-2 leading-relaxed">
               {product.short_description}
             </p>
           )}

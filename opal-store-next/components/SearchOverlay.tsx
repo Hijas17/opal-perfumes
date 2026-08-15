@@ -73,17 +73,17 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
           <div className="w-full max-w-2xl">
             {/* Input */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-2" aria-hidden />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search perfumes…"
-                className="w-full pl-12 pr-12 py-4 text-lg bg-white rounded-xl shadow-2xl outline-none text-[#1a1a1a] placeholder-gray-400"
+                className="w-full pl-12 pr-12 py-4 text-lg bg-surface rounded-xl shadow-2xl outline-none text-ink placeholder-[#8a7757]"
               />
               <Dialog.Close
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-2 hover:text-muted transition-colors"
                 aria-label="Close search"
               >
                 <X className="w-5 h-5" />
@@ -92,7 +92,7 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
 
             {/* Results */}
             {(results.length > 0 || loading || (query.trim() && !loading)) && (
-              <div className="mt-2 bg-white rounded-xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
+              <div className="mt-2 bg-surface rounded-xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
                 {loading && (
                   <div className="flex items-center justify-center py-8">
                     <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -109,7 +109,7 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
                       key={product.id || product.slug}
                       type="button"
                       onClick={() => handleResultClick(product)}
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-amber-50 transition-colors duration-200 border-b border-gray-100 last:border-0"
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-2 transition-colors duration-200 border-b border-line last:border-0"
                     >
                       {imgUrl ? (
                         <Image
@@ -120,20 +120,20 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
                           className="object-cover rounded-lg flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-amber-50 rounded-lg flex-shrink-0 flex items-center justify-center">
-                          <Package className="w-6 h-6 text-gray-300" />
+                        <div className="w-12 h-12 bg-surface-2 rounded-lg flex-shrink-0 flex items-center justify-center">
+                          <Package className="w-6 h-6 text-muted-2" />
                         </div>
                       )}
                       <div className="text-left">
-                        <p className="font-display text-sm font-medium text-[#1a1a1a]">{product.name}</p>
-                        {categoryName && <p className="text-xs text-gray-500 mt-0.5">{categoryName}</p>}
+                        <p className="font-display text-sm font-medium text-ink">{product.name}</p>
+                        {categoryName && <p className="text-xs text-muted mt-0.5">{categoryName}</p>}
                       </div>
                     </button>
                   )
                 })}
 
                 {!loading && results.length === 0 && query.trim() && (
-                  <div className="py-8 text-center text-sm text-gray-500">
+                  <div className="py-8 text-center text-sm text-muted">
                     No products found for &ldquo;{query}&rdquo;
                   </div>
                 )}

@@ -45,7 +45,7 @@ export default function MobileFeaturedCarousel({ products }: Props) {
   if (products.length === 0) return null
 
   return (
-    <section className="relative bg-white">
+    <section className="relative">
       <div
         ref={scrollerRef}
         className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -72,7 +72,7 @@ export default function MobileFeaturedCarousel({ products }: Props) {
             onClick={() => scrollBy(-1)}
             aria-label="Previous"
             disabled={activePage === 0}
-            className="absolute left-2 top-[42%] -translate-y-1/2 w-9 h-9 rounded-full border border-gray-300 bg-white/90 flex items-center justify-center text-gray-500 disabled:opacity-30"
+            className="absolute left-2 top-[42%] -translate-y-1/2 w-9 h-9 rounded-full border border-line bg-surface/90 flex items-center justify-center text-muted disabled:opacity-30"
           >
             <ChevronLeft className="w-5 h-5" strokeWidth={1.5} />
           </button>
@@ -81,7 +81,7 @@ export default function MobileFeaturedCarousel({ products }: Props) {
             onClick={() => scrollBy(1)}
             aria-label="Next"
             disabled={activePage === pageCount - 1}
-            className="absolute right-2 top-[42%] -translate-y-1/2 w-9 h-9 rounded-full border border-gray-300 bg-white/90 flex items-center justify-center text-gray-500 disabled:opacity-30"
+            className="absolute right-2 top-[42%] -translate-y-1/2 w-9 h-9 rounded-full border border-line bg-surface/90 flex items-center justify-center text-muted disabled:opacity-30"
           >
             <ChevronRight className="w-5 h-5" strokeWidth={1.5} />
           </button>
@@ -96,8 +96,8 @@ export default function MobileFeaturedCarousel({ products }: Props) {
                 className={cn(
                   'w-2.5 h-2.5 rounded-full border transition-colors',
                   i === activePage
-                    ? 'bg-[#1a1a1a] border-[#1a1a1a]'
-                    : 'bg-white border-gray-400',
+                    ? 'bg-gold border-gold'
+                    : 'bg-transparent border-muted-2',
                 )}
               />
             ))}
@@ -116,7 +116,7 @@ function FeaturedCard({ product }: { product: Product }) {
 
   return (
     <Link href={detailPath} className="block">
-      <div className="relative aspect-square bg-[#f5f5f5] overflow-hidden">
+      <div className="relative aspect-square bg-cream overflow-hidden">
         {primary && (
           <Image
             src={primary}
@@ -134,11 +134,11 @@ function FeaturedCard({ product }: { product: Product }) {
       </div>
       <div className="pt-3 text-center">
         {product.category?.name && (
-          <p className="text-xs tracking-widest uppercase text-gray-500">
+          <p className="text-xs tracking-widest uppercase text-muted">
             {product.category.name}
           </p>
         )}
-        <h3 className="mt-2 font-display font-semibold text-[#1a1a1a] text-sm line-clamp-2">
+        <h3 className="mt-2 font-display font-semibold text-ink text-sm line-clamp-2">
           {product.name}
         </h3>
         {price && (

@@ -68,19 +68,19 @@ export default async function AboutPage() {
       </section>
 
       {/* Brand Story */}
-      <section className="bg-white py-20 px-4">
+      <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Who We Are</p>
-            <h2 className="font-display text-4xl font-semibold text-[#1a1a1a]">{s.brand_name || 'Opal Perfumes'}</h2>
+            <h2 className="font-display text-4xl font-semibold text-ink">{s.brand_name || 'Opal Perfumes'}</h2>
             <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
           </div>
 
           {s.brand_story ? (
-            <div className="rich-text text-gray-600 leading-relaxed text-lg"
+            <div className="rich-text text-muted leading-relaxed text-lg"
                  dangerouslySetInnerHTML={{ __html: s.brand_story }} />
           ) : (
-            <p className="text-gray-600 leading-relaxed text-lg text-center">
+            <p className="text-muted leading-relaxed text-lg text-center">
               Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance and identity. Our perfumes are more than scents — they are stories waiting to be told, memories waiting to be made.
             </p>
           )}
@@ -101,11 +101,11 @@ export default async function AboutPage() {
 
       {/* Founder Section */}
       {(founderPhotoUrl || s.founder_bio) && (
-        <section className="bg-cream py-20 px-4">
+        <section className="py-20 px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">The Visionary</p>
-              <h2 className="font-display text-4xl font-semibold text-[#1a1a1a]">Our Founder</h2>
+              <h2 className="font-display text-4xl font-semibold text-ink">Our Founder</h2>
               <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
             </div>
 
@@ -118,7 +118,7 @@ export default async function AboutPage() {
                 </div>
               )}
               {s.founder_bio && (
-                <div className="rich-text text-gray-600 leading-relaxed text-base"
+                <div className="rich-text text-muted leading-relaxed text-base"
                      dangerouslySetInnerHTML={{ __html: s.founder_bio }} />
               )}
             </div>
@@ -127,11 +127,11 @@ export default async function AboutPage() {
       )}
 
       {/* Values Strip */}
-      <section className="bg-white py-20 px-4">
+      <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">What Drives Us</p>
-            <h2 className="font-display text-4xl font-semibold text-[#1a1a1a]">Our Values</h2>
+            <h2 className="font-display text-4xl font-semibold text-ink">Our Values</h2>
             <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
           </div>
 
@@ -169,8 +169,8 @@ export default async function AboutPage() {
                 <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center text-gold mx-auto mb-4">
                   {icon}
                 </div>
-                <h3 className="font-display text-xl font-semibold text-[#1a1a1a] mb-3">{title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{text}</p>
+                <h3 className="font-display text-xl font-semibold text-ink mb-3">{title}</h3>
+                <p className="text-muted text-sm leading-relaxed">{text}</p>
               </div>
             ))}
           </div>
@@ -178,15 +178,15 @@ export default async function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-[#1a1a1a] py-16 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-display text-3xl font-semibold text-white mb-4">Experience the Collection</h2>
-          <p className="text-gray-400 mb-8 leading-relaxed">Discover fragrances crafted to tell your story.</p>
+          <h2 className="font-display text-3xl font-semibold text-gold mb-4">Experience the Collection</h2>
+          <p className="text-muted-2 mb-8 leading-relaxed">Discover fragrances crafted to tell your story.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/products" className="inline-block bg-gold text-white px-10 py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors duration-300">
+            <Link href="/products" className="inline-block bg-gold text-white px-10 py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors duration-300">
               Shop Now
             </Link>
-            <Link href="/contact" className="inline-block border border-gold text-gold px-10 py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-gold hover:text-white transition-all duration-300">
+            <Link href="/contact" className="inline-block border border-gold text-gold px-10 py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-white transition-all duration-300">
               Contact Us
             </Link>
           </div>

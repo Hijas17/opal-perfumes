@@ -37,10 +37,10 @@ export default function Navbar({ categories }: NavbarProps) {
 
   const linkBase = 'text-sm font-medium transition-all duration-300 pb-0.5'
   const activeStyle = 'text-gold border-b-2 border-gold'
-  const idleStyle = 'text-gray-700 hover:text-gold'
+  const idleStyle = 'text-muted hover:text-gold'
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm" style={{ height: '70px' }}>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-line" style={{ height: '70px' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         {/* Logo — plain <img> for instant first-paint (no next/image optimisation
             pipeline, which stalls in dev mode). The asset is tiny (~125 KB). */}
@@ -74,11 +74,11 @@ export default function Navbar({ categories }: NavbarProps) {
                   />
                 </NavigationMenu.Trigger>
 
-                <NavigationMenu.Content className="absolute top-full left-0 mt-2 w-52 bg-white shadow-lg rounded-lg border border-gray-100 py-1 z-50">
+                <NavigationMenu.Content className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-lg rounded-lg border border-line py-1 z-50">
                   <NavigationMenu.Link asChild>
                     <Link
                       href="/products"
-                      className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gold hover:bg-amber-50 transition-colors duration-200"
+                      className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2 transition-colors duration-200"
                     >
                       All Products
                     </Link>
@@ -87,7 +87,7 @@ export default function Navbar({ categories }: NavbarProps) {
                     <NavigationMenu.Link key={cat.id || cat.slug} asChild>
                       <Link
                         href={`/products/${cat.slug}`}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gold hover:bg-amber-50 transition-colors duration-200"
+                        className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2 transition-colors duration-200"
                       >
                         {cat.name}
                       </Link>
@@ -116,12 +116,12 @@ export default function Navbar({ categories }: NavbarProps) {
 
           {/* Search */}
           <button type="button" onClick={openSearch}
-            className="text-gray-700 hover:text-gold transition-colors duration-300" aria-label="Open search">
+            className="text-muted hover:text-gold transition-colors duration-300" aria-label="Open search">
             <Search className="w-5 h-5" />
           </button>
 
           {/* Cart icon with badge */}
-          <Link href="/cart" className="relative text-gray-700 hover:text-gold transition-colors duration-300" aria-label="View cart">
+          <Link href="/cart" className="relative text-muted hover:text-gold transition-colors duration-300" aria-label="View cart">
             <ShoppingBag className="w-5 h-5" />
             {cart.item_count > 0 && (
               <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
@@ -136,29 +136,29 @@ export default function Navbar({ categories }: NavbarProps) {
             {isLoggedIn ? (
               <>
                 <button type="button" onClick={() => setUserMenuOpen((o) => !o)}
-                  className="flex items-center gap-1 text-gray-700 hover:text-gold transition-colors duration-300"
+                  className="flex items-center gap-1 text-muted hover:text-gold transition-colors duration-300"
                   aria-label="Account menu" aria-expanded={userMenuOpen}>
                   <User className="w-5 h-5" />
                 </button>
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white shadow-lg rounded-lg border border-gray-100 py-1 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-xs text-gray-500">Signed in as</p>
-                        <p className="text-sm font-medium text-[#1a1a1a] truncate">{customer?.email}</p>
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-surface shadow-lg rounded-lg border border-line py-1 z-50">
+                      <div className="px-4 py-2 border-b border-line">
+                        <p className="text-xs text-muted">Signed in as</p>
+                        <p className="text-sm font-medium text-ink truncate">{customer?.email}</p>
                       </div>
                       <Link href="/account" onClick={() => setUserMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gold hover:bg-amber-50">
+                        className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2">
                         My Account
                       </Link>
                       <Link href="/account/orders" onClick={() => setUserMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gold hover:bg-amber-50">
+                        className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2">
                         Order History
                       </Link>
                       <button type="button"
                         onClick={async () => { await logout(); setUserMenuOpen(false) }}
-                        className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:text-gold hover:bg-amber-50 border-t border-gray-100">
+                        className="block w-full text-left px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2 border-t border-line">
                         Sign Out
                       </button>
                     </div>
@@ -166,7 +166,7 @@ export default function Navbar({ categories }: NavbarProps) {
                 )}
               </>
             ) : (
-              <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-gold transition-colors">
+              <Link href="/login" className="text-sm font-medium text-muted hover:text-gold transition-colors">
                 Sign In
               </Link>
             )}
@@ -176,10 +176,10 @@ export default function Navbar({ categories }: NavbarProps) {
 
         {/* Mobile: search + cart + hamburger */}
         <div className="flex md:hidden items-center gap-3">
-          <button type="button" onClick={openSearch} className="text-gray-700 hover:text-gold" aria-label="Open search">
+          <button type="button" onClick={openSearch} className="text-muted hover:text-gold" aria-label="Open search">
             <Search className="w-5 h-5" />
           </button>
-          <Link href="/cart" className="relative text-gray-700 hover:text-gold" aria-label="View cart">
+          <Link href="/cart" className="relative text-muted hover:text-gold" aria-label="View cart">
             <ShoppingBag className="w-5 h-5" />
             {cart.item_count > 0 && (
               <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
@@ -188,7 +188,7 @@ export default function Navbar({ categories }: NavbarProps) {
             )}
           </Link>
           <button type="button" onClick={() => setMobileOpen((o) => !o)}
-            className="text-gray-700 hover:text-gold" aria-label="Toggle mobile menu" aria-expanded={mobileOpen}>
+            className="text-muted hover:text-gold" aria-label="Toggle mobile menu" aria-expanded={mobileOpen}>
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -196,28 +196,28 @@ export default function Navbar({ categories }: NavbarProps) {
 
       {/* Mobile Menu Drawer */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-md">
+        <div className="md:hidden bg-surface border-t border-line shadow-md">
           <div className="px-4 py-4 flex flex-col gap-1">
             {/* Products accordion */}
             <button
               type="button"
               onClick={() => setMobileProdOpen((o) => !o)}
-              className="flex items-center justify-between w-full text-left px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold transition-colors"
+              className="flex items-center justify-between w-full text-left px-2 py-2.5 text-sm font-medium text-muted hover:text-gold transition-colors"
               aria-expanded={mobileProdOpen}
             >
               Products
               <ChevronDown className={cn('w-3.5 h-3.5 transition-transform duration-300', mobileProdOpen && 'rotate-180')} />
             </button>
             {mobileProdOpen && (
-              <div className="pl-4 flex flex-col gap-1 bg-amber-50 rounded-lg py-1">
-                <Link href="/products" className="block px-2 py-2 text-sm text-gray-700 hover:text-gold transition-colors">
+              <div className="pl-4 flex flex-col gap-1 bg-surface-2 rounded-lg py-1">
+                <Link href="/products" className="block px-2 py-2 text-sm text-muted hover:text-gold transition-colors">
                   All Products
                 </Link>
                 {categories.map((cat) => (
                   <Link
                     key={cat.id || cat.slug}
                     href={`/products/${cat.slug}`}
-                    className="block px-2 py-2 text-sm text-gray-700 hover:text-gold transition-colors"
+                    className="block px-2 py-2 text-sm text-muted hover:text-gold transition-colors"
                   >
                     {cat.name}
                   </Link>
@@ -225,33 +225,33 @@ export default function Navbar({ categories }: NavbarProps) {
               </div>
             )}
 
-            <Link href="/about" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold transition-colors">
+            <Link href="/about" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold transition-colors">
               About Us
             </Link>
-            <Link href="/contact" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold transition-colors">
+            <Link href="/contact" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold transition-colors">
               Contact Us
             </Link>
             {!authDisabled && (
-            <div className="border-t border-gray-100 mt-2 pt-2">
+            <div className="border-t border-line mt-2 pt-2">
               {isLoggedIn ? (
                 <>
-                  <Link href="/account" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold">
+                  <Link href="/account" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
                     My Account
                   </Link>
-                  <Link href="/account/orders" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold">
+                  <Link href="/account/orders" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
                     Order History
                   </Link>
                   <button type="button" onClick={() => logout()}
-                    className="block w-full text-left px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold">
+                    className="block w-full text-left px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold">
+                  <Link href="/login" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
                     Sign In
                   </Link>
-                  <Link href="/signup" className="block px-2 py-2.5 text-sm font-medium text-gray-700 hover:text-gold">
+                  <Link href="/signup" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
                     Create Account
                   </Link>
                 </>

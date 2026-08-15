@@ -16,7 +16,7 @@ export default function MobileNavbar() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-100"
+      className="fixed top-0 left-0 right-0 z-40 bg-surface border-b border-line"
       style={{ height: '64px' }}
     >
       <div className="h-full flex items-center justify-between px-4">
@@ -25,7 +25,7 @@ export default function MobileNavbar() {
             type="button"
             onClick={openMenu}
             aria-label="Open menu"
-            className="p-1 text-[#1a1a1a] hover:text-gold transition-colors"
+            className="p-1 text-ink hover:text-gold transition-colors"
           >
             <Menu className="w-6 h-6" strokeWidth={2.5} />
           </button>
@@ -33,7 +33,7 @@ export default function MobileNavbar() {
             type="button"
             onClick={openSearch}
             aria-label="Open search"
-            className="p-1 text-[#1a1a1a] hover:text-gold transition-colors"
+            className="p-1 text-ink hover:text-gold transition-colors"
           >
             <Search className="w-5 h-5" strokeWidth={2} />
           </button>
@@ -52,7 +52,7 @@ export default function MobileNavbar() {
             <Link
               href={isLoggedIn ? '/account' : '/login'}
               aria-label={isLoggedIn ? 'My account' : 'Sign in'}
-              className="p-1 text-[#1a1a1a] hover:text-gold transition-colors"
+              className="p-1 text-ink hover:text-gold transition-colors"
             >
               <User className="w-6 h-6" strokeWidth={1.75} />
             </Link>
@@ -61,10 +61,10 @@ export default function MobileNavbar() {
             type="button"
             onClick={openCart}
             aria-label="Open cart"
-            className="relative p-1 text-[#1a1a1a] hover:text-gold transition-colors"
+            className="relative p-1 text-ink hover:text-gold transition-colors"
           >
             <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#1a1a1a] text-white text-[10px] font-semibold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-[#1a1206] text-[10px] font-semibold flex items-center justify-center">
               {cart.item_count}
             </span>
           </button>

@@ -42,7 +42,7 @@ export default function MobileHome({ settings, products }: Props) {
   ]
 
   return (
-    <div className="pt-[64px] bg-white">
+    <div className="pt-[64px]">
       <MobileHeroCarousel slides={slides} />
 
       {/* Featured products */}
@@ -53,10 +53,10 @@ export default function MobileHome({ settings, products }: Props) {
 
       {/* CTA strip */}
       <section className="bg-cream py-10 px-6 text-center">
-        <h2 className="font-display text-2xl font-semibold text-[#1a1a1a] mb-3">
+        <h2 className="font-display text-2xl font-semibold text-ink mb-3">
           {settings.brand_name || 'Opal Perfume'}
         </h2>
-        <p className="text-sm text-gray-600 leading-relaxed mb-6">
+        <p className="text-sm text-muted leading-relaxed mb-6">
           {settings.about_snippet ||
             'Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance.'}
         </p>

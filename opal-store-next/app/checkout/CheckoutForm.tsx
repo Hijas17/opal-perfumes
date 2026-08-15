@@ -146,10 +146,10 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   }
 
   return (
-    <div className="pt-[70px] min-h-screen bg-white">
+    <div className="pt-[70px] min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="font-display text-4xl font-semibold text-[#1a1a1a] mb-2">Checkout</h1>
-        <p className="text-sm text-gray-500 mb-8">
+        <h1 className="font-display text-4xl font-semibold text-ink mb-2">Checkout</h1>
+        <p className="text-sm text-muted mb-8">
           {useWhatsAppInquiry
             ? 'Send your selection to us on WhatsApp — we\'ll confirm availability and arrange delivery.'
             : 'Cash on delivery — pay when your order arrives.'}
@@ -158,8 +158,8 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
         <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Shipping form */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-gray-100 rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
-              <h2 className="font-display text-xl font-semibold text-[#1a1a1a] mb-5">Shipping Details</h2>
+            <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
+              <h2 className="font-display text-xl font-semibold text-ink mb-5">Shipping Details</h2>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm mb-5">{error}</div>
@@ -181,13 +181,13 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
             </div>
 
             {!useWhatsAppInquiry && (
-              <div className="bg-white border border-gray-100 rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
-                <h2 className="font-display text-xl font-semibold text-[#1a1a1a] mb-3">Payment Method</h2>
-                <label className="flex items-start gap-3 p-4 border border-gold rounded-[var(--radius-card)] bg-amber-50/50">
+              <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
+                <h2 className="font-display text-xl font-semibold text-ink mb-3">Payment Method</h2>
+                <label className="flex items-start gap-3 p-4 border border-gold rounded-[var(--radius-card)] bg-surface-2/50">
                   <input type="radio" name="payment" checked readOnly className="mt-0.5 accent-gold" />
                   <span>
-                    <span className="block text-sm font-medium text-[#1a1a1a]">Cash on Delivery</span>
-                    <span className="block text-xs text-gray-500 mt-0.5">Pay when your order arrives at your door.</span>
+                    <span className="block text-sm font-medium text-ink">Cash on Delivery</span>
+                    <span className="block text-xs text-muted mt-0.5">Pay when your order arrives at your door.</span>
                   </span>
                 </label>
               </div>
@@ -197,13 +197,13 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
           {/* Summary */}
           <div className="lg:col-span-1">
             <div className="bg-cream rounded-[var(--radius-card)] p-6 sticky top-24">
-              <h2 className="font-display text-xl font-semibold text-[#1a1a1a] mb-4">Your Order</h2>
+              <h2 className="font-display text-xl font-semibold text-ink mb-4">Your Order</h2>
               <ul className="space-y-3 mb-4 text-sm max-h-64 overflow-y-auto">
                 {cart.items.map((item) => (
                   <li key={item.product_id} className="flex justify-between gap-2">
-                    <span className="text-gray-700">
+                    <span className="text-muted">
                       <span className="font-medium">{item.name}</span>
-                      <span className="text-gray-500"> × {item.quantity}</span>
+                      <span className="text-muted"> × {item.quantity}</span>
                     </span>
                     {showPrices && (
                       <span className="font-medium whitespace-nowrap">{formatPrice(item.price * item.quantity, item.currency)}</span>
@@ -213,11 +213,11 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
               </ul>
               {showPrices && (
                 <>
-                  <dl className="space-y-2 text-sm border-t border-gray-200 pt-3">
-                    <div className="flex justify-between"><dt className="text-gray-600">Subtotal</dt><dd>{formatPrice(cart.subtotal, cart.currency)}</dd></div>
-                    <div className="flex justify-between"><dt className="text-gray-600">Shipping</dt><dd className="text-green-700">Free</dd></div>
+                  <dl className="space-y-2 text-sm border-t border-line pt-3">
+                    <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{formatPrice(cart.subtotal, cart.currency)}</dd></div>
+                    <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="text-green-700">Free</dd></div>
                   </dl>
-                  <div className="border-t border-gray-200 pt-3 mt-3 mb-6 flex justify-between text-base">
+                  <div className="border-t border-line pt-3 mt-3 mb-6 flex justify-between text-base">
                     <span className="font-semibold">Total</span>
                     <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
                   </div>
@@ -226,13 +226,13 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
               {!showPrices && <div className="mb-6" />}
               {useWhatsAppInquiry ? (
                 <button type="submit"
-                  className="w-full bg-[#25D366] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#1ebd5b] transition-colors flex items-center justify-center gap-2">
+                  className="w-full bg-[#25D366] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#1ebd5b] transition-colors flex items-center justify-center gap-2">
                   <MessageCircle className="w-4 h-4" />
                   Inquire on WhatsApp
                 </button>
               ) : (
                 <button type="submit" disabled={submitting}
-                  className="w-full bg-gold text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] hover:bg-[#8a6420] transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="w-full bg-gold text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
                   {submitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -246,7 +246,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
                   )}
                 </button>
               )}
-              <Link href="/cart" className="block text-center text-sm text-gray-500 mt-4 hover:text-gold transition-colors">
+              <Link href="/cart" className="block text-center text-sm text-muted mt-4 hover:text-gold transition-colors">
                 Back to cart
               </Link>
             </div>
@@ -267,7 +267,7 @@ function Field(props: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      <label className="block text-sm font-medium text-muted mb-1.5">
         {props.label}{props.required && <span className="text-red-500"> *</span>}
       </label>
       <input
@@ -276,7 +276,7 @@ function Field(props: {
         onChange={(e) => props.onChange(e.target.value)}
         required={props.required}
         placeholder={props.placeholder}
-        className="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
+        className="w-full border border-line rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
       />
     </div>
   )

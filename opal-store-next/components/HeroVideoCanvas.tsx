@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useMotionValueEvent, type MotionValue } from 'motion/react'
 
 const TOTAL_FRAMES = 192
-const FRAME_PATH   = (i: number) => `/hero-frames-v2/frame_${String(i).padStart(3, '0')}.webp`
+const FRAME_PATH   = (i: number) => `/hero-frames-v3/frame_${String(i).padStart(3, '0')}.webp`
 
 interface HeroVideoCanvasProps {
   /** Scroll progress 0–1 — drives which frame is drawn */

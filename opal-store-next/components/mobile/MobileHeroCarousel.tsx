@@ -101,7 +101,7 @@ export default function MobileHeroCarousel({ slides, autoPlayMs = DEFAULT_AUTOPL
                 </p>
                 <Link
                   href={slide.ctaHref}
-                  className="mt-6 inline-block bg-white text-[#1a1a1a] px-8 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase shadow-lg hover:bg-white/90 transition-colors"
+                  className="mt-6 inline-block bg-white text-[#140f09] px-8 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase shadow-lg hover:bg-white/90 transition-colors"
                 >
                   {slide.ctaLabel}
                 </Link>

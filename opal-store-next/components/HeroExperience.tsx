@@ -83,7 +83,7 @@ export default function HeroExperience({
       style={{ position: 'relative', marginTop: '-70px' }}
     >
       {/* Sticky stage: stays pinned to top of viewport while we scroll */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-white">
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-transparent">
 
         {/* ── Video canvas — RIGHT-ALIGNED, capped at 860px so the bottle
             looks smaller and sits further right inside the container.
@@ -102,47 +102,8 @@ export default function HeroExperience({
               className="block w-full h-auto max-h-[78vh] object-contain relative z-0"
             />
 
-            {/* Edge fades — physical white overlays feather the canvas
-                rectangle into the page background on ALL FOUR sides.
-                Gradient curve drops opacity FAST after the edge so the
-                cloud is concentrated where the frame line would be, not
-                bleeding into the bottle. Stops:
-                  0%   → solid white (kills any rectangle outline)
-                  12%  → 80% white  (still very opaque)
-                  40%  → 20% white  (light haze)
-                  75%  → transparent (clear from here inward) */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-40"
-              style={{
-                background:
-                  'linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
-              }}
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 z-[5] w-44"
-              style={{
-                background:
-                  'linear-gradient(to left, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
-              }}
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-56"
-              style={{
-                background:
-                  'linear-gradient(to top, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
-              }}
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-56"
-              style={{
-                background:
-                  'linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.8) 12%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 75%)',
-              }}
-            />
+            {/* Frames are pre-keyed (transparent background), so the bottle sits
+                directly on the page's gold-leak background — no edge fades needed. */}
           </div>
         </div>
 
@@ -152,10 +113,10 @@ export default function HeroExperience({
             reaches the left edge of the (smaller) video disappears into
             white instead of looking cropped. */}
         <div
-          className="absolute inset-y-0 left-0 w-full sm:w-[55%] lg:w-[40%] pointer-events-none z-10"
+          className="absolute inset-y-0 left-0 w-full sm:w-[60%] lg:w-[48%] pointer-events-none z-10"
           style={{
             background:
-              'linear-gradient(to right, rgb(255,255,255) 0%, rgb(255,255,255) 55%, rgba(255,255,255,0) 100%)',
+              'linear-gradient(to right, rgba(20,15,9,0.6) 0%, rgba(20,15,9,0.3) 45%, rgba(20,15,9,0) 100%)',
           }}
         />
 
@@ -219,10 +180,10 @@ export default function HeroExperience({
 
         {/* ── Scroll cue ──────────────────────────────────────────── */}
         <motion.div
-          className="absolute bottom-8 left-8 sm:left-16 flex items-center gap-3 text-[#2a1000]/35 z-30"
+          className="absolute bottom-8 left-8 sm:left-16 flex items-center gap-3 text-[#efe9dd]/40 z-30"
           style={{ opacity: scrollCueOpacity }}
         >
-          <div className="w-px h-12 bg-[#2a1000]/20 opal-scroll-line" />
+          <div className="w-px h-12 bg-[#efe9dd]/25 opal-scroll-line" />
           <span className="text-xs tracking-[0.2em] uppercase">Scroll</span>
         </motion.div>
       </div>

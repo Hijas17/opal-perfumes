@@ -47,20 +47,20 @@ export default async function ContactPage() {
       />
 
       {/* Hero */}
-      <section className="bg-[#1a1a1a] py-16 px-4 text-center">
+      <section className="py-16 px-4 text-center">
         <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Get in Touch</p>
-        <h1 className="font-display text-5xl sm:text-6xl font-semibold text-white">Contact Us</h1>
+        <h1 className="font-display text-5xl sm:text-6xl font-semibold text-gold">Contact Us</h1>
       </section>
 
-      <section className="bg-cream py-16 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-12">
           {/* Contact Info — server-rendered from settings */}
           <div className="lg:col-span-2 space-y-8">
             <div>
-              <h2 className="font-display text-2xl font-semibold text-[#1a1a1a] mb-4">
+              <h2 className="font-display text-2xl font-semibold text-ink mb-4">
                 We&rsquo;d love to hear from you
               </h2>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-muted leading-relaxed">
                 Whether you have a question about our fragrances, need help finding the perfect scent, or simply want to learn more about our brand — we&rsquo;re here to help.
               </p>
             </div>
@@ -102,9 +102,9 @@ export default async function ContactPage() {
           </div>
 
           {/* Form (client) — wrapped in Suspense because useSearchParams requires it */}
-          <div className="lg:col-span-3 bg-white rounded-[var(--radius-card)] p-8 shadow-[var(--shadow-card)]">
-            <Suspense fallback={<div className="text-sm text-gray-400">Loading form…</div>}>
-              <ContactForm />
+          <div className="lg:col-span-3 bg-surface rounded-[var(--radius-card)] p-8 shadow-[var(--shadow-card)]">
+            <Suspense fallback={<div className="text-sm text-muted-2">Loading form…</div>}>
+              <ContactForm variant="dark" />
             </Suspense>
           </div>
         </div>
@@ -128,16 +128,16 @@ function ContactInfoItem({ label, value, href, external, icon }: ContactInfoItem
         {icon}
       </div>
       <div>
-        <p className="text-xs text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
+        <p className="text-xs text-muted-2 uppercase tracking-widest mb-0.5">{label}</p>
         {href ? (
           <a href={href}
              target={external ? '_blank' : undefined}
              rel={external ? 'noopener noreferrer' : undefined}
-             className="text-[#1a1a1a] hover:text-gold transition-colors duration-200 font-medium">
+             className="text-ink hover:text-gold transition-colors duration-200 font-medium">
             {value}
           </a>
         ) : (
-          <p className="text-[#1a1a1a] font-medium whitespace-pre-line">{value}</p>
+          <p className="text-ink font-medium whitespace-pre-line">{value}</p>
         )}
       </div>
     </div>

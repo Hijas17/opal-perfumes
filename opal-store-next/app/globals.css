@@ -4,17 +4,32 @@
    Tailwind 4 theme — design tokens
    ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-gold:  #a67b30;
-  --color-cream: #f9f6f0;
+  /* ── Warm gold / brown / black theme (matches the Coming Soon look) ───────
+     Neutrals carry a brown undertone (not neutral grey-black), gold is bright
+     and used as a real color. `cream` repurposed as a warm brown surface so
+     every existing `bg-cream` flips automatically. */
+  --color-gold:      #d4a94e;   /* primary gold — headings, CTAs, links, active */
+  --color-gold-deep: #a67b30;   /* hover / deep gold */
+  --color-gold-soft: #3a2c14;   /* muted gold-brown fill */
+  --color-cream:     #241a10;   /* was #f9f6f0 — warm brown surface */
 
-  --font-display: var(--font-playfair);
-  --font-sans:    var(--font-inter);
+  --color-bg:        #140f09;   /* warm brown-black page background */
+  --color-surface:   #1e160d;   /* cards / panels (replaces bg-white) */
+  --color-surface-2: #271d11;   /* inputs / raised */
+  --color-line:      #3a2e1c;   /* warm brown borders */
+  --color-line-soft: #2a2115;
+  --color-ink:       #f2e9d6;   /* warm off-white text */
+  --color-muted:     #bda884;   /* warm tan secondary text */
+  --color-muted-2:   #8a7757;   /* dim brown-gold text */
+
+  --font-display: var(--font-cinzel);
+  --font-sans:    var(--font-montserrat);
 
   --radius-card: 4px;
   --radius-btn:  2px;
 
-  --shadow-card:       0 2px 12px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.14);
+  --shadow-card:       0 2px 12px rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -28,21 +43,90 @@ html {
 }
 
 body {
-  font-family: var(--font-inter), 'Inter', sans-serif;
-  color: #1a1a1a;
-  background-color: #ffffff;
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  color: #f2e9d6;
+  background-color: #140f09;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Site-wide warm gold "light-leak" background (same as the Coming Soon page).
+   Two fixed, blurred, slowly-drifting gold fields behind all content. z-index:-1
+   sits above the body's own background but below the page content. Reuses the
+   csLeakA/csLeakB keyframes defined further down. ── */
+.opal-dark::before,
+.opal-dark::after {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.opal-dark::before {
+  background:
+    radial-gradient(38% 42% at 30% 30%, rgba(216, 180, 92, 0.30), transparent 60%),
+    radial-gradient(30% 36% at 72% 66%, rgba(166, 123, 48, 0.24), transparent 62%);
+  filter: blur(44px);
+  animation: csLeakA 15s ease-in-out infinite alternate;
+}
+.opal-dark::after {
+  background:
+    radial-gradient(34% 40% at 76% 22%, rgba(240, 210, 136, 0.18), transparent 60%),
+    radial-gradient(42% 48% at 24% 80%, rgba(200, 160, 77, 0.20), transparent 62%);
+  filter: blur(54px);
+  mix-blend-mode: screen;
+  animation: csLeakB 19s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .opal-dark::before, .opal-dark::after { animation: none !important; }
+}
+
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-playfair), 'Playfair Display', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Convenience utility — referenced as className="font-display" */
 .font-display {
-  font-family: var(--font-playfair), 'Playfair Display', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+
+/* Cinzel is all-caps and reads large; trim the biggest display sizes so
+   headings stay proportional against Montserrat body copy. */
+.text-4xl { font-size: 2rem; }
+.text-5xl { font-size: 2.5rem; }
+.text-6xl { font-size: 3rem; }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   3D tactile buttons — raised bottom edge + bevel highlight; depress on click.
+   Colour-agnostic (keeps each button's own bg), so it works on gold, green,
+   and outline CTAs alike. Applied wherever `rounded-[var(--radius-btn)]` is used.
+   ─────────────────────────────────────────────────────────────────────────── */
+.btn-3d {
+  position: relative;
+  border-radius: 7px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.22),
+    0 4px 0 rgba(0, 0, 0, 0.4),
+    0 8px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.09s ease, box-shadow 0.09s ease, filter 0.2s ease;
+}
+.btn-3d:hover { filter: brightness(1.07); }
+.btn-3d:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.22),
+    0 1px 0 rgba(0, 0, 0, 0.4),
+    0 3px 6px rgba(0, 0, 0, 0.5);
+}
+/* Outline CTAs are transparent — give them a faint fill so the 3D reads. */
+.btn-3d.border, .btn-3d.border-2 { background-color: rgba(58, 44, 20, 0.35); }
 
 /* ───────────────────────────────────────────────────────────────────────────
    Product card image crossfade + slide-up CTA
@@ -106,11 +190,11 @@ h1, h2, h3, h4, h5, h6 {
    Rich text content (admin-edited HTML)
    ─────────────────────────────────────────────────────────────────────────── */
 .rich-text h1, .rich-text h2, .rich-text h3 {
-  font-family: var(--font-playfair), 'Playfair Display', serif;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
   margin-bottom: 0.75rem;
   margin-top: 1.25rem;
 }
-.rich-text p  { margin-bottom: 0.875rem; line-height: 1.75; color: #4b4b4b; }
+.rich-text p  { margin-bottom: 0.875rem; line-height: 1.75; color: #b8b0a1; }
 .rich-text ul { list-style: disc;    padding-left: 1.5rem; margin-bottom: 0.875rem; }
 .rich-text ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 0.875rem; }
 
@@ -118,12 +202,12 @@ h1, h2, h3, h4, h5, h6 {
    Apple-grade hero typography + CTAs
    ─────────────────────────────────────────────────────────────────────────── */
 .opal-eyebrow {
-  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
   font-size:    clamp(0.7rem, 0.85vw, 0.85rem);
   font-weight:  600;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: #a67b30;
+  color: #c8a04d;
   margin-bottom: 1.25rem;
   display: inline-flex;
   align-items: center;
@@ -134,86 +218,97 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-block;
   width: 2rem;
   height: 1px;
-  background: #a67b30;
+  background: #c8a04d;
   opacity: 0.7;
 }
 
 .opal-display {
-  font-family: var(--font-playfair), 'Playfair Display', serif;
-  font-size:    clamp(3.25rem, 9vw, 8.5rem);
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size:    clamp(2rem, 4.6vw, 4rem);
   font-weight:  600;
-  font-style:   italic;
-  line-height:  0.95;
-  letter-spacing: -0.015em;
-  color: #2a1000;
+  text-transform: uppercase;
+  line-height:  1.1;
+  letter-spacing: 0.03em;
+  color: #d4a94e;
 }
 .opal-display--outline {
-  -webkit-text-stroke: 1.5px #a67b30;
+  -webkit-text-stroke: 1.5px #d4a94e;
   color: transparent;
-  font-style: italic;
 }
 
 .opal-subtext {
-  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
   font-size:    clamp(0.95rem, 1.05vw, 1.15rem);
   line-height:  1.6;
-  color: #6b3c1a;
+  color: #a49a86;
 }
 
 /* Body text for scroll scenes (matches Scene 1's subtext size) */
 .opal-body {
-  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
   font-size:    clamp(0.95rem, 1.05vw, 1.15rem);
   line-height:  1.6;
-  color: #4a2510;
+  color: #a49a86;
   font-weight:  400;
 }
 .opal-body--lead {
   font-size:    clamp(1.05rem, 1.15vw, 1.25rem);
   line-height:  1.7;
-  color: #2a1000;
+  color: #efe9dd;
   letter-spacing: -0.005em;
 }
 
 .opal-cta-primary {
   display: inline-block;
-  background: #a67b30;
-  color: #ffffff;
+  background: linear-gradient(180deg, #e8c56a, #c8a04d 48%, #a67b30);
+  color: #1a1206;
   padding: 1rem 2.25rem;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   border-radius: 999px;
-  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
-              background 300ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(166, 123, 48, 0.25);
+  transition: transform 0.09s ease, box-shadow 0.09s ease, filter 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.2),
+    0 5px 0 #6b4f1a,
+    0 11px 20px rgba(0, 0, 0, 0.45);
 }
-.opal-cta-primary:hover {
-  background: #8a6420;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(166, 123, 48, 0.35);
+.opal-cta-primary:hover { filter: brightness(1.06); }
+.opal-cta-primary:active {
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.2),
+    0 1px 0 #6b4f1a,
+    0 4px 8px rgba(0, 0, 0, 0.45);
 }
 
 .opal-cta-ghost {
   display: inline-block;
-  border: 1px solid rgba(42, 16, 0, 0.3);
-  color: rgba(42, 16, 0, 0.75);
+  background: linear-gradient(180deg, #2c2418, #1c1610);
+  border: 1px solid #4a3a22;
+  color: #d4a94e;
   padding: 1rem 2.25rem;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   border-radius: 999px;
-  transition: border-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
-              color 300ms cubic-bezier(0.16, 1, 0.3, 1),
-              transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.09s ease, box-shadow 0.09s ease, filter 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 150, 0.14),
+    0 5px 0 #0e0b07,
+    0 11px 20px rgba(0, 0, 0, 0.5);
 }
-.opal-cta-ghost:hover {
-  border-color: #a67b30;
-  color: #a67b30;
-  transform: translateY(-2px);
+.opal-cta-ghost:hover { filter: brightness(1.12); }
+.opal-cta-ghost:active {
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 150, 0.12),
+    0 1px 0 #0e0b07,
+    0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
 /* Subtle pulse on the scroll indicator line */
@@ -236,7 +331,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: #140f09;
   opacity: 1;
   transition: opacity 700ms cubic-bezier(0.65, 0, 0.35, 1);
   will-change: opacity;
@@ -386,13 +481,13 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--cs-bg);
   color: var(--cs-ink);
   /* Cormorant Garamond for display, Jost for body — loaded in layout.tsx */
-  font-family: var(--font-cs-body), var(--font-inter), 'Inter', sans-serif;
+  font-family: var(--font-cs-body), var(--font-montserrat), 'Montserrat', sans-serif;
 }
 .coming-soon h1,
 .coming-soon h2,
 .coming-soon h3,
 .coming-soon h4 {
-  font-family: var(--font-cs-display), var(--font-playfair), 'Playfair Display', serif;
+  font-family: var(--font-cs-display), var(--font-cinzel), 'Cinzel', serif;
 }
 
 /* ── Ambient golden "light-leak" background — black + gold, slow video-like drift.
