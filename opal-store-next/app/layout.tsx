@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Cinzel, Montserrat, Cormorant_Garamond, Jost } from 'next/font/google'
+import { Cinzel, Montserrat } from 'next/font/google'
 import './globals.css'
 
 import Navbar from '@/components/Navbar'
@@ -26,22 +26,6 @@ const cinzel = Cinzel({
 const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-montserrat',
-  display: 'swap',
-  weight: ['300', '400', '500', '600'],
-})
-
-// ─── Coming Soon shell fonts (used only inside .coming-soon) ───────────────
-const csDisplay = Cormorant_Garamond({
-  subsets: ['latin'],
-  variable: '--font-cs-display',
-  display: 'swap',
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-})
-
-const csBody = Jost({
-  subsets: ['latin'],
-  variable: '--font-cs-body',
   display: 'swap',
   weight: ['300', '400', '500', '600'],
 })
@@ -134,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getSettings(),
   ])
 
-  const fontVars = `${cinzel.variable} ${montserrat.variable} ${csDisplay.variable} ${csBody.variable}`
+  const fontVars = `${cinzel.variable} ${montserrat.variable}`
 
   return (
     <html lang="en" data-scroll-behavior="smooth" className={fontVars}>
