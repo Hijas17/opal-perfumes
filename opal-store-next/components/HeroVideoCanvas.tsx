@@ -8,15 +8,15 @@
  * by apple.com product pages (AirPods Pro, iPhone) which use this exact
  * canvas + frame-sequence pattern.
  *
- * Frame files live in `/public/hero-frames/frame_001.webp` through
- * `frame_096.webp`. Add/remove frames by re-extracting via ffmpeg.
+ * Frame files live in `/public/hero-frames-v4/frame_001.webp` through
+ * `frame_180.webp`. Add/remove frames by re-extracting via ffmpeg.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { useMotionValueEvent, type MotionValue } from 'motion/react'
 
-const TOTAL_FRAMES = 192
-const FRAME_PATH   = (i: number) => `/hero-frames-v3/frame_${String(i).padStart(3, '0')}.webp`
+const TOTAL_FRAMES = 180
+const FRAME_PATH   = (i: number) => `/hero-frames-v4/frame_${String(i).padStart(3, '0')}.webp`
 
 interface HeroVideoCanvasProps {
   /** Scroll progress 0–1 — drives which frame is drawn */
@@ -32,8 +32,8 @@ interface HeroVideoCanvasProps {
 
 export default function HeroVideoCanvas({
   progress,
-  width  = 1080,
-  height = 608,
+  width  = 1280,
+  height = 720,
   className = '',
   style,
 }: HeroVideoCanvasProps) {

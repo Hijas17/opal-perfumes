@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSettings, getProducts } from '@/lib/api'
 import ProductCard from '@/components/ProductCard'
-import HeroStatic from '@/components/HeroStatic'
+import HeroExperience from '@/components/HeroExperience'
 import MobileHome from '@/components/mobile/MobileHome'
 import ComingSoon from '@/components/ComingSoon'
 import { comingSoon } from '@/lib/config'
@@ -96,15 +96,23 @@ export default async function HomePage() {
 
       {/* ── Desktop Hero (md+) ──────────────────────────────────────────── */}
       <div className="hidden md:block">
-        <HeroStatic
+        <HeroExperience
           heroTagline={s.hero_tagline || 'Luxury Fragrances'}
           heroHeadline={s.hero_headline || 'Discover\nyour scent.'}
           heroSubtext={s.hero_subtext || 'Handcrafted luxury perfumes that tell your story. Each bottle a masterpiece.'}
+          brandName={s.brand_name || 'Opal Perfume'}
         />
       </div>
 
+      {/* Seamless black-hero → warm-page transition (desktop) */}
+      <div
+        aria-hidden
+        className="hidden md:block h-40 -mt-px"
+        style={{ background: 'linear-gradient(to bottom, #000000 0%, #0a0806 45%, #140f09 100%)' }}
+      />
+
       {/* ── Featured Products (desktop only — mobile has its own carousel) ── */}
-      <section className="hidden md:block py-20 px-4">
+      <section className="hidden md:block py-20 px-4 -mt-px">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Curated For You</p>

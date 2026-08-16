@@ -83,7 +83,7 @@ export default function HeroExperience({
       style={{ position: 'relative', marginTop: '-70px' }}
     >
       {/* Sticky stage: stays pinned to top of viewport while we scroll */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-transparent">
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
 
         {/* ── Video canvas — RIGHT-ALIGNED, capped at 860px so the bottle
             looks smaller and sits further right inside the container.
@@ -116,7 +116,7 @@ export default function HeroExperience({
           className="absolute inset-y-0 left-0 w-full sm:w-[60%] lg:w-[48%] pointer-events-none z-10"
           style={{
             background:
-              'linear-gradient(to right, rgba(20,15,9,0.6) 0%, rgba(20,15,9,0.3) 45%, rgba(20,15,9,0) 100%)',
+              'linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0) 100%)',
           }}
         />
 
@@ -186,6 +186,7 @@ export default function HeroExperience({
           <div className="w-px h-12 bg-[#efe9dd]/25 opal-scroll-line" />
           <span className="text-xs tracking-[0.2em] uppercase">Scroll</span>
         </motion.div>
+
       </div>
     </section>
   )

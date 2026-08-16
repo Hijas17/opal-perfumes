@@ -23,7 +23,7 @@ export default function ExpandableDescription({ html, collapsedHeight = 160 }: P
         {!expanded && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/85 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#140f09] via-[#140f09]/80 to-transparent"
           />
         )}
       </div>

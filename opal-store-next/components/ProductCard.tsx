@@ -40,11 +40,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const price        = showPrices ? formatPrice(product.price, product.currency) : null
 
   return (
-    <Link href={detailPath} className="block group" prefetch>
+    <Link href={detailPath} className="block group h-full" prefetch>
       {/* On mobile the tile is flat (no card bg/shadow/radius) — matches the reference
           storefront layout where products sit directly on the page background.
-          From md up we get the card treatment: white bg, rounded, hover shadow. */}
-      <div className="product-card relative overflow-hidden transition-shadow duration-300 cursor-pointer md:bg-surface md:rounded-[var(--radius-card)] md:shadow-[var(--shadow-card)] md:hover:shadow-[var(--shadow-card-hover)]">
+          From md up we get the card treatment: dark surface, rounded, hover shadow.
+          h-full + flex-col so every card in a grid row is the same height. */}
+      <div className="product-card relative overflow-hidden transition-shadow duration-300 cursor-pointer h-full flex flex-col md:bg-surface md:rounded-[var(--radius-card)] md:shadow-[var(--shadow-card)] md:hover:shadow-[var(--shadow-card-hover)]">
         {/* Image Container */}
         <div className="aspect-square relative overflow-hidden bg-cream md:bg-cream">
           {primarySrc ? (
@@ -94,7 +95,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
 
         {/* Body */}
-        <div className="py-3 text-center md:p-4 md:text-left">
+        <div className="py-3 text-center md:p-4 md:text-left flex-1 flex flex-col">
           {product.category?.name && (
             <p className="text-[10px] md:text-xs tracking-widest uppercase text-muted md:hidden">
               {product.category.name}
