@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Cinzel, Montserrat } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 
 import Navbar from '@/components/Navbar'
@@ -14,20 +14,21 @@ import ComingSoonHeader from '@/components/ComingSoonHeader'
 import { getCategories, getSettings } from '@/lib/api'
 import { comingSoon } from '@/lib/config'
 
-// ─── Brand fonts (zero-CLS via next/font) ─────────────────────────────────
+// ─── Brand fonts (self-hosted so builds never depend on Google's CDN) ──────
 // Cinzel = headings (all-caps classic serif); Montserrat = body/labels.
-const cinzel = Cinzel({
-  subsets: ['latin'],
+// Variable woff2 files live in app/fonts/ and are committed to the repo.
+const cinzel = localFont({
+  src: './fonts/cinzel.woff2',
   variable: '--font-cinzel',
   display: 'swap',
-  weight: ['400', '500', '600'],
+  weight: '400 600',
 })
 
-const montserrat = Montserrat({
-  subsets: ['latin'],
+const montserrat = localFont({
+  src: './fonts/montserrat.woff2',
   variable: '--font-montserrat',
   display: 'swap',
-  weight: ['300', '400', '500', '600'],
+  weight: '300 600',
 })
 
 // ─── Site-wide metadata ────────────────────────────────────────────────────
