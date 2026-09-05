@@ -38,15 +38,29 @@ export default function ProductList() {
   const canReorder = statusFilter === 'all' && categoryFilter === 'all'
   const orderDirty = originalOrder !== null
 
-  const handleDragStart = (index) => {
-    if (!canReorder) return
+  const handleDragStart = (e, index) => {
+    if (!canReorder) {
+      e.preventDefault()
+      return
+    }
+    // Firefox will not begin a drag unless dataTransfer carries something, so
+    // this is required even though the payload itself is never read — the
+    // index is tracked in state instead.
+    try {
+      e.dataTransfer.setData('text/plain', String(index))
+      e.dataTransfer.effectAllowed = 'move'
+    } catch {
+      // Some browsers lock dataTransfer outside a real user gesture.
+    }
     if (originalOrder === null) setOriginalOrder(products)
     setDragIndex(index)
   }
 
   const handleDragOver = (e, index) => {
     if (!canReorder || dragIndex === null) return
+    // Required on every dragover, or the drop is rejected.
     e.preventDefault()
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
     if (index === overIndex) return
     setOverIndex(index)
     setProducts((prev) => {
@@ -232,10 +246,10 @@ export default function ProductList() {
                     <TableRow
                       key={product.id}
                       draggable={canReorder}
-                      onDragStart={() => handleDragStart(index)}
+                      onDragStart={(e) => handleDragStart(e, index)}
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDragEnd={handleDragEnd}
-                      onDrop={handleDragEnd}
+                      onDrop={(e) => { e.preventDefault(); handleDragEnd() }}
                       className={dragIndex === index ? 'opacity-50' : undefined}
                     >
                       <TableCell className="w-10">

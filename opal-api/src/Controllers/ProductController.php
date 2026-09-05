@@ -18,7 +18,10 @@ class ProductController
     {
         $params   = $request->getQueryParams();
         $category = $params['category'] ?? '';
-        $sort     = $params['sort']     ?? 'newest';
+        // No sort param means "Featured" — the manual order set by
+        // drag-and-drop in the admin. It must NOT fall through to 'newest',
+        // which would sort by created_at and ignore display_order entirely.
+        $sort     = $params['sort']     ?? 'featured';
         $search   = $params['search']   ?? '';
         $featured = $params['featured'] ?? '';
 
@@ -891,9 +894,11 @@ class ProductController
             'name_desc'  => ['name' => -1],
             'newest'     => ['created_at' => -1],
             'oldest'     => ['created_at' => 1],
-            // Default = the order the admin arranged by drag-and-drop, with
-            // newest first as the tiebreak for anything never reordered.
-            default      => ['display_order' => 1, 'created_at' => -1],
+            // 'featured' (and anything unrecognised) = the order the admin
+            // arranged by drag-and-drop, newest first as the tiebreak for
+            // products that have never been reordered.
+            'featured', '' => ['display_order' => 1, 'created_at' => -1],
+            default        => ['display_order' => 1, 'created_at' => -1],
         };
     }
 
