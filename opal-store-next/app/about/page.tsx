@@ -82,7 +82,9 @@ export default async function AboutPage() {
         </div>
         <div className="flex flex-col justify-center gap-4 px-6 py-16 md:px-12">
           <p className="eyebrow">Our story</p>
-          <h2 className="h2">{brand}</h2>
+          {/* Its own setting rather than the brand name: editing this heading
+              should not rename the site everywhere else. */}
+          <h2 className="h2">{s.about_story_heading || brand}</h2>
           {s.brand_story ? (
             <div className="rich-text max-w-prose" dangerouslySetInnerHTML={{ __html: s.brand_story }} />
           ) : (

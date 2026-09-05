@@ -249,6 +249,20 @@ export default function Settings() {
           onUpdate={handleChange}
         />
         <div className="space-y-1.5">
+          <Label>
+            Story Heading{' '}
+            <span className="text-muted-foreground font-normal text-xs">
+              (heading above the brand story — defaults to the brand name)
+            </span>
+          </Label>
+          <Input
+            value={s.about_story_heading || ''}
+            onChange={(e) => handleChange('about_story_heading', e.target.value)}
+            placeholder={s.brand_name || 'Opal Perfume'}
+          />
+        </div>
+
+        <div className="space-y-1.5">
           <Label>Brand Story</Label>
           <RichTextEditor value={s.brand_story || ''} onChange={(val) => handleChange('brand_story', val)} />
         </div>

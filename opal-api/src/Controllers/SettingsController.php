@@ -40,6 +40,7 @@ class SettingsController
         'home_compare',
         // About Us page
         'about_hero_image',
+        'about_story_heading',
         'brand_story',
         'mission_statement',
         'founder_photo',

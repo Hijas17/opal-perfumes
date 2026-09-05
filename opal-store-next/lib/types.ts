@@ -136,6 +136,8 @@ export interface SiteSettings {
   about_snippet?: string
   cta_message?: string
   about_hero_image?: string
+  /** Heading above the brand story. Falls back to brand_name when empty. */
+  about_story_heading?: string
   brand_story?: string
   mission_statement?: string
   founder_photo?: string
