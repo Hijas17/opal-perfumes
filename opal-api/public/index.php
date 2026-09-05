@@ -31,18 +31,33 @@ $app = AppFactory::create();
 // Add error middleware (must be last middleware added)
 $app->addRoutingMiddleware();
 
-// ─── CORS Middleware ─────────────────────────────────────────────────────────
-$app->add(function (ServerRequestInterface $request, $handler) {
-    // Read ALLOWED_ORIGINS: check $_ENV first (phpdotenv), then getenv() (Docker/Apache env vars)
+// ─── CORS ────────────────────────────────────────────────────────────────────
+/**
+ * Resolve the Access-Control-Allow-Origin value for a request.
+ *
+ * Shared by the CORS middleware and the error handler. The error handler needs
+ * it because Slim's middleware runs last-added-first, so a routing exception
+ * (404/405) unwinds PAST the CORS middleware — it never gets to add headers to
+ * that response. Without this, every API error reaches the browser as an
+ * opaque CORS failure instead of its real status, which hides the actual bug.
+ */
+function opal_cors_origin(ServerRequestInterface $request): string
+{
+    // Read ALLOWED_ORIGINS: $_ENV first (phpdotenv), then getenv() (Docker/Apache).
     $allowedOriginsRaw = $_ENV['ALLOWED_ORIGINS'] ?? getenv('ALLOWED_ORIGINS') ?: '*';
     $allowedOrigins    = array_values(array_filter(array_map('trim', explode(',', $allowedOriginsRaw))));
 
-    $origin        = $request->getHeaderLine('Origin');
-    $allowedOrigin = '*';
+    $origin = $request->getHeaderLine('Origin');
 
     if (!empty($allowedOrigins) && $origin !== '') {
-        $allowedOrigin = in_array($origin, $allowedOrigins, true) ? $origin : 'null';
+        return in_array($origin, $allowedOrigins, true) ? $origin : 'null';
     }
+
+    return '*';
+}
+
+$app->add(function (ServerRequestInterface $request, $handler) {
+    $allowedOrigin = opal_cors_origin($request);
 
     // Handle preflight OPTIONS request
     if ($request->getMethod() === 'OPTIONS') {
@@ -219,8 +234,15 @@ $errorMiddleware->setDefaultErrorHandler(
         $response = $app->getResponseFactory()->createResponse();
         $response->getBody()->write($payload);
 
+        // CORS headers must be repeated here: this response is built after the
+        // exception has already unwound past the CORS middleware, so without
+        // them the browser reports a CORS error and masks the real status.
         return $response
             ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Access-Control-Allow-Origin', opal_cors_origin($request))
+            ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->withHeader('Access-Control-Allow-Credentials', 'true')
             ->withStatus($statusCode);
     }
 );

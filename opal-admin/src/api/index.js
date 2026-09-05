@@ -106,8 +106,10 @@ export const exportInquiries = () =>
 export const getMedia = () =>
   api.get('/admin/media')
 
+// NOTE: the route is /admin/media/upload — POST /admin/media does not exist
+// and returns 405. This was pointing at the wrong path.
 export const uploadMedia = (formData) =>
-  api.post('/admin/media', formData, {
+  api.post('/admin/media/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 
