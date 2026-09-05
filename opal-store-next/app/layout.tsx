@@ -8,7 +8,6 @@ import SearchProvider from '@/components/SearchProvider'
 import AuthProvider from '@/components/AuthProvider'
 import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
-import AnnouncementBar from '@/components/AnnouncementBar'
 import CartDrawerProvider from '@/components/CartDrawerProvider'
 import CurrencyProvider from '@/components/CurrencyProvider'
 import MobileShell from '@/components/mobile/MobileShell'
@@ -146,7 +145,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <CartDrawerProvider whatsappNumber={settings.whatsapp_number}>
                 <Preloader brandName={settings.brand_name || 'Opal'} />
                 <div className="hidden md:block">
-                  <AnnouncementBar />
                   <Navbar categories={categories} />
                 </div>
                 <MobileShell categories={categories} settings={settings} />

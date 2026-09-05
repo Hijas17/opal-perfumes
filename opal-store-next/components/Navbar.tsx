@@ -6,6 +6,9 @@
  *   row 1 : currency (left) · centred logo · search / account / cart (right)
  *   row 2 : centred primary nav
  *
+ * There is no announcement bar above this — it was removed and its height
+ * folded into row 1's padding, which is why that row is generously tall.
+ *
  * Sticky at top with hide-on-scroll — scrolling down slides the header (and the
  * announcement bar above it) out of view; scrolling up brings it back. It
  * publishes its measured height to `--header-height` so sticky offsets on the
@@ -86,7 +89,7 @@ export default function Navbar({ categories }: NavbarProps) {
       className="sticky top-0 z-[4] border-b border-line bg-black transition-transform duration-[250ms] ease-in-out data-[hidden=true]:-translate-y-full"
     >
       {/* ── Row 1 ─────────────────────────────────────────────────────── */}
-      <div className="container-page--xl mx-auto flex items-center justify-between px-12 py-4">
+      <div className="container-page--xl mx-auto flex items-center justify-between px-12 py-6">
         <div className="w-40">
           <CurrencySelect />
         </div>
@@ -94,13 +97,14 @@ export default function Navbar({ categories }: NavbarProps) {
         <Link href="/" aria-label="Opal Perfume — home" className="flex-shrink-0">
           {/* Plain <img> for instant first paint — the asset is small and the
               optimisation pipeline stalls on it in dev.
-              Width-capped rather than height-capped: the lockup is a wide
-              horizontal mark, so constraining height alone would let it
-              overrun the header's centre slot. */}
+              HEIGHT-capped, unlike the footer and mobile bar: this is the
+              stacked lockup (roughly 0.7:1), so capping width would make it
+              absurdly tall. The horizontal /logo.png is still used everywhere
+              else and stays width-capped. */}
           <img
-            src="/logo.png"
+            src="/logo-stacked.png"
             alt="Opal Perfume"
-            className="h-auto w-[240px] max-w-full lg:w-[280px]"
+            className="h-[96px] w-auto lg:h-[112px]"
           />
         </Link>
 

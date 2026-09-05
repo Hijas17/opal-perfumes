@@ -77,7 +77,6 @@
 
   /* Chrome heights — consumed by sticky offsets so they live in one place.
      The header overwrites these at runtime once it measures itself. */
-  --announcement-bar-height: 40px;
   --header-height: 106px;
   --sticky-area-height: var(--header-height);
 }
