@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react'
 import { Package } from 'lucide-react'
 import AccountGuard from '@/components/AccountGuard'
 import { fetchOrders } from '@/lib/customer-api'
-import { formatPrice } from '@/lib/format'
 import type { Order } from '@/lib/types'
+import { useMoney } from '@/components/CurrencyProvider'
 
 const STATUS_BADGES: Record<string, string> = {
   pending:   'bg-amber-100 text-amber-800',
@@ -25,6 +25,7 @@ export default function OrdersList() {
 }
 
 function Inner() {
+  const money = useMoney()
   const [orders,  setOrders]  = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
@@ -37,7 +38,7 @@ function Inner() {
   }, [])
 
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <nav className="text-xs text-muted mb-4">
           <Link href="/account" className="hover:text-gold">My Account</Link> <span>/</span> Order History
@@ -55,7 +56,7 @@ function Inner() {
             <Package className="w-12 h-12 mx-auto mb-4 text-muted-2" />
             <h2 className="font-display text-xl text-ink mb-2">No orders yet</h2>
             <p className="text-sm text-muted mb-6">Your past orders will appear here.</p>
-            <Link href="/products" className="inline-block bg-gold text-white px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors">
+            <Link href="/products" className="inline-block btn">
               Shop Perfumes
             </Link>
           </div>
@@ -77,7 +78,7 @@ function Inner() {
                       <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${STATUS_BADGES[order.status] || 'bg-surface-2 text-muted'}`}>
                         {order.status}
                       </span>
-                      <span className="text-base font-semibold text-gold">{formatPrice(order.total, order.currency)}</span>
+                      <span className="text-base font-semibold text-gold">{money(order.total, order.currency)}</span>
                     </div>
                   </div>
                 </Link>

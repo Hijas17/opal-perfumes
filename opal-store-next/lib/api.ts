@@ -12,6 +12,7 @@ import type {
   SiteSettings,
 } from './types'
 
+
 // Server-side requests (Server Components, generateMetadata, sitemap) prefer
 // API_URL_INTERNAL — typically a loopback like http://127.0.0.1:8000/api when
 // the API runs on the same host. Browsers always use NEXT_PUBLIC_API_URL

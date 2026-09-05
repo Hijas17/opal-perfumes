@@ -191,7 +191,10 @@ export default function ProductForm() {
     is_featured:       false,
     display_order:     '',
     status:            'draft',
+    slug:              '',
     seo_keywords:      '',
+    meta_title:        '',
+    meta_description:  '',
   })
 
   const [primaryFile,      setPrimaryFile]      = useState(null)
@@ -229,7 +232,10 @@ export default function ProductForm() {
           is_featured:       p.is_featured || false,
           display_order:     p.display_order != null ? String(p.display_order) : '',
           status:            p.status      || 'draft',
+          slug:              p.slug             || '',
           seo_keywords:      Array.isArray(p.seo_keywords) ? p.seo_keywords.join(', ') : (p.seo_keywords || ''),
+          meta_title:        p.meta_title       || '',
+          meta_description:  p.meta_description || '',
         })
         setCurrentImages(p.images || { primary: null, hover: null, ingredients: null, gallery: [] })
         setGalleryCurrentKept(p.images?.gallery || [])
@@ -274,7 +280,10 @@ export default function ProductForm() {
     fd.append('is_featured',  form.is_featured ? '1' : '0')
     if (form.display_order !== '') fd.append('display_order', form.display_order)
     fd.append('status', form.status)
-    fd.append('seo_keywords', form.seo_keywords)
+    fd.append('slug',             form.slug)
+    fd.append('seo_keywords',     form.seo_keywords)
+    fd.append('meta_title',       form.meta_title)
+    fd.append('meta_description', form.meta_description)
     fd.append('purchase_links', JSON.stringify(purchaseLinks.filter((l) => l.platform.trim() && l.url.trim())))
 
     if (primaryFile)     fd.append('primary_image',     primaryFile)
@@ -457,6 +466,61 @@ export default function ProductForm() {
 
       {/* SEO */}
       <SectionCard title="SEO">
+        <div className="space-y-1.5">
+          <Label>URL Slug</Label>
+          <Input
+            name="slug"
+            value={form.slug}
+            onChange={handleChange}
+            placeholder="auto-generated from the product name"
+            className="font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">
+            Product URL: <code>/products/&lt;category&gt;/{form.slug || 'auto-generated'}</code>
+            {isEdit && (
+              <>
+                {' '}·{' '}
+                <span className="text-destructive">
+                  Changing this breaks the existing link and any search ranking it has earned.
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Meta Title</Label>
+          <Input
+            name="meta_title"
+            value={form.meta_title}
+            onChange={handleChange}
+            placeholder={form.name ? `${form.name} — Luxury Perfume UAE` : 'Leave blank to generate automatically'}
+            maxLength={70}
+          />
+          <p className="text-xs text-muted-foreground">
+            Shown as the headline in search results and the browser tab.
+            Aim for under 60 characters — {form.meta_title.length}/70 used.
+            Leave blank to generate it from the product name.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Meta Description</Label>
+          <Textarea
+            name="meta_description"
+            value={form.meta_description}
+            onChange={handleChange}
+            rows={3}
+            maxLength={180}
+            placeholder="Leave blank to build one from the short description and scent notes."
+            className="resize-none"
+          />
+          <p className="text-xs text-muted-foreground">
+            The snippet under the title in search results.
+            Aim for 150–160 characters — {form.meta_description.length}/180 used.
+          </p>
+        </div>
+
         <div className="space-y-1.5">
           <Label>Keywords</Label>
           <Textarea

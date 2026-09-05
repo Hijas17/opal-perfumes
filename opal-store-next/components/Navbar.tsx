@@ -1,266 +1,241 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+/**
+ * Desktop header — follows the reference storefront's structure:
+ *
+ *   row 1 : currency (left) · centred logo · search / account / cart (right)
+ *   row 2 : centred primary nav
+ *
+ * Sticky at top with hide-on-scroll — scrolling down slides the header (and the
+ * announcement bar above it) out of view; scrolling up brings it back. It
+ * publishes its measured height to `--header-height` so sticky offsets on the
+ * product and collection pages stay correct without hardcoded pixel values.
+ */
+
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as NavigationMenu from '@radix-ui/react-navigation-menu'
-import { ChevronDown, Search, Menu, X, ShoppingBag, User } from 'lucide-react'
+import { ChevronDown, Search, ShoppingBag, User } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { authDisabled } from '@/lib/config'
 import type { Category } from '@/lib/types'
 import { useSearchOverlay } from './SearchProvider'
 import { useAuth } from './AuthProvider'
 import { useCart } from './CartProvider'
+import { useCartDrawer } from './CartDrawerProvider'
+import CurrencySelect from './CurrencySelect'
 
 interface NavbarProps {
   categories: Category[]
 }
 
+const linkBase = 'text-xs uppercase tracking-[0.18em] transition-colors duration-200'
+const idle = 'text-gold/70 hover:text-gold'
+const active = 'text-gold'
+
 export default function Navbar({ categories }: NavbarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [mobileProdOpen, setMobileProdOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const pathname = usePathname()
   const { open: openSearch } = useSearchOverlay()
-  const { isLoggedIn, customer, logout } = useAuth()
+  const { isLoggedIn, logout } = useAuth()
   const { cart } = useCart()
+  const { openCart } = useCartDrawer()
 
-  // Close mobile menu when route changes
+  const headerRef = useRef<HTMLElement>(null)
+  const [hidden, setHidden] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  // Publish the real header height so `--sticky-area-height` is accurate.
   useEffect(() => {
-    setMobileOpen(false)
-    setMobileProdOpen(false)
-  }, [pathname])
+    const el = headerRef.current
+    if (!el) return
+    const publish = () => {
+      document.documentElement.style.setProperty('--header-height', `${el.offsetHeight}px`)
+    }
+    publish()
+    const ro = new ResizeObserver(publish)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
-  const isProductsActive = pathname.startsWith('/products')
-  const isAboutActive    = pathname === '/about'
-  const isContactActive  = pathname === '/contact'
+  // Hide on scroll down, reveal on scroll up.
+  useEffect(() => {
+    let lastY = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      // Ignore tiny jitters and never hide near the very top of the page.
+      if (Math.abs(y - lastY) < 6) return
+      setHidden(y > lastY && y > 160)
+      lastY = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
-  const linkBase = 'text-sm font-medium transition-all duration-300 pb-0.5'
-  const activeStyle = 'text-gold border-b-2 border-gold'
-  const idleStyle = 'text-muted hover:text-gold'
+  useEffect(() => { setUserMenuOpen(false) }, [pathname])
+
+  const isProducts = pathname.startsWith('/products')
+  const isAbout = pathname === '/about'
+  const isContact = pathname === '/contact'
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-line" style={{ height: '70px' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-        {/* Logo — plain <img> for instant first-paint (no next/image optimisation
-            pipeline, which stalls in dev mode). The asset is tiny (~125 KB). */}
-        <Link href="/" aria-label="Opal Perfumes — home" className="flex items-center flex-shrink-0">
+    <header
+      ref={headerRef}
+      data-hidden={hidden}
+      className="sticky top-0 z-[4] border-b border-line bg-black transition-transform duration-[250ms] ease-in-out data-[hidden=true]:-translate-y-full"
+    >
+      {/* ── Row 1 ─────────────────────────────────────────────────────── */}
+      <div className="container-page--xl mx-auto flex items-center justify-between px-12 py-4">
+        <div className="w-40">
+          <CurrencySelect />
+        </div>
+
+        <Link href="/" aria-label="Opal Perfume — home" className="flex-shrink-0">
+          {/* Plain <img> for instant first paint — the asset is small and the
+              optimisation pipeline stalls on it in dev.
+              Width-capped rather than height-capped: the lockup is a wide
+              horizontal mark, so constraining height alone would let it
+              overrun the header's centre slot. */}
           <img
             src="/logo.png"
-            alt="Opal Perfumes"
-            width={702}
-            height={205}
-            className="h-12 w-auto"
+            alt="Opal Perfume"
+            className="h-auto w-[240px] max-w-full lg:w-[280px]"
           />
         </Link>
 
-        {/* Desktop Nav — Radix NavigationMenu */}
-        <div className="hidden md:flex items-center gap-8">
-          <NavigationMenu.Root>
-            <NavigationMenu.List className="flex items-center gap-8 list-none m-0 p-0">
-              {/* Products dropdown */}
-              <NavigationMenu.Item className="relative">
-                <NavigationMenu.Trigger
-                  className={cn(
-                    'group flex items-center gap-1 bg-transparent border-0 cursor-pointer',
-                    linkBase,
-                    isProductsActive ? activeStyle : idleStyle
-                  )}
-                >
-                  Products
-                  <ChevronDown
-                    className="w-3.5 h-3.5 transition-transform duration-300 group-data-[state=open]:rotate-180"
-                    aria-hidden
-                  />
-                </NavigationMenu.Trigger>
+        <div className="flex w-40 items-center justify-end gap-5">
+          <button
+            type="button"
+            onClick={openSearch}
+            aria-label="Search"
+            className="text-gold/70 transition-colors hover:text-gold"
+          >
+            <Search className="h-4 w-4" />
+          </button>
 
-                <NavigationMenu.Content className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-lg rounded-lg border border-line py-1 z-50">
+          {!authDisabled && (
+            <div className="relative">
+              {isLoggedIn ? (
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-label="Account menu"
+                  aria-expanded={userMenuOpen}
+                  className="block text-gold/70 transition-colors hover:text-gold"
+                >
+                  <User className="h-4 w-4" />
+                </button>
+              ) : (
+                <Link href="/login" aria-label="Sign in" className="block text-gold/70 transition-colors hover:text-gold">
+                  <User className="h-4 w-4" />
+                </Link>
+              )}
+
+              {userMenuOpen && isLoggedIn && (
+                <div className="absolute right-0 top-full mt-3 w-44 border border-line bg-black py-1">
+                  <Link href="/account" className="block px-4 py-2.5 text-xs uppercase tracking-[0.18em] text-gold/70 hover:text-gold">
+                    Account
+                  </Link>
+                  <Link href="/account/orders" className="block px-4 py-2.5 text-xs uppercase tracking-[0.18em] text-gold/70 hover:text-gold">
+                    Orders
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="block w-full px-4 py-2.5 text-left text-xs uppercase tracking-[0.18em] text-gold/70 hover:text-gold"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={openCart}
+            aria-label={`Cart, ${cart.item_count} items`}
+            className="relative text-gold/70 transition-colors hover:text-gold"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {cart.item_count > 0 && (
+              <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[10px] text-black">
+                {cart.item_count}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Row 2 — primary nav ───────────────────────────────────────── */}
+      <nav className="border-t border-line-soft">
+        {/* Root spans the full width so the mega-menu viewport below can be
+            full-bleed; the list itself stays centred. */}
+        <NavigationMenu.Root className="relative w-full">
+          <NavigationMenu.List className="m-0 flex list-none items-center justify-center gap-8 p-0 py-3">
+            <NavigationMenu.Item>
+              <NavigationMenu.Link asChild>
+                <Link href="/" className={cn(linkBase, pathname === '/' ? active : idle)}>Home</Link>
+              </NavigationMenu.Link>
+            </NavigationMenu.Item>
+
+            <NavigationMenu.Item>
+              <NavigationMenu.Trigger
+                className={cn('group flex cursor-pointer items-center gap-1 border-0 bg-transparent', linkBase, isProducts ? active : idle)}
+              >
+                Collections
+                <ChevronDown className="h-3 w-3 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
+              </NavigationMenu.Trigger>
+
+              {/* Full-bleed mega menu — the reference renders this as an
+                  edge-to-edge strip under the header (40px/48px padding) with
+                  the collections in a single flex row, 40px apart. */}
+              <NavigationMenu.Content className="w-full">
+                <div className="container-page flex flex-wrap items-center gap-x-10 gap-y-4 py-10">
                   <NavigationMenu.Link asChild>
                     <Link
                       href="/products"
-                      className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2 transition-colors duration-200"
+                      className="whitespace-nowrap text-xs uppercase tracking-[0.18em] text-gold transition-colors hover:text-ink"
                     >
                       All Products
                     </Link>
                   </NavigationMenu.Link>
+
                   {categories.map((cat) => (
                     <NavigationMenu.Link key={cat.id || cat.slug} asChild>
                       <Link
                         href={`/products/${cat.slug}`}
-                        className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2 transition-colors duration-200"
+                        className="whitespace-nowrap text-xs uppercase tracking-[0.18em] text-gold/70 transition-colors hover:text-gold"
                       >
                         {cat.name}
                       </Link>
                     </NavigationMenu.Link>
                   ))}
-                </NavigationMenu.Content>
-              </NavigationMenu.Item>
+                </div>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
 
-              <NavigationMenu.Item>
-                <NavigationMenu.Link asChild>
-                  <Link href="/about" className={cn(linkBase, isAboutActive ? activeStyle : idleStyle)}>
-                    About Us
-                  </Link>
-                </NavigationMenu.Link>
-              </NavigationMenu.Item>
+            <NavigationMenu.Item>
+              <NavigationMenu.Link asChild>
+                <Link href="/about" className={cn(linkBase, isAbout ? active : idle)}>About Us</Link>
+              </NavigationMenu.Link>
+            </NavigationMenu.Item>
 
-              <NavigationMenu.Item>
-                <NavigationMenu.Link asChild>
-                  <Link href="/contact" className={cn(linkBase, isContactActive ? activeStyle : idleStyle)}>
-                    Contact Us
-                  </Link>
-                </NavigationMenu.Link>
-              </NavigationMenu.Item>
-            </NavigationMenu.List>
-          </NavigationMenu.Root>
+            <NavigationMenu.Item>
+              <NavigationMenu.Link asChild>
+                <Link href="/contact" className={cn(linkBase, isContact ? active : idle)}>Contact</Link>
+              </NavigationMenu.Link>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
 
-          {/* Search */}
-          <button type="button" onClick={openSearch}
-            className="text-muted hover:text-gold transition-colors duration-300" aria-label="Open search">
-            <Search className="w-5 h-5" />
-          </button>
-
-          {/* Cart icon with badge */}
-          <Link href="/cart" className="relative text-muted hover:text-gold transition-colors duration-300" aria-label="View cart">
-            <ShoppingBag className="w-5 h-5" />
-            {cart.item_count > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
-                {cart.item_count}
-              </span>
-            )}
-          </Link>
-
-          {/* User menu */}
-          {!authDisabled && (
-          <div className="relative">
-            {isLoggedIn ? (
-              <>
-                <button type="button" onClick={() => setUserMenuOpen((o) => !o)}
-                  className="flex items-center gap-1 text-muted hover:text-gold transition-colors duration-300"
-                  aria-label="Account menu" aria-expanded={userMenuOpen}>
-                  <User className="w-5 h-5" />
-                </button>
-                {userMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-surface shadow-lg rounded-lg border border-line py-1 z-50">
-                      <div className="px-4 py-2 border-b border-line">
-                        <p className="text-xs text-muted">Signed in as</p>
-                        <p className="text-sm font-medium text-ink truncate">{customer?.email}</p>
-                      </div>
-                      <Link href="/account" onClick={() => setUserMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2">
-                        My Account
-                      </Link>
-                      <Link href="/account/orders" onClick={() => setUserMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2">
-                        Order History
-                      </Link>
-                      <button type="button"
-                        onClick={async () => { await logout(); setUserMenuOpen(false) }}
-                        className="block w-full text-left px-4 py-2.5 text-sm text-muted hover:text-gold hover:bg-surface-2 border-t border-line">
-                        Sign Out
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <Link href="/login" className="text-sm font-medium text-muted hover:text-gold transition-colors">
-                Sign In
-              </Link>
-            )}
+          {/* The panel renders here rather than inside the item, which is what
+              lets it span the viewport instead of hanging off the trigger. */}
+          <div className="absolute inset-x-0 top-full z-50">
+            <NavigationMenu.Viewport className="w-full border-b border-line bg-black" />
           </div>
-          )}
-        </div>
-
-        {/* Mobile: search + cart + hamburger */}
-        <div className="flex md:hidden items-center gap-3">
-          <button type="button" onClick={openSearch} className="text-muted hover:text-gold" aria-label="Open search">
-            <Search className="w-5 h-5" />
-          </button>
-          <Link href="/cart" className="relative text-muted hover:text-gold" aria-label="View cart">
-            <ShoppingBag className="w-5 h-5" />
-            {cart.item_count > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold flex items-center justify-center">
-                {cart.item_count}
-              </span>
-            )}
-          </Link>
-          <button type="button" onClick={() => setMobileOpen((o) => !o)}
-            className="text-muted hover:text-gold" aria-label="Toggle mobile menu" aria-expanded={mobileOpen}>
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu Drawer */}
-      {mobileOpen && (
-        <div className="md:hidden bg-surface border-t border-line shadow-md">
-          <div className="px-4 py-4 flex flex-col gap-1">
-            {/* Products accordion */}
-            <button
-              type="button"
-              onClick={() => setMobileProdOpen((o) => !o)}
-              className="flex items-center justify-between w-full text-left px-2 py-2.5 text-sm font-medium text-muted hover:text-gold transition-colors"
-              aria-expanded={mobileProdOpen}
-            >
-              Products
-              <ChevronDown className={cn('w-3.5 h-3.5 transition-transform duration-300', mobileProdOpen && 'rotate-180')} />
-            </button>
-            {mobileProdOpen && (
-              <div className="pl-4 flex flex-col gap-1 bg-surface-2 rounded-lg py-1">
-                <Link href="/products" className="block px-2 py-2 text-sm text-muted hover:text-gold transition-colors">
-                  All Products
-                </Link>
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id || cat.slug}
-                    href={`/products/${cat.slug}`}
-                    className="block px-2 py-2 text-sm text-muted hover:text-gold transition-colors"
-                  >
-                    {cat.name}
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            <Link href="/about" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold transition-colors">
-              About Us
-            </Link>
-            <Link href="/contact" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold transition-colors">
-              Contact Us
-            </Link>
-            {!authDisabled && (
-            <div className="border-t border-line mt-2 pt-2">
-              {isLoggedIn ? (
-                <>
-                  <Link href="/account" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
-                    My Account
-                  </Link>
-                  <Link href="/account/orders" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
-                    Order History
-                  </Link>
-                  <button type="button" onClick={() => logout()}
-                    className="block w-full text-left px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link href="/login" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
-                    Sign In
-                  </Link>
-                  <Link href="/signup" className="block px-2 py-2.5 text-sm font-medium text-muted hover:text-gold">
-                    Create Account
-                  </Link>
-                </>
-              )}
-            </div>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
+        </NavigationMenu.Root>
+      </nav>
+    </header>
   )
 }

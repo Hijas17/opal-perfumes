@@ -1,48 +1,49 @@
 'use client'
 
+/**
+ * Cart PAGE — deliberately different from the cart drawer, as on the reference:
+ * a dark, centred table layout (PRODUCT | QUANTITY | TOTAL) with hairline rules,
+ * the free-shipping bar under the title, and the order note beside the totals.
+ */
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
+
 import { useCart } from '@/components/CartProvider'
 import { getImageUrl } from '@/lib/image'
-import { formatPrice } from '@/lib/format'
-import { showPrices, buildWhatsAppUrl, buildCartInquiryMessage, whatsappFallback } from '@/lib/config'
-import WhatsAppIcon from '@/components/WhatsAppIcon'
+import {
+  showPrices,
+  useWhatsAppInquiry,
+  buildWhatsAppUrl,
+  buildCartInquiryMessage,
+  whatsappFallback,
+} from '@/lib/config'
+import FreeShippingBar from '@/components/FreeShippingBar'
+import QuantitySelector from '@/components/QuantitySelector'
 import type { SiteSettings } from '@/lib/types'
+import { useMoney } from '@/components/CurrencyProvider'
+
+const DEFAULT_THRESHOLD = 250
 
 interface Props {
   settings: SiteSettings
 }
 
 export default function CartView({ settings }: Props) {
+  const money = useMoney()
   const { cart, loading, update, remove } = useCart()
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [note, setNote] = useState('')
 
   const waNumber = settings.whatsapp_number || whatsappFallback
   const waHref = waNumber
     ? buildWhatsAppUrl(waNumber, buildCartInquiryMessage(cart.items))
     : null
 
-  // Empty cart
-  if (!loading && cart.items.length === 0) {
-    return (
-      <div className="pt-[70px] min-h-screen">
-        <div className="max-w-md mx-auto px-4 py-24 text-center">
-          <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-muted-2" />
-          <h1 className="font-display text-3xl font-semibold text-ink mb-3">Your cart is empty</h1>
-          <p className="text-muted mb-8">Browse our collection and find your signature scent.</p>
-          <Link href="/products"
-            className="inline-block bg-gold text-white px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors">
-            Shop Perfumes
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  const threshold = Number(settings.free_shipping_threshold) || DEFAULT_THRESHOLD
 
   async function changeQty(productId: string, q: number) {
-    if (q < 1) return
     setBusyId(productId)
     try { await update(productId, q) } finally { setBusyId(null) }
   }
@@ -52,96 +53,138 @@ export default function CartView({ settings }: Props) {
     try { await remove(productId) } finally { setBusyId(null) }
   }
 
+  if (!loading && cart.items.length === 0) {
+    return (
+      <div className="section-spacing pt-16 md:pt-0">
+        <div className="container-page container-page--xs flex flex-col items-center gap-6 py-16 text-center">
+          <h1 className="h2">Cart</h1>
+          <p className="text-sm text-muted">Your cart is empty.</p>
+          <Link href="/products" className="btn mt-2">Continue shopping</Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="pt-[70px] min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="font-display text-4xl font-semibold text-ink mb-8">Your Cart</h1>
+    <div className="section-spacing pt-16 md:pt-0">
+      <div className="container-page" style={{ maxWidth: '980px' }}>
+        <h1 className="h2 text-center">Cart</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Items */}
-          <div className="lg:col-span-2 space-y-4">
-            {cart.items.map((item) => {
-              const img = item.image ? getImageUrl(item.image) : null
-              const link = `/products/${item.subcategory_slug || 'all'}/${item.slug}`
-              const lineTotal = item.price * item.quantity
-              const isBusy = busyId === item.product_id
+        <div className="mx-auto mt-8 max-w-md">
+          <FreeShippingBar
+            subtotal={cart.subtotal}
+            currency={cart.currency}
+            threshold={threshold}
+          />
+        </div>
 
-              return (
-                <div key={item.product_id} className="flex gap-4 bg-surface border border-line rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-card)]">
-                  <Link href={link} className="flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 bg-cream rounded-[var(--radius-card)] overflow-hidden relative">
-                    {img ? (
-                      <Image src={img} alt={item.name} fill sizes="112px" className="object-cover" />
-                    ) : null}
+        {/* Column headers — hidden on small screens where rows stack */}
+        <div className="mt-12 hidden border-b border-line pb-3 md:grid md:grid-cols-[1fr_max-content_120px] md:gap-8">
+          <span className="h6 text-muted">Product</span>
+          <span className="h6 text-center text-muted">Quantity</span>
+          <span className="h6 text-right text-muted">Total</span>
+        </div>
+
+        <ul>
+          {cart.items.map((item) => {
+            const img = item.image ? getImageUrl(item.image) : null
+            const href = `/products/${item.subcategory_slug || 'all'}/${item.slug}`
+            const isBusy = busyId === item.product_id
+
+            return (
+              <li
+                key={item.product_id}
+                className="grid grid-cols-1 gap-6 border-b border-line py-8 md:grid-cols-[1fr_max-content_120px] md:items-center md:gap-8"
+              >
+                {/* Product */}
+                <div className="flex items-center gap-6">
+                  <Link
+                    href={href}
+                    className="relative h-[100px] w-[100px] flex-shrink-0 overflow-hidden rounded-[var(--radius-thumb)] bg-surface"
+                  >
+                    {img && <Image src={img} alt={item.name} fill sizes="100px" className="object-cover" />}
                   </Link>
-
-                  <div className="flex-1 min-w-0 flex flex-col">
-                    <Link href={link} className="font-display font-medium text-base text-ink hover:text-gold transition-colors line-clamp-2">
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <Link href={href} className="h6 text-ink transition-colors hover:text-gold">
                       {item.name}
                     </Link>
                     {showPrices && (
-                      <p className="text-sm text-gold font-semibold mt-1">{formatPrice(item.price, item.currency)}</p>
+                      <span className="text-sm text-muted">
+                        {money(item.price, item.currency)}
+                      </span>
                     )}
-
-                    <div className="mt-auto flex items-center justify-between gap-3">
-                      <div className="flex items-center border border-line rounded-full">
-                        <button type="button" onClick={() => changeQty(item.product_id, item.quantity - 1)}
-                          disabled={isBusy || item.quantity <= 1}
-                          className="w-8 h-8 flex items-center justify-center text-muted hover:text-gold disabled:opacity-30">
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                        <button type="button" onClick={() => changeQty(item.product_id, item.quantity + 1)}
-                          disabled={isBusy}
-                          className="w-8 h-8 flex items-center justify-center text-muted hover:text-gold disabled:opacity-30">
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <button type="button" onClick={() => removeItem(item.product_id)} disabled={isBusy}
-                        className="text-muted-2 hover:text-red-500 transition-colors" aria-label="Remove">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
-
-                  {showPrices && (
-                    <div className="hidden sm:flex flex-col items-end justify-between">
-                      <p className="font-medium text-ink">{formatPrice(lineTotal, item.currency)}</p>
-                    </div>
-                  )}
                 </div>
-              )
-            })}
+
+                {/* Quantity */}
+                <div className="flex items-center gap-4 md:justify-center">
+                  <QuantitySelector
+                    size="sm"
+                    value={item.quantity}
+                    disabled={isBusy}
+                    onChange={(q) => changeQty(item.product_id, q)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.product_id)}
+                    disabled={isBusy}
+                    className="text-xs text-muted-2 underline underline-offset-4 transition-colors hover:text-gold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                {/* Line total */}
+                {showPrices ? (
+                  <span className="text-sm text-gold md:text-right">
+                    {money(item.price * item.quantity, item.currency)}
+                  </span>
+                ) : (
+                  <span />
+                )}
+              </li>
+            )
+          })}
+        </ul>
+
+        {/* Note + totals */}
+        <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-2">
+          <div className="flex flex-col gap-3">
+            <label htmlFor="order-note" className="h6 text-muted">Add order note</label>
+            <textarea
+              id="order-note"
+              rows={4}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="How can we help you?"
+              className="w-full border border-line bg-surface-2 p-3 text-sm text-ink outline-none placeholder:text-muted-2 focus:border-gold"
+            />
           </div>
 
-          {/* Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-cream rounded-[var(--radius-card)] p-6 sticky top-24">
-              <h2 className="font-display text-xl font-semibold text-ink mb-4">Order Summary</h2>
-              <dl className="space-y-2 text-sm mb-4">
-                <div className="flex justify-between"><dt className="text-muted">Items</dt><dd className="font-medium">{cart.item_count}</dd></div>
-                {showPrices && (
-                  <>
-                    <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd className="font-medium">{formatPrice(cart.subtotal, cart.currency)}</dd></div>
-                    <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="font-medium text-green-700">Free</dd></div>
-                  </>
-                )}
-              </dl>
-              {showPrices && (
-                <div className="border-t border-line pt-3 mb-6 flex justify-between text-base">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
-                </div>
-              )}
-              {waHref ? (
-                <a href={waHref} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2.5 w-full bg-gold text-[#1a1206] py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors">
-                  <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
-                  Send Inquiry via WhatsApp
-                </a>
+          <div className="flex flex-col gap-4 md:items-end">
+            {showPrices && (
+              <div className="flex w-full justify-between md:max-w-xs">
+                <span className="h6 text-muted">Total</span>
+                <span className="h6 text-gold">{money(cart.subtotal, cart.currency)}</span>
+              </div>
+            )}
+            <p className="text-xs text-muted-2 md:text-right">
+              Taxes and shipping calculated at checkout
+            </p>
+
+            <div className="flex w-full flex-col gap-3 md:max-w-xs">
+              {useWhatsAppInquiry ? (
+                waHref ? (
+                  <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn w-full">
+                    Inquire on WhatsApp
+                  </a>
+                ) : (
+                  <p className="text-xs text-sale">WhatsApp number not configured.</p>
+                )
               ) : (
-                <p className="text-xs text-red-500 text-center">WhatsApp number not configured.</p>
+                <Link href="/checkout" className="btn w-full">Checkout</Link>
               )}
-              <Link href="/products" className="block text-center text-sm text-muted mt-4 hover:text-gold transition-colors">
+              <Link href="/products" className="btn btn--outline w-full">
                 Continue shopping
               </Link>
             </div>

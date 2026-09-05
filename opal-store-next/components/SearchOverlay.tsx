@@ -1,20 +1,39 @@
 'use client'
 
+/**
+ * Predictive search — modelled on the reference's header search.
+ *
+ * It drops down as a full-width panel directly beneath the sticky header
+ * (rather than a centred modal), over a 40% scrim: a magnifier, a borderless
+ * tracked input and a close button, with a horizontal row of product cards
+ * appearing as you type. Products only — no collection or article suggestions,
+ * matching the reference.
+ *
+ * "View all results" and Enter both go to /products?q=…
+ */
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
-import { Search, X, Package } from 'lucide-react'
+import { Search, X } from 'lucide-react'
+
 import { getProducts } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
+import { showPrices } from '@/lib/config'
 import type { Product } from '@/lib/types'
+import { useMoney } from './CurrencyProvider'
+
+const DEBOUNCE_MS = 300
 
 interface SearchOverlayProps {
   onClose: () => void
 }
 
 export default function SearchOverlay({ onClose }: SearchOverlayProps) {
+  const money = useMoney()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
@@ -26,120 +45,117 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
     if (timerRef.current) clearTimeout(timerRef.current)
     if (!q.trim()) {
       setResults([])
+      setLoading(false)
       return
     }
     timerRef.current = setTimeout(async () => {
       setLoading(true)
       try {
         const items = await getProducts({ search: q })
-        setResults(items.slice(0, 8))
+        setResults(items.slice(0, 5))
       } catch {
         setResults([])
       } finally {
         setLoading(false)
       }
-    }, 300)
+    }, DEBOUNCE_MS)
   }, [])
 
   useEffect(() => {
-    search(query)
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [query, search])
+    inputRef.current?.focus()
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
 
-  function handleResultClick(product: Product) {
-    const category = product.subcategory_slug || product.category?.slug || 'all'
-    router.push(`/products/${category}/${product.slug}`)
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!query.trim()) return
+    router.push(`/products?q=${encodeURIComponent(query.trim())}`)
     onClose()
   }
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog.Root open onOpenChange={(o) => { if (!o) onClose() }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[200] bg-black/80 search-overlay-enter" />
+        <Dialog.Overlay className="search-overlay-enter fixed inset-0 z-[60] bg-black/40" />
 
         <Dialog.Content
-          className="fixed inset-x-0 top-24 z-[201] flex justify-center px-4"
-          onOpenAutoFocus={(e) => {
-            e.preventDefault()
-            inputRef.current?.focus()
-          }}
+          className="search-overlay-enter fixed inset-x-0 z-[61] border-b border-line bg-black"
+          style={{ top: 'var(--sticky-area-height)' }}
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <VisuallyHidden.Root asChild>
-            <Dialog.Title>Search Perfumes</Dialog.Title>
+          <VisuallyHidden.Root>
+            <Dialog.Title>Search products</Dialog.Title>
           </VisuallyHidden.Root>
 
-          <div className="w-full max-w-2xl">
-            {/* Input */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-2" aria-hidden />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search perfumes…"
-                className="w-full pl-12 pr-12 py-4 text-lg bg-surface rounded-xl shadow-2xl outline-none text-ink placeholder-[#8a7757]"
-              />
-              <Dialog.Close
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-2 hover:text-muted transition-colors"
-                aria-label="Close search"
-              >
-                <X className="w-5 h-5" />
-              </Dialog.Close>
-            </div>
+          <form onSubmit={submit} className="container-page flex items-center gap-4 py-6">
+            <Search className="h-4 w-4 flex-shrink-0 text-gold" aria-hidden />
+            <input
+              ref={inputRef}
+              type="search"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); search(e.target.value) }}
+              placeholder="Search"
+              aria-label="Search products"
+              className="min-w-0 flex-1 border-0 bg-transparent text-[1.11rem] uppercase tracking-[0.18em] text-gold outline-none placeholder:text-gold/40"
+            />
+            <Dialog.Close
+              aria-label="Close search"
+              className="flex-shrink-0 text-muted opacity-60 transition-opacity duration-200 hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+            </Dialog.Close>
+          </form>
 
-            {/* Results */}
-            {(results.length > 0 || loading || (query.trim() && !loading)) && (
-              <div className="mt-2 bg-surface rounded-xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
-                {loading && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
+          {query.trim() && (
+            <div className="container-page max-h-[60vh] overflow-y-auto pb-8">
+              {loading && <p className="text-sm text-muted-2">Searching…</p>}
 
-                {!loading && results.map((product) => {
-                  const imgPath = product.images?.primary
-                  const imgUrl = imgPath ? getImageUrl(imgPath) : null
-                  const categoryName = product.subcategory_name || product.category?.name || ''
+              {!loading && results.length === 0 && (
+                <p className="text-sm text-muted-2">
+                  No products match &ldquo;{query.trim()}&rdquo;.
+                </p>
+              )}
 
-                  return (
-                    <button
-                      key={product.id || product.slug}
-                      type="button"
-                      onClick={() => handleResultClick(product)}
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-2 transition-colors duration-200 border-b border-line last:border-0"
+              {!loading && results.length > 0 && (
+                <>
+                  <p className="eyebrow mb-4">Products</p>
+                  <ul className="no-scrollbar flex gap-6 overflow-x-auto pb-2">
+                    {results.map((p) => {
+                      const src = p.images?.primary ? getImageUrl(p.images.primary) : null
+                      const href = `/products/${p.subcategory_slug || p.category?.slug || 'all'}/${p.slug}`
+                      const price = showPrices ? money(p.price, p.currency) : null
+
+                      return (
+                        <li key={p.id || p.slug} className="w-[160px] flex-shrink-0">
+                          <Link href={href} onClick={onClose} className="group block">
+                            <div className="relative aspect-square overflow-hidden bg-surface">
+                              {src && (
+                                <Image src={src} alt={p.name} fill sizes="160px" className="object-cover" />
+                              )}
+                            </div>
+                            <p className="mt-3 text-xs uppercase tracking-[0.18em] text-ink transition-colors group-hover:text-gold">
+                              {p.name}
+                            </p>
+                            {price && <p className="mt-1 text-xs text-gold">{price}</p>}
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+
+                  <div className="mt-6">
+                    <Link
+                      href={`/products?q=${encodeURIComponent(query.trim())}`}
+                      onClick={onClose}
+                      className="text-xs uppercase tracking-[0.18em] text-gold underline underline-offset-4"
                     >
-                      {imgUrl ? (
-                        <Image
-                          src={imgUrl}
-                          alt={product.name}
-                          width={48}
-                          height={48}
-                          className="object-cover rounded-lg flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-surface-2 rounded-lg flex-shrink-0 flex items-center justify-center">
-                          <Package className="w-6 h-6 text-muted-2" />
-                        </div>
-                      )}
-                      <div className="text-left">
-                        <p className="font-display text-sm font-medium text-ink">{product.name}</p>
-                        {categoryName && <p className="text-xs text-muted mt-0.5">{categoryName}</p>}
-                      </div>
-                    </button>
-                  )
-                })}
-
-                {!loading && results.length === 0 && query.trim() && (
-                  <div className="py-8 text-center text-sm text-muted">
-                    No products found for &ldquo;{query}&rdquo;
+                      View all results
+                    </Link>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                </>
+              )}
+            </div>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

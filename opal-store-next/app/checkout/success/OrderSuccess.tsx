@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
 import { fetchOrder } from '@/lib/customer-api'
-import { formatPrice } from '@/lib/format'
 import type { Order } from '@/lib/types'
+import { useMoney } from '@/components/CurrencyProvider'
 
 export default function OrderSuccess({ orderId }: { orderId: string | null }) {
+  const money = useMoney()
   const [order,   setOrder]   = useState<Order | null>(null)
   const [loading, setLoading] = useState(!!orderId)
 
@@ -20,7 +21,7 @@ export default function OrderSuccess({ orderId }: { orderId: string | null }) {
   }, [orderId])
 
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0 min-h-screen">
       <div className="max-w-2xl mx-auto px-4 py-16">
         <div className="bg-surface rounded-[var(--radius-card)] shadow-[var(--shadow-card)] p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
@@ -54,7 +55,7 @@ export default function OrderSuccess({ orderId }: { orderId: string | null }) {
               <div className="border-t border-line my-3" />
               <div className="flex justify-between text-base">
                 <span className="font-semibold">Total</span>
-                <span className="font-semibold text-gold">{formatPrice(order.total, order.currency)}</span>
+                <span className="font-semibold text-gold">{money(order.total, order.currency)}</span>
               </div>
             </div>
           )}
@@ -62,12 +63,12 @@ export default function OrderSuccess({ orderId }: { orderId: string | null }) {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {order && (
               <Link href={`/account/orders/${order.id}`}
-                className="inline-block bg-gold text-white px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors">
+                className="inline-block btn">
                 View Order
               </Link>
             )}
             <Link href="/products"
-              className="inline-block border border-gold text-gold px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-white transition-all">
+              className="inline-block border border-gold text-gold px-8 py-3 text-sm font-medium tracking-wider uppercase hover:bg-gold hover:text-white transition-all">
               Continue Shopping
             </Link>
           </div>

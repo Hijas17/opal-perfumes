@@ -40,10 +40,12 @@ export default function MobileNavbar() {
         </div>
 
         <Link href="/" aria-label="Home" className="absolute left-1/2 -translate-x-1/2">
+          {/* Width-capped: the lockup is wide, so a height cap alone would
+              run it under the hamburger and cart icons on a 375px bar. */}
           <img
             src="/logo.png"
             alt="Opal Perfumes"
-            className="h-11 w-auto"
+            className="h-auto w-[170px] max-w-[55vw]"
           />
         </Link>
 

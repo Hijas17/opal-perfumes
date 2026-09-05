@@ -3,29 +3,26 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { getProduct } from '@/lib/api'
+import { getProduct, getProducts, getSettings } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
-import { formatPrice } from '@/lib/format'
-import { cn } from '@/lib/utils'
-import { showPrices } from '@/lib/config'
+import { showPrices, buildWhatsAppUrl, whatsappFallback } from '@/lib/config'
 import ProductGallery from '@/components/ProductGallery'
 import SocialShare from '@/components/SocialShare'
-import AddToCartButton from '@/components/AddToCartButton'
-import ExpandableDescription from '@/components/ExpandableDescription'
-import WhatsAppIcon from '@/components/WhatsAppIcon'
-import { buildWhatsAppUrl, whatsappFallback } from '@/lib/config'
-import { getSettings } from '@/lib/api'
+import ProductBuyBlock from '@/components/ProductBuyBlock'
+import ComplementaryProducts from '@/components/ComplementaryProducts'
+import Price from '@/components/Price'
+import Accordion from '@/components/Accordion'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
-const LABEL_STYLES: Record<string, string> = {
-  'new':              'bg-gold text-white',
-  'bestseller':       'bg-gold text-[#1a1206]',
-  'limited edition':  'bg-purple-700 text-white',
-  'featured':         'bg-blue-600 text-white',
+const LABEL_CLASS: Record<string, string> = {
+  'new':             'badge badge--new',
+  'bestseller':      'badge badge--bestseller',
+  'limited edition': 'badge badge--limited',
+  'featured':        'badge badge--featured',
 }
 
-// React `cache` dedupes the request between generateMetadata and the page component
+// React `cache` dedupes the request between generateMetadata and the page
 const fetchProduct = cache(async (slug: string) => getProduct(slug))
 
 interface RouteParams { category: string; slug: string }
@@ -39,16 +36,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const catName = p.subcategory_name || p.category?.name || ''
   const productImage = p.images?.primary ? getImageUrl(p.images.primary) ?? undefined : undefined
   const scentSummary = [p.scent_notes?.top, p.scent_notes?.middle, p.scent_notes?.base].filter(Boolean).join(', ')
-  const description = (
+  // Admin-supplied metadata wins; the generated version is the fallback.
+  const generatedDescription = (
     [p.short_description, scentSummary && `Scent notes: ${scentSummary}.`]
       .filter(Boolean)
       .join(' ')
       .slice(0, 155)
   ) || `Buy ${p.name} — a luxury ${catName || 'Arabian'} fragrance by Opal Perfumes. Available in UAE.`
 
+  const description = p.meta_description?.trim() || generatedDescription
+  const title = p.meta_title?.trim() || `${p.name} — ${catName || 'Luxury Perfume'} UAE`
+
   const url = `/products/${catSlug}/${slug}`
-  // Admin-supplied SEO keywords take precedence; we still append the defaults so
-  // every product has the brand/category baseline indexed.
   const adminKeywords = Array.isArray(p.seo_keywords) ? p.seo_keywords.filter(Boolean) : []
   const defaultKeywords = [
     p.name,
@@ -64,21 +63,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     seen.add(k)
     return true
   })
+
   return {
-    title: `${p.name} — ${catName || 'Luxury Perfume'} UAE`,
+    title,
     description,
     keywords,
     alternates: { canonical: url },
     openGraph: {
       type: 'website',
-      title: `${p.name} — Opal Perfumes`,
+      title: p.meta_title?.trim() || `${p.name} — Opal Perfumes`,
       description,
       url,
       images: productImage ? [productImage] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${p.name} — Opal Perfumes`,
+      title: p.meta_title?.trim() || `${p.name} — Opal Perfumes`,
       description,
       images: productImage ? [productImage] : undefined,
     },
@@ -90,23 +90,25 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const [p, settings] = await Promise.all([fetchProduct(slug), getSettings()])
   if (!p) notFound()
 
-  const waNumber = settings.whatsapp_number || whatsappFallback
-  const productPageUrl = `${SITE_URL}/products/${p.subcategory_slug || p.category?.slug || routeCatSlug || 'all'}/${p.slug}`
-  const waHref = waNumber
-    ? buildWhatsAppUrl(
-        waNumber,
-        `Hi! I'd like to inquire about ${p.name}.\n${productPageUrl}`,
-      )
-    : null
-
+  const brandName = settings.brand_name || 'Opal Perfume'
   const catSlug = p.subcategory_slug || p.category?.slug || routeCatSlug || 'all'
   const catName = p.subcategory_name || p.category?.name || ''
-  const priceStr = showPrices ? formatPrice(p.price, p.currency) : null
+
+  // No recommendations endpoint — use same-category products, current excluded.
+  const siblings = (await getProducts({ category: catSlug, limit: 6 }))
+    .filter((s) => s.slug !== p.slug)
+    .slice(0, 4)
+
+  const waNumber = settings.whatsapp_number || whatsappFallback
+  const productPageUrl = `${SITE_URL}/products/${catSlug}/${p.slug}`
+  const waHref = waNumber
+    ? buildWhatsAppUrl(waNumber, `Hi! I'd like to inquire about ${p.name}.\n${productPageUrl}`)
+    : null
 
   const labelKey = p.label?.toLowerCase()
-  const labelStyle = labelKey ? LABEL_STYLES[labelKey] : null
+  const labelClass = labelKey ? LABEL_CLASS[labelKey] : null
 
-  // ── Build thumbnails from images object ───────────────────────────────
+  // ── Gallery media ──────────────────────────────────────────────────────
   const imgs = p.images || {}
   const thumbnails: { src: string; label: string }[] = []
   if (imgs.primary)     { const s = getImageUrl(imgs.primary);     if (s) thumbnails.push({ src: s, label: 'Main' }) }
@@ -119,19 +121,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
     })
   }
 
-  // Purchase links (single object, array, or undefined)
   const purchaseLinks = Array.isArray(p.purchase_links)
     ? p.purchase_links
-    : p.purchase_links
-    ? [p.purchase_links]
-    : []
+    : p.purchase_links ? [p.purchase_links] : []
 
   const scentNotes = p.scent_notes || {}
-  const hasScent = scentNotes.top || scentNotes.middle || scentNotes.base
+  const hasScent = Boolean(scentNotes.top || scentNotes.middle || scentNotes.base)
 
-  // ── JSON-LD Product + BreadcrumbList schema ────────────────────────────
+  // ── JSON-LD ────────────────────────────────────────────────────────────
   const productImage = imgs.primary ? getImageUrl(imgs.primary) : undefined
-  const productUrl = `${SITE_URL}/products/${catSlug}/${slug}`
 
   const breadcrumbItems = [
     { '@type': 'ListItem', 'position': 1, 'name': 'Home',     'item': SITE_URL },
@@ -143,10 +141,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     })
   }
   breadcrumbItems.push({
-    '@type': 'ListItem',
-    'position': catName ? 4 : 3,
-    'name': p.name,
-    'item': productUrl,
+    '@type': 'ListItem', 'position': catName ? 4 : 3, 'name': p.name, 'item': productPageUrl,
   })
 
   const productJsonLd = {
@@ -158,18 +153,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
         'description': p.short_description || `${p.name} — a luxury ${catName || 'Arabian'} fragrance.`,
         'image': productImage,
         'sku': p.slug,
-        'brand': { '@type': 'Brand', 'name': 'Opal Perfume' },
+        'brand': { '@type': 'Brand', 'name': brandName },
         'category': catName || 'Perfume',
-        // Only emit Offer/price in structured data when we're publicly displaying prices.
-        // Prevents Google from showing a price in search results that contradicts our site.
         ...(showPrices && p.price && {
           'offers': {
             '@type': 'Offer',
             'priceCurrency': p.currency || 'AED',
             'price': parseFloat(String(p.price)).toFixed(2),
             'availability': p.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-            'url': productUrl,
-            'seller': { '@type': 'Organization', 'name': 'Opal Perfume' },
+            'url': productPageUrl,
+            'seller': { '@type': 'Organization', 'name': brandName },
           },
         }),
         ...(hasScent && {
@@ -180,140 +173,219 @@ export default async function ProductDetailPage({ params }: PageProps) {
           ].filter(Boolean),
         }),
       },
-      {
-        '@type': 'BreadcrumbList',
-        'itemListElement': breadcrumbItems,
-      },
+      { '@type': 'BreadcrumbList', 'itemListElement': breadcrumbItems },
     ],
   }
 
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c') }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-muted mb-8">
-          <Link href="/"         className="hover:text-gold transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/products" className="hover:text-gold transition-colors">Products</Link>
-          {catName && (
-            <>
-              <span>/</span>
-              <Link href={`/products/${catSlug}`} className="hover:text-gold transition-colors">{catName}</Link>
-            </>
-          )}
-          <span>/</span>
-          <span className="text-ink truncate max-w-[180px]">{p.name}</span>
-        </nav>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* Image Gallery */}
-          <ProductGallery productName={p.name} thumbnails={thumbnails} />
-
-          {/* Details */}
-          <div>
+      {/* ── Main product section ─────────────────────────────────────── */}
+      <section className="section-spacing--tight bg-surface">
+        <div className="container-page">
+          <nav className="mb-8 flex items-center gap-2 text-xs text-muted-2">
+            <Link href="/" className="transition-colors hover:text-gold">Home</Link>
+            <span>/</span>
+            <Link href="/products" className="transition-colors hover:text-gold">Products</Link>
             {catName && (
-              <Link href={`/products/${catSlug}`}
-                className="inline-block text-xs font-medium text-gold border border-gold px-3 py-1 rounded-full hover:bg-gold hover:text-white transition-all duration-200 mb-4">
-                {catName}
-              </Link>
+              <>
+                <span>/</span>
+                <Link href={`/products/${catSlug}`} className="transition-colors hover:text-gold">{catName}</Link>
+              </>
             )}
+            <span>/</span>
+            <span className="max-w-[180px] truncate text-muted">{p.name}</span>
+          </nav>
 
-            {labelKey && labelStyle && (
-              <span className={cn('inline-block text-xs font-medium px-3 py-1 rounded-sm ml-2 mb-4', labelStyle)}>
-                {p.label}
-              </span>
-            )}
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">
+            {/* Left — gallery, then the accordions beneath it */}
+            <div>
+              <ProductGallery productName={p.name} thumbnails={thumbnails} />
 
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold text-ink leading-tight mb-4">
-              {p.name}
-            </h1>
+              <div className="mt-12">
+                {hasScent && (
+                  <Accordion summary="Fragrance Notes" defaultOpen>
+                    <dl className="grid gap-2 text-sm">
+                      {scentNotes.top && (
+                        <div className="flex gap-2">
+                          <dt className="text-muted">Top Notes:</dt>
+                          <dd className="text-ink">{scentNotes.top}</dd>
+                        </div>
+                      )}
+                      {scentNotes.middle && (
+                        <div className="flex gap-2">
+                          <dt className="text-muted">Middle Notes:</dt>
+                          <dd className="text-ink">{scentNotes.middle}</dd>
+                        </div>
+                      )}
+                      {scentNotes.base && (
+                        <div className="flex gap-2">
+                          <dt className="text-muted">Base Notes:</dt>
+                          <dd className="text-ink">{scentNotes.base}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </Accordion>
+                )}
 
-            {priceStr && <p className="text-2xl text-gold font-semibold mb-4">{priceStr}</p>}
-
-            {p.short_description && (
-              <p className="text-muted text-base leading-relaxed mb-6">{p.short_description}</p>
-            )}
-
-            {p.size_volume && (
-              <div className="flex items-center gap-2 mb-6">
-                <span className="text-xs text-muted-2 uppercase tracking-widest">Volume:</span>
-                <span className="text-sm font-medium text-ink">{p.size_volume}</span>
+                <Accordion summary="Shipping &amp; Returns">
+                  <div className="prose flex flex-col gap-3">
+                    <p>Free delivery within the UAE on orders over AED 250.</p>
+                    <p>
+                      UAE: 1–3 working days. GCC: 5–8 working days. Rest of world:
+                      7–10 working days. Shipping is calculated at checkout and
+                      customs duties are excluded.
+                    </p>
+                    <p>
+                      Unopened items may be returned within 14 days of delivery.
+                      Opened fragrances cannot be returned for hygiene reasons.
+                    </p>
+                  </div>
+                </Accordion>
               </div>
-            )}
-
-            <div className="border-t border-line my-6" />
-
-            {p.full_description && (
-              <ExpandableDescription html={p.full_description} />
-            )}
-
-            {hasScent && (
-              <div className="bg-cream rounded-[var(--radius-card)] p-6 mb-8">
-                <h3 className="font-display text-base font-semibold text-ink text-center mb-4">Scent Notes</h3>
-                <div className="grid grid-cols-3 gap-4 divide-x divide-gray-200">
-                  <ScentNote label="Top"    notes={scentNotes.top} />
-                  <ScentNote label="Middle" notes={scentNotes.middle} />
-                  <ScentNote label="Base"   notes={scentNotes.base} />
-                </div>
-              </div>
-            )}
-
-            {purchaseLinks.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs text-muted-2 uppercase tracking-widest mb-3">Available On</p>
-                <div className="flex flex-wrap gap-3">
-                  {purchaseLinks.map((link, i) => (
-                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                       className="inline-block border-2 border-gold text-gold px-6 py-2.5 text-sm font-medium rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-white transition-all duration-300">
-                      Buy on {link.platform || `Platform ${i + 1}`}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Primary CTA — add to cart */}
-            <div className="mb-3">
-              <AddToCartButton product={p} />
             </div>
-            {/* Secondary CTA — direct WhatsApp inquiry with this specific product */}
-            {waHref && (
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 w-full bg-gold text-[#1a1206] py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors mb-3"
-              >
-                <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
-                Inquire via WhatsApp
-              </a>
-            )}
-            <p className="text-xs text-muted mb-6 text-center">
-              Have questions?{' '}
-              <Link href={`/contact?product=${encodeURIComponent(p.name)}`} className="text-gold hover:underline">
-                Contact us
-              </Link>
-            </p>
 
-            <SocialShare productName={p.name} />
+            {/* Right — sticky buy column */}
+            <div
+              className="self-start lg:sticky"
+              style={{ top: 'calc(var(--sticky-area-height) + 2rem)' }}
+            >
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/products/${catSlug}`}
+                    className="eyebrow transition-colors hover:text-gold"
+                  >
+                    {brandName}
+                  </Link>
+                  {labelKey && labelClass && <span className={labelClass}>{p.label}</span>}
+                </div>
+
+                <h1 className="h3 text-ink">{p.name}</h1>
+
+                {showPrices && p.price != null && (
+                  <div>
+                    <Price
+                      amount={p.price}
+                      from={p.currency}
+                      className="block text-[1.11rem] uppercase tracking-[0.18em] text-muted"
+                    />
+                    <p className="mt-1 text-sm text-muted-2">Tax excluded.</p>
+                  </div>
+                )}
+
+                <hr className="my-2 border-line" />
+
+                {p.short_description && <p className="prose">{p.short_description}</p>}
+
+                {p.full_description && (
+                  <div
+                    className="rich-text"
+                    dangerouslySetInnerHTML={{ __html: p.full_description }}
+                  />
+                )}
+
+                {/* The reference renders volume as body copy, not a variant
+                    picker — this product model has no variants either. */}
+                {p.size_volume && !/volume/i.test(p.full_description ?? '') && (
+                  <p className="prose">
+                    <strong>Volume:</strong> {p.size_volume}
+                  </p>
+                )}
+
+                <div className="mt-2">
+                  <ProductBuyBlock product={p} whatsappHref={waHref} />
+                </div>
+
+                {purchaseLinks.length > 0 && (
+                  <div className="mt-2">
+                    <p className="eyebrow mb-3">Also available on</p>
+                    <div className="flex flex-wrap gap-3">
+                      {purchaseLinks.map((link, i) => (
+                        <a
+                          key={i}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn--ghost"
+                        >
+                          {link.platform || `Platform ${i + 1}`}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-center text-xs text-muted-2">
+                  Have questions?{' '}
+                  <Link href={`/contact?product=${encodeURIComponent(p.name)}`} className="text-gold hover:underline">
+                    Contact us
+                  </Link>
+                </p>
+
+                <ComplementaryProducts products={siblings} />
+
+                <SocialShare productName={p.name} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
+      </section>
 
-function ScentNote({ label, notes }: { label: string; notes?: string | null }) {
-  if (!notes) return null
-  return (
-    <div className="text-center">
-      <p className="text-xs text-muted-2 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-sm text-ink font-medium">{notes}</p>
+      {/* ── Image with text — full-bleed 50/50, zero gap ──────────────── */}
+      {thumbnails.length > 1 && (
+        <section className="grid grid-cols-1 md:grid-cols-2">
+          <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[520px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={thumbnails[1].src}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex flex-col justify-center gap-4 bg-bg px-6 py-12 md:px-12">
+            {catName && <p className="eyebrow">{catName}</p>}
+            <h2 className="h2">{p.name}</h2>
+            <p className="prose max-w-prose">
+              {p.short_description ||
+                `${p.name} is blended in small batches and rested before bottling, so the top notes never sit above the base — they arrive together.`}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Media grid ────────────────────────────────────────────────── */}
+      {thumbnails.length > 2 && (
+        <section className="section-spacing border-t border-line">
+          <div className="container-page">
+            <div className="mb-10 text-center">
+              <p className="eyebrow">{brandName}</p>
+              <h2 className="h2 mt-2">{p.name}</h2>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-12" style={{ gridAutoRows: '280px' }}>
+              {thumbnails.slice(0, 3).map((t, i) => (
+                <div
+                  key={t.src}
+                  className={
+                    i === 0
+                      ? 'relative overflow-hidden md:col-span-6 md:row-span-2'
+                      : 'relative overflow-hidden md:col-span-3'
+                  }
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={t.src} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

@@ -17,7 +17,7 @@ function DashboardInner() {
   const { customer, logout } = useAuth()
 
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="font-display text-4xl font-semibold text-ink mb-2">
           Hello, {customer?.name?.split(' ')[0] || 'there'}

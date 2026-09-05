@@ -16,7 +16,7 @@ interface Props {
 
 export default function AuthFormShell({ title, subtitle, altText, altLabel, altHref, children }: Props) {
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0 min-h-screen">
       <div className="max-w-md mx-auto px-4 py-16">
         <div className="text-center mb-8">
           <Link href="/" className="font-display italic text-3xl text-gold">Opal Perfumes</Link>

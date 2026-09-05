@@ -22,11 +22,11 @@ export default function ContactForm({ variant = 'light' }: ContactFormProps) {
   const dark = variant === 'dark'
 
   // Class fragments that differ between the light storefront and the dark shell.
-  const headingCls = dark ? 'text-[#efe9dd]' : 'text-ink'
-  const labelCls = dark ? 'text-[#a49a86]' : 'text-muted'
+  const headingCls = dark ? 'text-ink' : 'text-ink'
+  const labelCls = dark ? 'text-muted' : 'text-muted'
   const inputCls = dark
-    ? 'w-full border border-[#2a2620] bg-[#1e1b13] rounded px-3.5 py-2.5 text-sm text-[#efe9dd] placeholder-[#726a5a] focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200'
-    : 'w-full border border-line rounded px-3.5 py-2.5 text-sm text-ink placeholder-[#8a7757] focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200'
+    ? 'w-full border border-line bg-surface-2 rounded px-3.5 py-2.5 text-sm text-ink placeholder-muted-2 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200'
+    : 'w-full border border-line rounded px-3.5 py-2.5 text-sm text-ink placeholder-muted-2 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors duration-200'
 
   const searchParams = useSearchParams()
   const productSubject = searchParams.get('product')
@@ -92,7 +92,7 @@ export default function ContactForm({ variant = 'light' }: ContactFormProps) {
           </svg>
         </div>
         <h3 className={`font-display text-2xl font-semibold mb-2 ${headingCls}`}>Message Sent!</h3>
-        <p className={`mb-6 ${dark ? 'text-[#a49a86]' : 'text-muted'}`}>Thank you for reaching out. We&rsquo;ll get back to you as soon as possible.</p>
+        <p className={`mb-6 ${dark ? 'text-muted' : 'text-muted'}`}>Thank you for reaching out. We&rsquo;ll get back to you as soon as possible.</p>
         <button type="button" onClick={() => setSuccess(false)} className="text-gold text-sm font-medium hover:underline">
           Send another message
         </button>
@@ -147,7 +147,7 @@ export default function ContactForm({ variant = 'light' }: ContactFormProps) {
       </div>
 
       <button type="submit" disabled={submitting}
-        className="w-full bg-gold text-white py-3.5 px-8 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed">
+        className="w-full btn disabled:opacity-60 disabled:cursor-not-allowed">
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

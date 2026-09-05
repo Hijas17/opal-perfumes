@@ -66,6 +66,10 @@ export const updateProduct = (id, formData) =>
     params: { _method: 'PUT' },
   })
 
+/** Persist a manual product ordering. `ids` is the full list in display order. */
+export const reorderProducts = (ids) =>
+  api.put('/admin/products/reorder', { order: ids })
+
 export const deleteProduct = (id) =>
   api.delete(`/admin/products/${id}`)
 

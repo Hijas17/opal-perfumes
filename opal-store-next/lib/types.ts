@@ -39,6 +39,10 @@ export interface Product {
 
   scent_notes?: ScentNotes
   seo_keywords?: string[]
+  /** Admin overrides for the product page's <title> and meta description.
+   *  Empty means "generate one" — see generateMetadata on the product page. */
+  meta_title?: string
+  meta_description?: string
   size_volume?: string
 
   price?: number | string | null
@@ -63,7 +67,40 @@ export interface Category {
   name: string
   slug: string
   description?: string
+  /** Filename in the uploads store — run it through getImageUrl(). */
+  image?: string
   display_order?: number
+}
+
+/* ── Admin-managed home page media ──────────────────────────────────────────
+   Stored in site_settings as whole JSON values (arrays/objects) rather than
+   scalars, so one setting key holds an entire repeatable section. Every
+   `image` is a bare filename — pass it through getImageUrl(). */
+
+export interface HeroSlideSetting {
+  image?: string
+  eyebrow?: string
+  headline?: string
+  subtext?: string
+  cta_label?: string
+  cta_href?: string
+}
+
+export interface HomeTileSetting {
+  image?: string
+  title?: string
+  href?: string
+}
+
+export interface CompareSideSetting {
+  image?: string
+  label?: string
+  href?: string
+}
+
+export interface HomeCompareSetting {
+  before?: CompareSideSetting
+  after?: CompareSideSetting
 }
 
 export interface SiteSettings {
@@ -89,6 +126,11 @@ export interface SiteSettings {
   hero_tagline?: string
   hero_headline?: string
   hero_subtext?: string
+
+  // Home page media (admin-managed, see the interfaces above)
+  home_hero_slides?: HeroSlideSetting[]
+  home_delight_tiles?: HomeTileSetting[]
+  home_compare?: HomeCompareSetting
 
   // About / Home
   about_snippet?: string

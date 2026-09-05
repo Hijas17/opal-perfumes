@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react'
 import AccountGuard from '@/components/AccountGuard'
 import { fetchOrder } from '@/lib/customer-api'
 import { getImageUrl } from '@/lib/image'
-import { formatPrice } from '@/lib/format'
 import type { Order } from '@/lib/types'
+import { useMoney } from '@/components/CurrencyProvider'
 
 const STATUS_BADGES: Record<string, string> = {
   pending:   'bg-amber-100 text-amber-800',
@@ -26,6 +26,7 @@ export default function OrderDetail({ orderId }: { orderId: string }) {
 }
 
 function Inner({ orderId }: { orderId: string }) {
+  const money = useMoney()
   const [order,   setOrder]   = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
@@ -39,7 +40,7 @@ function Inner({ orderId }: { orderId: string }) {
 
   if (loading) {
     return (
-      <div className="pt-[70px] min-h-screen flex items-center justify-center">
+      <div className="pt-16 md:pt-0 min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -47,11 +48,11 @@ function Inner({ orderId }: { orderId: string }) {
 
   if (error || !order) {
     return (
-      <div className="pt-[70px] min-h-screen">
+      <div className="pt-16 md:pt-0 min-h-screen">
         <div className="max-w-md mx-auto px-4 py-24 text-center">
           <h1 className="font-display text-3xl font-semibold text-ink mb-3">Order Not Found</h1>
           <p className="text-sm text-muted mb-6">{error || 'We couldn\'t find that order.'}</p>
-          <Link href="/account/orders" className="inline-block border border-gold text-gold px-8 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-white transition-all">
+          <Link href="/account/orders" className="inline-block border border-gold text-gold px-8 py-3 text-sm font-medium tracking-wider uppercase hover:bg-gold hover:text-white transition-all">
             Back to Orders
           </Link>
         </div>
@@ -60,7 +61,7 @@ function Inner({ orderId }: { orderId: string }) {
   }
 
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <nav className="text-xs text-muted mb-4">
           <Link href="/account" className="hover:text-gold">My Account</Link> <span>/</span>{' '}
@@ -96,7 +97,7 @@ function Inner({ orderId }: { orderId: string }) {
                         <p className="text-xs text-muted mt-0.5">Qty {item.quantity}</p>
                       </div>
                       <p className="font-medium text-sm whitespace-nowrap">
-                        {formatPrice(item.price * item.quantity, item.currency)}
+                        {money(item.price * item.quantity, item.currency)}
                       </p>
                     </li>
                   )
@@ -130,11 +131,11 @@ function Inner({ orderId }: { orderId: string }) {
           <div className="space-y-6">
             <Card title="Summary">
               <dl className="space-y-2 text-sm">
-                <Row label="Subtotal" value={formatPrice(order.subtotal, order.currency) || '—'} />
-                <Row label="Shipping" value={order.shipping_fee > 0 ? formatPrice(order.shipping_fee, order.currency) || '—' : 'Free'} />
+                <Row label="Subtotal" value={money(order.subtotal, order.currency) || '—'} />
+                <Row label="Shipping" value={order.shipping_fee > 0 ? money(order.shipping_fee, order.currency) || '—' : 'Free'} />
                 <div className="border-t border-line pt-2 mt-2 flex justify-between text-base">
                   <dt className="font-semibold">Total</dt>
-                  <dd className="font-semibold text-gold">{formatPrice(order.total, order.currency)}</dd>
+                  <dd className="font-semibold text-gold">{money(order.total, order.currency)}</dd>
                 </div>
                 <Row label="Payment" value={order.payment_method === 'cod' ? 'Cash on Delivery' : order.payment_method} />
                 <Row label="Status"  value={<span className="capitalize">{order.payment_status}</span>} />

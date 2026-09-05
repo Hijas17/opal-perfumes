@@ -58,6 +58,9 @@ class CategoryController
         $name         = trim($body['name'] ?? '');
         $slug         = trim($body['slug'] ?? '');
         $displayOrder = (int)($body['display_order'] ?? 0);
+        $description  = trim($body['description'] ?? '');
+        // Stored as a bare filename, same as product images and setting images.
+        $image        = trim($body['image'] ?? '');
 
         if (empty($name)) {
             return Response::error($response, 'Category name is required.', 400);
@@ -82,6 +85,8 @@ class CategoryController
             $doc = [
                 'name'          => $name,
                 'slug'          => $slug,
+                'description'   => $description,
+                'image'         => $image,
                 'display_order' => $displayOrder,
                 'created_at'    => $now,
                 'updated_at'    => $now,
@@ -141,6 +146,16 @@ class CategoryController
 
             if (isset($body['display_order'])) {
                 $updateFields['display_order'] = (int)$body['display_order'];
+            }
+
+            // isset(), not a truthiness check — an empty string is a valid
+            // value here and means "clear it".
+            if (isset($body['description'])) {
+                $updateFields['description'] = trim((string)$body['description']);
+            }
+
+            if (isset($body['image'])) {
+                $updateFields['image'] = trim((string)$body['image']);
             }
 
             if (empty($updateFields)) {
@@ -210,6 +225,8 @@ class CategoryController
             'id'            => (string)$cat['_id'],
             'name'          => $cat['name'] ?? '',
             'slug'          => $cat['slug'] ?? '',
+            'description'   => $cat['description'] ?? '',
+            'image'         => $cat['image'] ?? '',
             'display_order' => $cat['display_order'] ?? 0,
             'created_at'    => isset($cat['created_at']) ? (string)$cat['created_at'] : null,
             'updated_at'    => isset($cat['updated_at']) ? (string)$cat['updated_at'] : null,

@@ -8,6 +8,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import { placeOrder } from '@/lib/customer-api'
 import { formatPrice } from '@/lib/format'
+import { useMoney } from '@/components/CurrencyProvider'
 import {
   buildWhatsAppUrl,
   showPrices,
@@ -24,6 +25,10 @@ interface Props {
 /**
  * Compose the WhatsApp inquiry text the customer sends to the merchant.
  * Prices are omitted when `showPrices` is off — the merchant quotes back in chat.
+ *
+ * Deliberately uses the STORED currency (AED), not the shopper's display
+ * currency: this message is the actual order, so it must not quote a converted
+ * figure the merchant would then have to reconcile.
  */
 function buildInquiryMessage(
   brand: string,
@@ -56,6 +61,7 @@ function buildInquiryMessage(
 }
 
 export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
+  const money = useMoney()
   const router = useRouter()
   const { customer, isLoggedIn, loading: authLoading } = useAuth()
   const { cart, refresh: refreshCart } = useCart()
@@ -139,14 +145,14 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
 
   if (authLoading || !isLoggedIn || cart.items.length === 0) {
     return (
-      <div className="pt-[70px] min-h-screen flex items-center justify-center">
+      <div className="pt-16 md:pt-0 min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="pt-[70px] min-h-screen">
+    <div className="pt-16 md:pt-0 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="font-display text-4xl font-semibold text-ink mb-2">Checkout</h1>
         <p className="text-sm text-muted mb-8">
@@ -206,7 +212,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
                       <span className="text-muted"> × {item.quantity}</span>
                     </span>
                     {showPrices && (
-                      <span className="font-medium whitespace-nowrap">{formatPrice(item.price * item.quantity, item.currency)}</span>
+                      <span className="font-medium whitespace-nowrap">{money(item.price * item.quantity, item.currency)}</span>
                     )}
                   </li>
                 ))}
@@ -214,28 +220,28 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
               {showPrices && (
                 <>
                   <dl className="space-y-2 text-sm border-t border-line pt-3">
-                    <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{formatPrice(cart.subtotal, cart.currency)}</dd></div>
+                    <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{money(cart.subtotal, cart.currency)}</dd></div>
                     <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="text-green-700">Free</dd></div>
                   </dl>
                   <div className="border-t border-line pt-3 mt-3 mb-6 flex justify-between text-base">
                     <span className="font-semibold">Total</span>
-                    <span className="font-semibold text-gold">{formatPrice(cart.subtotal, cart.currency)}</span>
+                    <span className="font-semibold text-gold">{money(cart.subtotal, cart.currency)}</span>
                   </div>
                 </>
               )}
               {!showPrices && <div className="mb-6" />}
               {useWhatsAppInquiry ? (
                 <button type="submit"
-                  className="w-full bg-[#25D366] text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#1ebd5b] transition-colors flex items-center justify-center gap-2">
+                  className="btn btn--outline w-full">
                   <MessageCircle className="w-4 h-4" />
                   Inquire on WhatsApp
                 </button>
               ) : (
                 <button type="submit" disabled={submitting}
-                  className="w-full bg-gold text-white py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="w-full btn disabled:opacity-60 flex items-center justify-center gap-2">
                   {submitting ? (
                     <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       Placing order…
                     </>
                   ) : (

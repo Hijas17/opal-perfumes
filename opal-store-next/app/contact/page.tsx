@@ -40,7 +40,7 @@ export default async function ContactPage() {
   }
 
   return (
-    <div className="pt-[70px]">
+    <div className="pt-16 md:pt-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd).replace(/</g, '\\u003c') }}

@@ -3,6 +3,7 @@ import { getAdminCategories, createCategory, updateCategory, deleteCategory } fr
 import { Button } from '../components/ui/button.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Textarea } from '../components/ui/textarea.jsx'
+import MediaField from '../components/MediaField.jsx'
 import { Label } from '../components/ui/label.jsx'
 import { Card, CardContent } from '../components/ui/card.jsx'
 import { Alert, AlertDescription } from '../components/ui/alert.jsx'
@@ -15,7 +16,7 @@ import {
 } from '../components/ui/alert-dialog.jsx'
 import { cn } from '../lib/utils.js'
 
-const emptyForm = { name: '', slug: '', description: '', display_order: '' }
+const emptyForm = { name: '', slug: '', description: '', image: '', display_order: '' }
 
 function slugify(text) {
   return text
@@ -64,6 +65,7 @@ export default function Categories() {
       name:          cat.name          || '',
       slug:          cat.slug          || '',
       description:   cat.description   || '',
+      image:         cat.image         || '',
       display_order: cat.display_order != null ? String(cat.display_order) : '',
     })
     setSlugManual(true)
@@ -88,6 +90,7 @@ export default function Categories() {
       name:          form.name.trim(),
       slug:          form.slug.trim() || slugify(form.name.trim()),
       description:   form.description.trim(),
+      image:         form.image || '',
       display_order: form.display_order !== '' ? parseInt(form.display_order, 10) : 0,
     }
 
@@ -175,6 +178,15 @@ export default function Categories() {
                   rows={3}
                   placeholder="Short description (optional)"
                   className="resize-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <MediaField
+                  label="Category Image"
+                  value={form.image}
+                  onChange={(v) => setForm((prev) => ({ ...prev, image: v }))}
+                  hint="Used for the home page collection tiles. Square images work best."
                 />
               </div>
 

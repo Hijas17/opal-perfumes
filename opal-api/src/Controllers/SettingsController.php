@@ -28,6 +28,16 @@ class SettingsController
         'hero_subtext',
         'about_snippet',
         'cta_message',
+        // Home page media — these hold ARRAYS/OBJECTS rather than scalars.
+        // Mongo stores them natively and the generic update() below already
+        // accepts any value type, so no special handling is needed; they only
+        // have to be listed here to be exposed publicly.
+        //   home_hero_slides  : [{ image, eyebrow, headline, subtext, cta_label, cta_href }]
+        //   home_delight_tiles: [{ image, title, href }]
+        //   home_compare      : { before: {image,label,href}, after: {image,label,href} }
+        'home_hero_slides',
+        'home_delight_tiles',
+        'home_compare',
         // About Us page
         'about_hero_image',
         'brand_story',

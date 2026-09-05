@@ -1,84 +1,119 @@
 'use client'
 
 /**
- * Opal Perfume — home-page preloader.
+ * Opal Perfume — full-screen brand reveal.
  *
- * Shows a full-screen brand reveal whenever the user lands on `/` — both on
- * initial hard load and on client-side navigation back to home. Any other
- * route: silent, no preloader.
+ * Shows ONCE per visit: on the first page a visitor lands on, and not again
+ * while that browser tab is open. Two things enforce that —
+ *   1. the effect has no dependencies, and the root layout persists across
+ *      client-side navigation, so it never re-runs when moving between pages;
+ *   2. a sessionStorage flag covers full reloads within the same session.
+ *
+ * The check runs in a layout effect so a repeat visit never paints a frame of
+ * the loader before it is removed. (The reference fires on every navigation;
+ * this is a deliberate departure.)
+ *
+ * Runs a fixed 2s eased bar, swaps its label to "Welcome", holds, then fades —
+ * ~3.5s on screen in total.
+ *
+ * The bar itself is animated purely in CSS (see .preloader__fill). State here
+ * is limited to the three real transitions — done -> fading -> unmounted —
+ * driven by setTimeout rather than per-frame JS. That matters: rAF is paused
+ * outright in a backgrounded tab and setInterval is heavily throttled there, so
+ * a JS-driven bar leaves the loader stuck on screen for anyone who opens the
+ * site in a background tab. setTimeout still fires, so the loader always clears.
+ *
+ * Timings must stay in sync with the `.preloader*` rules in globals.css,
+ * particularly FADE_MS and the CSS `transition: opacity 1s`.
  */
 
-import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useEffect, useLayoutEffect, useState } from 'react'
 
-const MIN_DISPLAY_MS = 1400  // deliberate luxury reveal, matches the initial-load feel
-const FADE_OUT_MS    = 700   // matches CSS transition on .opal-preloader
+const SEEN_KEY = 'opal:preloader-seen'
 
-type Phase = 'showing' | 'fading' | 'gone'
+/** useLayoutEffect on the client, useEffect on the server (which never runs it). */
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
-export default function Preloader() {
-  const pathname = usePathname()
-  const [phase, setPhase] = useState<Phase>(pathname === '/' ? 'showing' : 'gone')
+const DURATION_MS = 2000   // progress bar fill time
+const HOLD_MS     = 500    // pause on "Welcome" before fading
+const FADE_MS     = 1000   // matches the CSS transition on .preloader
 
-  useEffect(() => {
-    if (pathname !== '/') {
-      setPhase('gone')
+interface Props {
+  /** Used as the logo's alt text. */
+  brandName?: string
+}
+
+export default function Preloader({ brandName = 'Opal Perfume' }: Props) {
+  const [done, setDone] = useState(false)   // bar full, label reads "Welcome"
+  const [gone, setGone] = useState(false)   // fade-out class applied
+  const [unmounted, setUnmounted] = useState(false)
+
+  useIsomorphicLayoutEffect(() => {
+    let alreadySeen = false
+    try {
+      alreadySeen = window.sessionStorage.getItem(SEEN_KEY) === '1'
+      if (!alreadySeen) window.sessionStorage.setItem(SEEN_KEY, '1')
+    } catch {
+      // Private mode / blocked storage: fall through and just show it.
+    }
+
+    if (alreadySeen) {
+      setUnmounted(true)
       return
     }
 
-    // Restart the reveal cycle every time we land on home.
-    setPhase('showing')
-    const start = Date.now()
+    document.documentElement.classList.add('preloader-active')
 
-    const dismiss = () => {
-      const elapsed = Date.now() - start
-      const wait = Math.max(0, MIN_DISPLAY_MS - elapsed)
-      const t1 = window.setTimeout(() => {
-        setPhase('fading')
-        const t2 = window.setTimeout(() => setPhase('gone'), FADE_OUT_MS)
-        cleanupFns.push(() => window.clearTimeout(t2))
-      }, wait)
-      cleanupFns.push(() => window.clearTimeout(t1))
-    }
-
-    const cleanupFns: Array<() => void> = []
-
-    if (document.readyState === 'complete') {
-      dismiss()
-    } else {
-      window.addEventListener('load', dismiss, { once: true })
-      // Safety net: dismiss anyway after 4s even if `load` never fires
-      const failsafe = window.setTimeout(dismiss, 4000)
-      cleanupFns.push(() => {
-        window.removeEventListener('load', dismiss)
-        window.clearTimeout(failsafe)
-      })
-    }
+    const timers: number[] = []
+    timers.push(
+      window.setTimeout(() => {
+        setDone(true)
+        timers.push(
+          window.setTimeout(() => {
+            document.documentElement.classList.remove('preloader-active')
+            setGone(true)
+            timers.push(window.setTimeout(() => setUnmounted(true), FADE_MS))
+          }, HOLD_MS),
+        )
+      }, DURATION_MS),
+    )
 
     return () => {
-      cleanupFns.forEach((fn) => fn())
+      timers.forEach((t) => window.clearTimeout(t))
+      document.documentElement.classList.remove('preloader-active')
     }
-  }, [pathname])
+    // No deps: the root layout persists across client-side navigation, so this
+    // runs once per full page load and never on route changes.
+  }, [])
 
-  if (phase === 'gone') return null
+  if (unmounted) return null
 
   return (
     <div
-      aria-hidden
-      data-fading={phase === 'fading' ? 'true' : 'false'}
-      className="opal-preloader"
+      className={`preloader${gone ? ' is-done' : ''}`}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading"
     >
-      <div className="opal-preloader__inner">
-        {/* Plain <img> (not next/image) so the logo paints in the very first
-            render — the whole point of the preloader is instant visibility,
-            before Next.js's optimised image pipeline finishes. */}
+      <div className="preloader__smoke preloader__smoke--left" aria-hidden />
+      <div className="preloader__smoke preloader__smoke--right" aria-hidden />
+
+      <div className="preloader__text">
+        {/* Plain <img>, not next/image — the whole point of a preloader is to
+            paint immediately, before the optimisation pipeline finishes. */}
         <img
-          src="/logo-icon.png"
-          alt="Opal Perfume"
-          width={512}
-          height={512}
-          className="opal-preloader__logo"
+          src="/logo-preloader.png"
+          alt={brandName}
+          className="preloader__logo"
         />
+      </div>
+
+      <div className="preloader__loader">
+        <span className="preloader__label">{done ? 'Welcome' : 'Loading...'}</span>
+        <div className="preloader__track">
+          <div className="preloader__fill" />
+        </div>
       </div>
     </div>
   )

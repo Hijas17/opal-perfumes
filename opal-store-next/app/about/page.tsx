@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import type { Metadata } from 'next'
+
 import { getSettings } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
 
@@ -24,171 +24,118 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+/** The reference's About page: a content-over-media hero, an image-with-text
+ *  block, a services multi-column row, then a closing CTA. */
 export default async function AboutPage() {
   const s = await getSettings()
-  const heroImageUrl    = s.about_hero_image ? getImageUrl(s.about_hero_image) : null
-  const founderPhotoUrl = s.founder_photo    ? getImageUrl(s.founder_photo)    : null
+  const brand = s.brand_name || 'Opal Perfume'
+  const heroImageUrl = s.about_hero_image ? getImageUrl(s.about_hero_image) : null
+  const founderPhotoUrl = s.founder_photo ? getImageUrl(s.founder_photo) : null
 
-  // ── About JSON-LD ────────────────────────────────────────────────────
   const aboutJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
-    'name': 'About Opal Perfumes',
-    'url':  `${SITE_URL}/about`,
+    'name': `About ${brand}`,
+    'url': `${SITE_URL}/about`,
     'description': 'The story and heritage behind Opal Perfumes, a luxury Arabian fragrance brand in UAE.',
     'mainEntity': {
       '@type': 'Organization',
-      'name': 'Opal Perfumes',
+      'name': brand,
       'foundingLocation': { '@type': 'Place', 'name': 'UAE' },
       'description': s.brand_story?.replace(/<[^>]+>/g, '') || '',
     },
   }
 
+  const services = [
+    { title: 'Private Labelling', body: 'Your brand, our perfumers — from concept brief to finished bottle.' },
+    { title: 'Bespoke Blending',  body: 'A fragrance composed around one person, one memory, one occasion.' },
+    { title: 'Workshops',         body: 'Learn the craft of Arabian perfumery with our in-house noses.' },
+  ]
+
   return (
-    <div className="pt-[70px]">
+    <div className="pt-16 md:pt-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutJsonLd).replace(/</g, '\\u003c') }}
       />
 
-      {/* Hero */}
-      <section
-        className="relative flex items-center justify-center h-[50vh] min-h-[320px] bg-cover bg-center bg-no-repeat"
-        style={
-          heroImageUrl
-            ? { backgroundImage: `url(${heroImageUrl})` }
-            : { background: 'linear-gradient(135deg, #1a1a1a 0%, #3a2a0a 50%, #a67b30 100%)' }
-        }
-      >
-        <div className="absolute inset-0 bg-black/55" />
-        <div className="relative z-10 text-center px-4">
-          <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Our Heritage</p>
-          <h1 className="font-display text-5xl sm:text-6xl font-semibold text-white">About Us</h1>
+      {/* ── Content over media ─────────────────────────────────────────── */}
+      <section className="relative grid min-h-[60vh] place-items-center overflow-hidden bg-black">
+        {heroImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={heroImageUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-black/60" aria-hidden />
+        <div className="relative flex flex-col items-center gap-4 px-6 py-24 text-center">
+          <p className="eyebrow">Our heritage</p>
+          <h1 className="h1">About Us</h1>
         </div>
       </section>
 
-      {/* Brand Story */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Who We Are</p>
-            <h2 className="font-display text-4xl font-semibold text-ink">{s.brand_name || 'Opal Perfumes'}</h2>
-            <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
-          </div>
-
+      {/* ── Image with text — full-bleed 50/50, zero gap ───────────────── */}
+      <section className="grid grid-cols-1 md:grid-cols-2">
+        <div className="relative aspect-[4/3] bg-surface md:aspect-auto md:min-h-[520px]">
+          {founderPhotoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={founderPhotoUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+          )}
+        </div>
+        <div className="flex flex-col justify-center gap-4 px-6 py-16 md:px-12">
+          <p className="eyebrow">Our story</p>
+          <h2 className="h2">{brand}</h2>
           {s.brand_story ? (
-            <div className="rich-text text-muted leading-relaxed text-lg"
-                 dangerouslySetInnerHTML={{ __html: s.brand_story }} />
+            <div className="rich-text max-w-prose" dangerouslySetInnerHTML={{ __html: s.brand_story }} />
           ) : (
-            <p className="text-muted leading-relaxed text-lg text-center">
-              Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance and identity. Our perfumes are more than scents — they are stories waiting to be told, memories waiting to be made.
+            <p className="prose max-w-prose">
+              Born from a passion for the art of perfumery, we craft each fragrance
+              as a unique expression of elegance and identity. Our perfumes are more
+              than scents — they are stories waiting to be told.
             </p>
+          )}
+          {s.founder_bio && (
+            <div className="rich-text mt-2 max-w-prose" dangerouslySetInnerHTML={{ __html: s.founder_bio }} />
           )}
         </div>
       </section>
 
-      {/* Mission Statement */}
+      {/* ── Mission ───────────────────────────────────────────────────── */}
       {s.mission_statement && (
-        <section className="bg-gold py-16 px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <svg className="w-10 h-10 text-white/40 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-            </svg>
-            <p className="font-display text-2xl sm:text-3xl font-medium text-white leading-relaxed">{s.mission_statement}</p>
+        <section className="section-spacing bg-surface-2">
+          <div className="container-page container-page--xs text-center">
+            <p className="eyebrow">Our mission</p>
+            <p className="mt-4 text-lg leading-relaxed text-gold">{s.mission_statement}</p>
           </div>
         </section>
       )}
 
-      {/* Founder Section */}
-      {(founderPhotoUrl || s.founder_bio) && (
-        <section className="py-20 px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">The Visionary</p>
-              <h2 className="font-display text-4xl font-semibold text-ink">Our Founder</h2>
-              <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              {founderPhotoUrl && (
-                <div className="flex-shrink-0">
-                  <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-gold/30 shadow-lg relative">
-                    <Image src={founderPhotoUrl} alt="Founder" fill sizes="192px" className="object-cover" />
-                  </div>
-                </div>
-              )}
-              {s.founder_bio && (
-                <div className="rich-text text-muted leading-relaxed text-base"
-                     dangerouslySetInnerHTML={{ __html: s.founder_bio }} />
-              )}
-            </div>
+      {/* ── Services multi-column ─────────────────────────────────────── */}
+      <section className="section-spacing bg-surface">
+        <div className="container-page">
+          <div className="mb-12 text-center">
+            <p className="eyebrow">What we do</p>
+            <h2 className="h2 mt-2">Our Services</h2>
           </div>
-        </section>
-      )}
-
-      {/* Values Strip */}
-      <section className="py-20 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">What Drives Us</p>
-            <h2 className="font-display text-4xl font-semibold text-ink">Our Values</h2>
-            <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Craftsmanship',
-                text:  'Every bottle is a labour of love, crafted with the finest ingredients and meticulous attention to detail.',
-                icon: (
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Luxury',
-                text:  'We believe luxury is not a price — it is an experience, a feeling that lingers long after the last note fades.',
-                icon: (
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Heritage',
-                text:  'Rooted in the rich traditions of Arabian perfumery, we honour the past while embracing the future.',
-                icon: (
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-                  </svg>
-                ),
-              },
-            ].map(({ title, icon, text }) => (
-              <div key={title} className="text-center">
-                <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center text-gold mx-auto mb-4">
-                  {icon}
-                </div>
-                <h3 className="font-display text-xl font-semibold text-ink mb-3">{title}</h3>
-                <p className="text-muted text-sm leading-relaxed">{text}</p>
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+            {services.map((item) => (
+              <div key={item.title} className="flex flex-col gap-3 border border-line p-8 text-center">
+                <h3 className="h5">{item.title}</h3>
+                <p className="text-sm leading-relaxed text-muted">{item.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 px-4">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-display text-3xl font-semibold text-gold mb-4">Experience the Collection</h2>
-          <p className="text-muted-2 mb-8 leading-relaxed">Discover fragrances crafted to tell your story.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/products" className="inline-block bg-gold text-white px-10 py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors duration-300">
-              Shop Now
-            </Link>
-            <Link href="/contact" className="inline-block border border-gold text-gold px-10 py-3.5 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-white transition-all duration-300">
-              Contact Us
-            </Link>
+      {/* ── Closing CTA ──────────────────────────────────────────────── */}
+      <section className="section-spacing">
+        <div className="container-page container-page--xs text-center">
+          <h2 className="h2">{s.cta_message || 'Find your signature scent'}</h2>
+          <p className="mt-4 text-sm text-muted">
+            Our fragrance experts are ready to help you choose.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Link href="/products" className="btn">Shop the collection</Link>
+            <Link href="/contact" className="btn btn--outline">Contact us</Link>
           </div>
         </div>
       </section>

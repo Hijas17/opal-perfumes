@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getSettings, getProducts } from '@/lib/api'
+
+import { getSettings, getProducts, getCategories } from '@/lib/api'
+import { getImageUrl } from '@/lib/image'
 import ProductCard from '@/components/ProductCard'
-import HeroExperience from '@/components/HeroExperience'
+import HeroSlideshow, { type HeroSlide } from '@/components/HeroSlideshow'
+import FeaturedCarousel from '@/components/FeaturedCarousel'
+import BeforeAfter, { type BeforeAfterItem } from '@/components/BeforeAfter'
 import MobileHome from '@/components/mobile/MobileHome'
-import ComingSoon from '@/components/ComingSoon'
-import { comingSoon } from '@/lib/config'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -35,29 +37,84 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  // TEMPORARY — Coming Soon shell. Guarded before any product fetch so featured
-  // products aren't requested while the store is gated.
-  if (comingSoon) {
-    const s = await getSettings()
-    return <ComingSoon settings={s} />
-  }
-
-  // Both fetches happen in parallel on the server
-  const [s, allFeatured] = await Promise.all([
+  const [s, featured, categories] = await Promise.all([
     getSettings(),
     getProducts({ featured: true }),
+    getCategories(),
   ])
 
-  const products = allFeatured.slice(0, 8)
+  const brandName = s.brand_name || 'Opal Perfume'
+  const products = featured.slice(0, 8)
 
-  // ─── Page-specific JSON-LD ─────────────────────────────────────────────
+
+  // ── Hero slides ────────────────────────────────────────────────────────
+  // Admin-managed via Settings › Home Media. Falls back to the legacy single
+  // hero_* fields so the page still renders before any slides are configured.
+  const adminSlides = Array.isArray(s.home_hero_slides) ? s.home_hero_slides : []
+  const slides: HeroSlide[] = adminSlides
+    .filter((slide) => slide?.image)
+    .map((slide) => ({
+      image: getImageUrl(slide.image!) ?? '',
+      eyebrow: slide.eyebrow || undefined,
+      headline: (slide.headline || '').replace(/\n/g, ' '),
+      subtext: slide.subtext || undefined,
+      ctaLabel: slide.cta_label || 'Explore',
+      ctaHref: slide.cta_href || '/products',
+    }))
+    .filter((slide) => slide.image)
+
+  if (slides.length === 0) {
+    const heroImage = s.hero_image ? getImageUrl(s.hero_image) : null
+    slides.push({
+      image: heroImage || '/banner-1.jpg',
+      eyebrow: s.hero_tagline || 'Luxury Fragrances',
+      headline: (s.hero_headline || 'Discover your scent').replace(/\n/g, ' '),
+      subtext: s.hero_subtext || undefined,
+      ctaLabel: 'Explore',
+      ctaHref: '/products',
+    })
+  }
+
+  // ── "Scented Delights" tiles ───────────────────────────────────────────
+  // Admin tiles win; otherwise fall back to the first three categories.
+  const adminTiles = Array.isArray(s.home_delight_tiles) ? s.home_delight_tiles : []
+  const delightTiles = adminTiles.length
+    ? adminTiles.map((t) => ({
+        title: t.title || '',
+        href: t.href || '/products',
+        image: t.image ? getImageUrl(t.image) : null,
+      }))
+    : categories.slice(0, 3).map((c) => ({
+        title: c.name,
+        href: `/products/${c.slug}`,
+        image: c.image ? getImageUrl(c.image) : null,
+      }))
+
+  // ── Before / after comparator ──────────────────────────────────────────
+  // Both halves must have an image or the section is hidden entirely.
+  const compare = s.home_compare
+  const comparePair: BeforeAfterItem[] = (['before', 'after'] as const)
+    .map((side) => {
+      const cfg = compare?.[side]
+      if (!cfg?.image) return null
+      const image = getImageUrl(cfg.image)
+      if (!image) return null
+      return {
+        image,
+        label: cfg.label || '',
+        href: cfg.href || '/products',
+        ctaLabel: 'Buy now',
+      }
+    })
+    .filter(Boolean) as BeforeAfterItem[]
+
   const homeJsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'LocalBusiness',
         '@id': `${SITE_URL}/#org`,
-        'name': s.brand_name || 'Opal Perfume',
+        'name': brandName,
         'image': `${SITE_URL}/og-cover.jpg`,
         'description': 'A curated collection of luxury Arabian fragrances, oud and buhoor handcrafted in the UAE.',
         'url': SITE_URL,
@@ -84,97 +141,159 @@ export default async function HomePage() {
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(homeJsonLd).replace(/</g, '\\u003c'),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd).replace(/</g, '\\u003c') }}
       />
 
-      {/* ── Mobile Home (below md) ──────────────────────────────────────── */}
+      {/* ── Mobile home (below md) — its own tree, restyled in a later phase ── */}
       <div className="md:hidden">
         <MobileHome settings={s} products={products} />
       </div>
 
-      {/* ── Desktop Hero (md+) ──────────────────────────────────────────── */}
+      {/* ── Desktop (md+) ─────────────────────────────────────────────────── */}
       <div className="hidden md:block">
-        <HeroExperience
-          heroTagline={s.hero_tagline || 'Luxury Fragrances'}
-          heroHeadline={s.hero_headline || 'Discover\nyour scent.'}
-          heroSubtext={s.hero_subtext || 'Handcrafted luxury perfumes that tell your story. Each bottle a masterpiece.'}
-          brandName={s.brand_name || 'Opal Perfume'}
-        />
-      </div>
+        <HeroSlideshow slides={slides} />
 
-      {/* Seamless black-hero → warm-page transition (desktop) */}
-      <div
-        aria-hidden
-        className="hidden md:block h-40 -mt-px"
-        style={{ background: 'linear-gradient(to bottom, #000000 0%, #0a0806 45%, #140f09 100%)' }}
-      />
-
-      {/* ── Featured Products (desktop only — mobile has its own carousel) ── */}
-      <section className="hidden md:block py-20 px-4 -mt-px">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-3">Curated For You</p>
-            <h2 className="font-display text-4xl font-semibold text-gold">Featured Collection</h2>
-            <div className="w-16 h-0.5 bg-gold mx-auto mt-4" />
-          </div>
-
-          {products.length === 0 ? (
-            <div className="text-center py-16 text-muted-2">
-              <svg className="w-12 h-12 mx-auto mb-4 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              <p className="font-display text-lg">No featured products yet</p>
+        {/* Featured strip on a raised surface, bleeding off both edges */}
+        {products.length > 0 && (
+          <section className="section-spacing border-y border-line bg-surface-2">
+            <div className="container-page mb-10 text-center">
+              <p className="eyebrow">Weekly pick</p>
+              <h2 className="h2 mt-2">Featured Collection</h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm text-muted">
+                Discover this week&rsquo;s curated fragrances and find your next signature scent.
+              </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.map((product, i) => (
-                <ProductCard key={product.id || product.slug} product={product} priority={i < 4} />
+            <FeaturedCarousel products={products} vendor={brandName} />
+          </section>
+        )}
+
+        {/* Category tiles */}
+        {categories.length > 0 && (
+          <section className="section-spacing bg-surface">
+            <div className="container-page">
+              <div className="mb-10 text-center">
+                <h2 className="h2">Our Collections</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {categories.slice(0, 6).map((cat) => {
+                  const tileImage = cat.image ? getImageUrl(cat.image) : null
+                  return (
+                    <Link
+                      key={cat.id || cat.slug}
+                      href={`/products/${cat.slug}`}
+                      className="group relative grid aspect-[4/3] place-items-center overflow-hidden border border-line bg-black"
+                    >
+                      {tileImage && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={tileImage}
+                          alt=""
+                          aria-hidden
+                          className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity duration-300 group-hover:opacity-80"
+                        />
+                      )}
+                      <span className="relative h4 text-gold transition-colors group-hover:text-ink">
+                        {cat.name}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Featured grid + Explore */}
+        {products.length > 0 && (
+          <section className="section-spacing">
+            <div className="container-page">
+              <div className="mb-10 text-center">
+                <p className="eyebrow">Curated for you</p>
+                <h2 className="h2 mt-2">Bestsellers</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-x-12 gap-y-16 lg:grid-cols-4">
+                {products.slice(0, 4).map((p) => (
+                  <ProductCard key={p.id || p.slug} product={p} vendor={brandName} />
+                ))}
+              </div>
+              <div className="mt-12 text-center">
+                <Link href="/products" className="btn btn--outline">Explore</Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Multi-column — "Scented Delights" */}
+        {delightTiles.length > 0 && (
+        <section className="section-spacing bg-surface">
+          <div className="container-page text-center">
+            <h2 className="h2">Scented Delights</h2>
+            <p className="eyebrow mt-3">A trio of luxurious fragrances</p>
+
+            <div className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-3">
+              {delightTiles.map((col) => (
+                <Link key={col.title} href={col.href} className="group flex flex-col gap-4">
+                  <div className="relative aspect-square w-full overflow-hidden border border-line bg-black">
+                    {col.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={col.image}
+                        alt=""
+                        aria-hidden
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
+                  </div>
+                  <span className="h5 text-gold transition-colors group-hover:text-ink">
+                    {col.title}
+                  </span>
+                </Link>
               ))}
             </div>
-          )}
-
-          <div className="text-center mt-12">
-            <Link href="/products"
-              className="inline-block border-2 border-gold text-gold px-10 py-3 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold hover:text-[#1a1206] transition-all duration-300">
-              View All Products
-            </Link>
           </div>
-        </div>
-      </section>
+        </section>
+        )}
 
-      {/* ── About Snippet (desktop only — mobile home has its own) ────────── */}
-      <section className="hidden md:block py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-gold text-xs tracking-[0.3em] uppercase font-medium mb-4">Our Heritage</p>
-          <h2 className="font-display text-4xl font-semibold text-gold mb-6">{s.brand_name || 'Opal Perfume'}</h2>
-          <p className="text-muted text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            {s.about_snippet || 'Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance and identity. Our perfumes are more than scents — they are stories waiting to be told.'}
-          </p>
-          <Link href="/about" className="inline-flex items-center gap-2 text-gold font-medium text-sm tracking-wider uppercase hover:gap-3 transition-all duration-300">
-            Our Story
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
-        </div>
-      </section>
+        {/* Before / after comparator */}
+        {comparePair.length === 2 && (
+          <section className="section-spacing">
+            <div className="container-page">
+              <BeforeAfter before={comparePair[0]} after={comparePair[1]} />
+            </div>
+          </section>
+        )}
 
-      {/* ── CTA Strip (desktop only) ────────────────────────────────────── */}
-      <section className="hidden md:block py-16 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold text-gold mb-4">
-            {s.cta_message || 'Find Your Perfect Fragrance'}
-          </h2>
-          <p className="text-muted mb-8 text-base leading-relaxed">
-            Our fragrance experts are ready to help you discover your signature scent.
-          </p>
-          <Link href="/contact" className="inline-block bg-gold text-[#1a1206] px-10 py-4 text-sm font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-gold-deep transition-colors duration-300">
-            Contact Us
-          </Link>
-        </div>
-      </section>
+        {/* About snippet */}
+        <section className="section-spacing">
+          <div className="container-page container-page--xs text-center">
+            <p className="eyebrow">Our heritage</p>
+            <h2 className="h2 mt-2">{brandName}</h2>
+            <p className="mt-6 text-sm leading-relaxed text-ink">
+              {s.about_snippet ||
+                'Born from a passion for the art of perfumery, we craft each fragrance as a unique expression of elegance and identity.'}
+            </p>
+            <div className="mt-8">
+              <Link href="/about" className="btn btn--outline">Our Story</Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Trust row */}
+        <section className="border-t border-line py-12">
+          <div className="container-page grid grid-cols-1 gap-10 text-center md:grid-cols-3">
+            {[
+              { t: 'International Shipping', d: 'Worldwide shipping — customs and duties excluded.' },
+              { t: 'Customer Service',       d: 'Get in touch with us on WhatsApp.' },
+              { t: 'Secure Payment',         d: 'Your payment information is processed securely.' },
+            ].map((item) => (
+              <div key={item.t} className="flex flex-col gap-2">
+                <h3 className="h6">{item.t}</h3>
+                <p className="text-sm text-muted">{item.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }

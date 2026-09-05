@@ -8,15 +8,19 @@ import SearchProvider from '@/components/SearchProvider'
 import AuthProvider from '@/components/AuthProvider'
 import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
+import AnnouncementBar from '@/components/AnnouncementBar'
+import CartDrawerProvider from '@/components/CartDrawerProvider'
+import CurrencyProvider from '@/components/CurrencyProvider'
 import MobileShell from '@/components/mobile/MobileShell'
 import WhatsAppFloat from '@/components/mobile/WhatsAppFloat'
-import ComingSoonHeader from '@/components/ComingSoonHeader'
 import { getCategories, getSettings } from '@/lib/api'
-import { comingSoon } from '@/lib/config'
 
 // ─── Brand fonts (self-hosted so builds never depend on Google's CDN) ──────
-// Cinzel = headings (all-caps classic serif); Montserrat = body/labels.
-// Variable woff2 files live in app/fonts/ and are committed to the repo.
+// Per the Opal brand guide:
+//   Cinzel Regular      — logo wordmark and HEADINGS (all caps, wide tracking)
+//   Montserrat Light/Reg — subheadings, body copy, taglines and small details
+// This intentionally departs from the reference storefront, which uses a single
+// sans throughout; the brand guide takes precedence over matching it.
 const cinzel = localFont({
   src: './fonts/cinzel.woff2',
   variable: '--font-cinzel',
@@ -79,7 +83,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0e0d0b',
+  themeColor: '#000000',
 }
 
 // ─── Site-wide JSON-LD (Organization + WebSite) ───────────────────────────
@@ -113,9 +117,9 @@ const siteJsonLd = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Categories only feed the Navbar/MobileShell, which are hidden in Coming Soon mode.
+  // Categories feed the Navbar, MobileShell and Footer.
   const [categories, settings] = await Promise.all([
-    comingSoon ? Promise.resolve([]) : getCategories(),
+    getCategories(),
     getSettings(),
   ])
 
@@ -131,42 +135,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
       </head>
-      <body
-        className={
-          comingSoon
-            ? 'coming-soon min-h-screen flex flex-col'
-            : 'opal-dark min-h-screen flex flex-col bg-bg text-ink'
-        }
-      >
+      <body className="min-h-screen flex flex-col bg-bg text-ink">
         {/* Context providers stay mounted in both modes — they render no product
             UI on their own, and gated pages (e.g. /cart) still need them to
             prerender at build time (the proxy only redirects at runtime). */}
+        <CurrencyProvider>
         <AuthProvider>
           <CartProvider>
             <SearchProvider>
-              {comingSoon ? (
-                // ── TEMPORARY: dark Coming Soon shell (minimal header, no store chrome) ──
-                <>
-                  <ComingSoonHeader />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                  <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
-                </>
-              ) : (
-                <>
-                  <Preloader />
-                  <div className="hidden md:block">
-                    <Navbar categories={categories} />
-                  </div>
-                  <MobileShell categories={categories} settings={settings} />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                  <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
-                </>
-              )}
+              <CartDrawerProvider whatsappNumber={settings.whatsapp_number}>
+                <Preloader brandName={settings.brand_name || 'Opal'} />
+                <div className="hidden md:block">
+                  <AnnouncementBar />
+                  <Navbar categories={categories} />
+                </div>
+                <MobileShell categories={categories} settings={settings} />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />
+              </CartDrawerProvider>
             </SearchProvider>
           </CartProvider>
         </AuthProvider>
+        </CurrencyProvider>
       </body>
     </html>
   )

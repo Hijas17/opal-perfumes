@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { getAdminSettings, updateSettings, UPLOADS_URL } from '../api/index.js'
 import api from '../api/index.js'
 import RichTextEditor from '../components/RichTextEditor.jsx'
+import HomeMediaEditor from '../components/HomeMediaEditor.jsx'
 import { Button } from '../components/ui/button.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Textarea } from '../components/ui/textarea.jsx'
@@ -15,11 +16,12 @@ import {
 import { cn } from '../lib/utils.js'
 
 const SECTION_LABELS = {
-  general: 'General',
-  home:    'Home Page',
-  about:   'About Us',
-  social:  'Social Media',
-  contact: 'Contact',
+  general:   'General',
+  home:      'Home Page',
+  homeMedia: 'Home Media',
+  about:     'About Us',
+  social:    'Social Media',
+  contact:   'Contact',
 }
 
 function ImageSettingField({ label, settingKey, currentValue, onUpdate }) {
@@ -195,8 +197,12 @@ export default function Settings() {
 
     home: (
       <div className="space-y-5">
+        <p className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          The hero images and slides now live under <strong>Home Media</strong>.
+          The fields below are the fallback used when no slides are configured.
+        </p>
         <ImageSettingField
-          label="Hero Background Image"
+          label="Hero Background Image (fallback)"
           settingKey="hero_image"
           currentValue={s.hero_image}
           onUpdate={handleChange}
@@ -228,6 +234,10 @@ export default function Settings() {
           <Input value={s.cta_message || ''} onChange={(e) => handleChange('cta_message', e.target.value)} placeholder="Find Your Perfect Fragrance" />
         </div>
       </div>
+    ),
+
+    homeMedia: (
+      <HomeMediaEditor settings={s} onChange={handleChange} />
     ),
 
     about: (

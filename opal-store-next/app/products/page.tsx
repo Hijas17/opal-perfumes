@@ -16,10 +16,10 @@ export const metadata: Metadata = {
 }
 
 interface PageProps {
-  searchParams: Promise<{ sort?: string }>
+  searchParams: Promise<{ sort?: string; q?: string }>
 }
 
 export default async function ProductsPage({ searchParams }: PageProps) {
-  const { sort } = await searchParams
-  return <ProductsListingView sort={sort} />
+  const { sort, q } = await searchParams
+  return <ProductsListingView sort={sort} search={q} />
 }

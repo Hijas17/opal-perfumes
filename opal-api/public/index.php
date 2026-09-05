@@ -150,6 +150,9 @@ $app->group('/api', function (RouteCollectorProxy $api) {
         // Products
         $admin->get('/products',         [ProductController::class, 'adminIndex']);
         $admin->post('/products/bulk-import', [ProductController::class, 'bulkImport']);
+        // Must precede /products/{id} — Slim matches in registration order and
+        // would otherwise treat "reorder" as a product ID.
+        $admin->put('/products/reorder', [ProductController::class, 'reorder']);
         $admin->get('/products/{id}',    [ProductController::class, 'adminShow']);
         $admin->post('/products',        [ProductController::class, 'store']);
         $admin->put('/products/{id}',    [ProductController::class, 'update']);

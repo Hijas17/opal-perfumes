@@ -1,60 +1,205 @@
 'use client'
 
-import { useState } from 'react'
+/**
+ * Product gallery — the reference's layout:
+ *
+ *  Desktop: a STICKY vertical thumbnail rail on the left (56px squares, 1px
+ *  active hairline) beside a stacked, scroll-snapping column of square media.
+ *  Clicking a thumbnail scrolls that media into view rather than swapping a
+ *  single <img>.
+ *
+ *  Mobile: the rail moves BELOW into a horizontal row and the media becomes a
+ *  swipeable carousel, with a circular zoom button floating top-right.
+ */
+
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { ZoomIn, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Thumbnail {
   src: string
   label: string
 }
 
-interface ProductGalleryProps {
+interface Props {
   productName: string
   thumbnails: Thumbnail[]
 }
 
-export default function ProductGallery({ productName, thumbnails }: ProductGalleryProps) {
-  const [activeImage, setActiveImage] = useState<string | null>(thumbnails[0]?.src || null)
+export default function ProductGallery({ productName, thumbnails }: Props) {
+  const [active, setActive] = useState(0)
+  const [lightbox, setLightbox] = useState<string | null>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  // Track which media is in view so the rail's active state follows scrolling
+  // (desktop) and swiping (mobile), not just clicks. Uses the scroller's own
+  // scroll position rather than IntersectionObserver, whose callbacks never
+  // fire while the document is hidden.
+  useEffect(() => {
+    const root = scrollerRef.current
+    if (!root) return
+
+    const measure = () => {
+      const slides = slideRefs.current.filter(Boolean) as HTMLDivElement[]
+      if (slides.length === 0) return
+
+      // Mobile lays the media out as a horizontal scroller, so the reference
+      // point is the scroller's own centre. Desktop stacks them and the PAGE
+      // scrolls, so the reference point is the centre of the VIEWPORT — using
+      // the (very tall) stack's own midpoint would always select the middle
+      // image regardless of scroll position.
+      const horizontal = root.scrollWidth > root.clientWidth + 1
+      const rootRect = root.getBoundingClientRect()
+      const anchor = horizontal
+        ? rootRect.left + root.clientWidth / 2
+        : window.innerHeight / 2
+
+      let best = 0
+      let bestDist = Infinity
+      slides.forEach((el, i) => {
+        const r = el.getBoundingClientRect()
+        const centre = horizontal ? r.left + r.width / 2 : r.top + r.height / 2
+        const dist = Math.abs(centre - anchor)
+        if (dist < bestDist) { bestDist = dist; best = i }
+      })
+      setActive(best)
+    }
+
+    measure()
+    root.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('resize', measure)
+    return () => {
+      root.removeEventListener('scroll', measure)
+      window.removeEventListener('scroll', measure)
+      window.removeEventListener('resize', measure)
+    }
+  }, [thumbnails.length])
+
+  // Close the lightbox on Escape
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightbox])
+
+  function goTo(i: number) {
+    setActive(i)
+    slideRefs.current[i]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    })
+  }
+
+  if (thumbnails.length === 0) {
+    return (
+      <div className="aspect-square w-full bg-surface" aria-hidden />
+    )
+  }
+
+  const rail = (
+    <ul
+      className={cn(
+        // Mobile: horizontal row below the media. Desktop: vertical rail.
+        'no-scrollbar flex gap-3 overflow-x-auto pb-1',
+        'md:flex-col md:overflow-visible md:pb-0',
+      )}
+    >
+      {thumbnails.map((t, i) => (
+        <li key={t.src}>
+          <button
+            type="button"
+            onClick={() => goTo(i)}
+            aria-label={`Show ${t.label}`}
+            aria-current={i === active ? 'true' : undefined}
+            className={cn(
+              'relative block h-14 w-14 flex-shrink-0 overflow-hidden border p-px transition-[border-color] duration-100',
+              i === active ? 'border-gold' : 'border-transparent hover:border-line',
+            )}
+          >
+            <Image src={t.src} alt="" aria-hidden width={56} height={56} className="h-full w-full object-cover" />
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
 
   return (
-    <div>
-      {/* Main Image */}
-      <div className="aspect-square bg-cream rounded-[var(--radius-card)] overflow-hidden mb-4 relative">
-        {activeImage ? (
-          <Image
-            src={activeImage}
-            alt={productName}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            priority
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <svg className="w-24 h-24 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-        )}
-      </div>
+    <>
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-20">
+        {/* Sticky lives on the wrapper: the flex row is tall (the media column
+            sets its height) so the wrapper has travel room. A sticky <ul> inside
+            a wrapper only as tall as itself has none, and just scrolls away. */}
+        <div
+          className="order-2 md:order-1 md:sticky md:self-start"
+          style={{ top: 'calc(var(--sticky-area-height) + 2rem)' }}
+        >
+          {rail}
+        </div>
 
-      {/* Thumbnails */}
-      {thumbnails.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {thumbnails.map((thumb, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setActiveImage(thumb.src)}
-              className={`flex-shrink-0 w-16 h-16 rounded-[var(--radius-card)] overflow-hidden border-2 transition-all duration-200 relative ${
-                activeImage === thumb.src ? 'border-gold' : 'border-transparent hover:border-line'
-              }`}
+        <div
+          ref={scrollerRef}
+          className={cn(
+            'order-1 min-w-0 flex-1',
+            // Mobile: one-per-view horizontal carousel.
+            'no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto',
+            // Desktop: stacked column, vertical snap.
+            'md:grid md:snap-y md:grid-cols-1 md:gap-6 md:overflow-x-visible',
+          )}
+        >
+          {thumbnails.map((t, i) => (
+            <div
+              key={t.src}
+              ref={(el) => { slideRefs.current[i] = el }}
+              className="relative aspect-square w-full flex-shrink-0 basis-full snap-center bg-surface md:basis-auto"
             >
-              <Image src={thumb.src} alt={thumb.label} width={64} height={64} className="w-full h-full object-cover" />
-            </button>
+              <Image
+                src={t.src}
+                alt={i === 0 ? productName : `${productName} — ${t.label}`}
+                fill
+                sizes="(max-width: 767px) 100vw, 45vw"
+                priority={i === 0}
+                className="object-cover"
+              />
+
+              <button
+                type="button"
+                onClick={() => setLightbox(t.src)}
+                aria-label="Zoom image"
+                className="absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full border border-gold bg-black/70 text-gold transition-colors hover:bg-gold hover:text-black md:opacity-0 md:group-hover:opacity-100"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
+      </div>
+
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${productName} enlarged`}
+          className="fixed inset-0 z-[1000] grid place-items-center bg-black/90 p-6"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="Close"
+            className="absolute right-6 top-6 grid h-9 w-9 place-items-center rounded-full border border-gold text-gold"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="relative h-[80vh] w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+            <Image src={lightbox} alt={productName} fill sizes="90vw" className="object-contain" />
+          </div>
+        </div>
       )}
-    </div>
+    </>
   )
 }

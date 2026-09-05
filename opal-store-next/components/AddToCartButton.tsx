@@ -1,29 +1,41 @@
 'use client'
 
 import { useState } from 'react'
-import { ShoppingBag, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
+
 import { useCart } from './CartProvider'
+import { useCartDrawer } from './CartDrawerProvider'
 import type { Product } from '@/lib/types'
 
 interface Props {
   product: Product
-  /** When true, render a smaller compact variant */
-  compact?: boolean
+  /** Units to add. Defaults to 1 so callers without a stepper keep working. */
+  quantity?: number
+  /** Open the cart drawer after adding (as the reference does). */
+  openDrawerOnAdd?: boolean
+  label?: string
 }
 
-export default function AddToCartButton({ product, compact = false }: Props) {
+export default function AddToCartButton({
+  product,
+  quantity = 1,
+  openDrawerOnAdd = true,
+  label = 'Add to cart',
+}: Props) {
   const { add } = useCart()
-  const [busy, setBusy]   = useState(false)
-  const [done, setDone]   = useState(false)
+  const { openCart } = useCartDrawer()
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
   const [error, setError] = useState('')
 
   async function handleClick() {
     setError('')
     setBusy(true)
     try {
-      await add(product, 1)
+      await add(product, quantity)
       setDone(true)
-      setTimeout(() => setDone(false), 1500)
+      if (openDrawerOnAdd) openCart()
+      window.setTimeout(() => setDone(false), 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not add to cart.')
     } finally {
@@ -31,36 +43,24 @@ export default function AddToCartButton({ product, compact = false }: Props) {
     }
   }
 
-  const sizing = compact
-    ? 'py-2.5 px-5 text-xs'
-    : 'py-3.5 px-8 text-sm'
-
   return (
     <div className="w-full">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={busy || done}
-        className={`inline-flex items-center justify-center gap-2 w-full bg-gold text-white ${sizing} font-medium tracking-wider uppercase rounded-[var(--radius-btn)] btn-3d hover:bg-[#8a6420] transition-colors disabled:opacity-80`}
-      >
+      <button type="button" onClick={handleClick} disabled={busy || done} className="btn w-full">
         {done ? (
           <>
-            <Check className="w-4 h-4" />
+            <Check className="h-4 w-4" />
             Added to cart
           </>
         ) : busy ? (
           <>
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
             Adding…
           </>
         ) : (
-          <>
-            <ShoppingBag className="w-4 h-4" />
-            Add to cart
-          </>
+          label
         )}
       </button>
-      {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-2 text-xs text-sale">{error}</p>}
     </div>
   )
 }

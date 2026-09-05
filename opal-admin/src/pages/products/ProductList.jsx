@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAdminProducts, deleteProduct, getAdminCategories, getImageUrl } from '../../api/index.js'
+import { getAdminProducts, deleteProduct, getAdminCategories, getImageUrl, reorderProducts } from '../../api/index.js'
 import { Button } from '../../components/ui/button.jsx'
 import { Badge } from '../../components/ui/badge.jsx'
 import { Alert, AlertDescription } from '../../components/ui/alert.jsx'
@@ -14,7 +14,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '../../components/ui/alert-dialog.jsx'
-import { Plus } from 'lucide-react'
+import { Plus, GripVertical, Undo2 } from 'lucide-react'
 
 export default function ProductList() {
   const [products, setProducts]         = useState([])
@@ -23,7 +23,70 @@ export default function ProductList() {
   const [error, setError]               = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  // Drag-to-reorder state. `dirty` holds the pre-drag order so the list can be
+  // reverted, and gates the Save/Cancel bar.
+  const [dragIndex, setDragIndex]   = useState(null)
+  const [overIndex, setOverIndex]   = useState(null)
+  const [originalOrder, setOriginalOrder] = useState(null)
+  const [savingOrder, setSavingOrder] = useState(false)
+  const [orderMsg, setOrderMsg]     = useState('')
   const navigate = useNavigate()
+
+  // Reordering only makes sense against the full, unfiltered list — a filtered
+  // view hides neighbours, so dropping between two visible rows would write
+  // positions that ignore everything in between.
+  const canReorder = statusFilter === 'all' && categoryFilter === 'all'
+  const orderDirty = originalOrder !== null
+
+  const handleDragStart = (index) => {
+    if (!canReorder) return
+    if (originalOrder === null) setOriginalOrder(products)
+    setDragIndex(index)
+  }
+
+  const handleDragOver = (e, index) => {
+    if (!canReorder || dragIndex === null) return
+    e.preventDefault()
+    if (index === overIndex) return
+    setOverIndex(index)
+    setProducts((prev) => {
+      if (dragIndex === index) return prev
+      const next = [...prev]
+      const [moved] = next.splice(dragIndex, 1)
+      next.splice(index, 0, moved)
+      return next
+    })
+    setDragIndex(index)
+  }
+
+  const handleDragEnd = () => {
+    setDragIndex(null)
+    setOverIndex(null)
+  }
+
+  const cancelReorder = () => {
+    if (originalOrder) setProducts(originalOrder)
+    setOriginalOrder(null)
+    setOrderMsg('')
+  }
+
+  const saveOrder = async () => {
+    setSavingOrder(true)
+    setOrderMsg('')
+    try {
+      await reorderProducts(products.map((p) => p.id))
+      setOriginalOrder(null)
+      setOrderMsg('Order saved.')
+      setTimeout(() => setOrderMsg(''), 2500)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to save the new order.')
+      // Put the list back so what is on screen matches what is stored.
+      if (originalOrder) setProducts(originalOrder)
+      setOriginalOrder(null)
+    } finally {
+      setSavingOrder(false)
+    }
+  }
 
   const fetchProducts = () => {
     setLoading(true)
@@ -42,7 +105,12 @@ export default function ProductList() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => { fetchProducts() }, [statusFilter, categoryFilter])
+  useEffect(() => {
+    // A filter change refetches, which would silently throw away an unsaved
+    // drag — drop the pending state first so the two can't disagree.
+    setOriginalOrder(null)
+    fetchProducts()
+  }, [statusFilter, categoryFilter])
 
   const handleDelete = async (id, name) => {
     try {
@@ -104,6 +172,34 @@ export default function ProductList() {
       )}
 
       {/* Table */}
+      {/* Unsaved-order bar. Dragging only rearranges local state; nothing is
+          written until this is confirmed. */}
+      {(orderDirty || orderMsg) && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
+          <p className="text-sm">
+            {orderDirty
+              ? 'Product order changed. Save to apply it to the storefront.'
+              : orderMsg}
+          </p>
+          {orderDirty && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={cancelReorder} disabled={savingOrder}>
+                <Undo2 className="mr-1 h-4 w-4" /> Cancel
+              </Button>
+              <Button size="sm" onClick={saveOrder} disabled={savingOrder}>
+                {savingOrder ? 'Saving…' : 'Save order'}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!canReorder && (
+        <p className="mb-3 text-xs text-muted-foreground">
+          Set both filters to “All” to drag products into a custom order.
+        </p>
+      )}
+
       <Card className="p-0 overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
@@ -114,6 +210,7 @@ export default function ProductList() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10" />
                   <TableHead className="w-16">Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
@@ -126,13 +223,33 @@ export default function ProductList() {
               <TableBody>
                 {products.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                       No products found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  products.map((product) => (
-                    <TableRow key={product.id}>
+                  products.map((product, index) => (
+                    <TableRow
+                      key={product.id}
+                      draggable={canReorder}
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                      onDrop={handleDragEnd}
+                      className={dragIndex === index ? 'opacity-50' : undefined}
+                    >
+                      <TableCell className="w-10">
+                        <span
+                          title={canReorder
+                            ? 'Drag to reorder'
+                            : 'Clear the filters to reorder products'}
+                          className={canReorder
+                            ? 'cursor-grab text-muted-foreground active:cursor-grabbing'
+                            : 'cursor-not-allowed text-muted-foreground/30'}
+                        >
+                          <GripVertical className="h-4 w-4" />
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {product.images?.primary ? (
                           <img

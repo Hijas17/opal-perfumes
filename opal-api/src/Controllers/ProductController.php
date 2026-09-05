@@ -110,7 +110,9 @@ class ProductController
                 }
             }
 
-            $cursor   = $db->products->find($filter, ['sort' => ['created_at' => -1]]);
+            // Same ordering the storefront uses by default, so what the admin
+            // drags is what shoppers see.
+            $cursor   = $db->products->find($filter, ['sort' => ['display_order' => 1, 'created_at' => -1]]);
             $products = [];
 
             foreach ($cursor as $product) {
@@ -177,7 +179,10 @@ class ProductController
                 }
             }
 
-            $slug = $this->generateSlug($name);
+            // An admin-supplied slug wins; otherwise derive one from the name.
+            // Either way it is normalised and made unique.
+            $slugInput = trim((string)($body['slug'] ?? ''));
+            $slug = $this->generateSlug($slugInput !== '' ? $slugInput : $name);
             $slug = $this->ensureUniqueSlug($db, $slug);
 
             $uploadDir = $this->getUploadDir();
@@ -230,6 +235,8 @@ class ProductController
                 'full_description'  => $body['full_description']  ?? '',
                 'scent_notes'       => $scentNotes,
                 'seo_keywords'      => $seoKeywords,
+                'meta_title'        => trim((string)($body['meta_title'] ?? '')),
+                'meta_description'  => trim((string)($body['meta_description'] ?? '')),
                 'price'             => isset($body['price']) ? (float)$body['price'] : 0.0,
                 'currency'          => $body['currency'] ?? 'USD',
                 'purchase_links'    => $purchaseLinks,
@@ -280,11 +287,26 @@ class ProductController
 
             $updateFields = [];
 
+            // An explicitly supplied slug always wins. Only fall back to
+            // regenerating from the name when the admin left the field blank —
+            // otherwise editing the name would silently discard a hand-picked
+            // slug and break the product's existing URL.
+            $slugInput = isset($body['slug']) ? trim((string)$body['slug']) : null;
+
             if (isset($body['name']) && trim($body['name']) !== '') {
                 $updateFields['name'] = trim($body['name']);
-                // Only regenerate slug if name changed
-                if ($updateFields['name'] !== ($product['name'] ?? '')) {
+                if (
+                    ($slugInput === null || $slugInput === '')
+                    && $updateFields['name'] !== ($product['name'] ?? '')
+                ) {
                     $newSlug = $this->generateSlug($updateFields['name']);
+                    $updateFields['slug'] = $this->ensureUniqueSlug($db, $newSlug, (string)$objectId);
+                }
+            }
+
+            if ($slugInput !== null && $slugInput !== '') {
+                $newSlug = $this->generateSlug($slugInput);
+                if ($newSlug !== ($product['slug'] ?? '')) {
                     $updateFields['slug'] = $this->ensureUniqueSlug($db, $newSlug, (string)$objectId);
                 }
             }
@@ -326,6 +348,14 @@ class ProductController
             }
             if (isset($body['seo_keywords'])) {
                 $updateFields['seo_keywords'] = $this->parseSeoKeywords($body['seo_keywords']);
+            }
+            // isset(), not truthiness — an empty string clears the override and
+            // lets the storefront fall back to its generated metadata.
+            if (isset($body['meta_title'])) {
+                $updateFields['meta_title'] = trim((string)$body['meta_title']);
+            }
+            if (isset($body['meta_description'])) {
+                $updateFields['meta_description'] = trim((string)$body['meta_description']);
             }
 
             // Scent notes
@@ -414,6 +444,54 @@ class ProductController
             ]);
         } catch (\Exception $e) {
             return Response::error($response, 'Failed to update product: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Persist a manual product ordering.
+     *
+     * Body: { "order": ["<id>", "<id>", ...] } — position in the array becomes
+     * display_order. Sent as one bulk write so a long list is a single round
+     * trip rather than one update per product.
+     */
+    public function reorder(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $body  = $request->getParsedBody();
+        $order = $body['order'] ?? null;
+
+        if (!is_array($order) || empty($order)) {
+            return Response::error($response, 'Body must contain a non-empty "order" array of product IDs.', 400);
+        }
+
+        try {
+            $operations = [];
+            foreach (array_values($order) as $index => $id) {
+                try {
+                    $objectId = new ObjectId((string)$id);
+                } catch (\Exception $e) {
+                    return Response::error($response, 'Invalid product ID in order array: ' . $id, 400);
+                }
+
+                $operations[] = [
+                    'updateOne' => [
+                        ['_id' => $objectId],
+                        ['$set' => [
+                            'display_order' => $index,
+                            'updated_at'    => new \MongoDB\BSON\UTCDateTime(),
+                        ]],
+                    ],
+                ];
+            }
+
+            $db     = Database::getInstance();
+            $result = $db->products->bulkWrite($operations);
+
+            return Response::success($response, 'Product order saved.', [
+                'matched'  => $result->getMatchedCount(),
+                'modified' => $result->getModifiedCount(),
+            ]);
+        } catch (\Exception $e) {
+            return Response::error($response, 'Failed to save order: ' . $e->getMessage(), 500);
         }
     }
 
@@ -678,6 +756,8 @@ class ProductController
                         'base'   => trim($row['base_notes']   ?? ''),
                     ],
                     'seo_keywords'   => $this->parseSeoKeywords($row['seo_keywords'] ?? null),
+                    'meta_title'       => trim((string)($row['meta_title'] ?? '')),
+                    'meta_description' => trim((string)($row['meta_description'] ?? '')),
                     'price'          => $price,
                     'currency'       => $currency,
                     'purchase_links' => $purchaseLinks,
@@ -781,6 +861,8 @@ class ProductController
                 'base'   => $scentNotes['base']   ?? '',
             ],
             'seo_keywords'      => $seoKeywords,
+            'meta_title'        => $product['meta_title']        ?? '',
+            'meta_description'  => $product['meta_description']  ?? '',
             'price'             => (float)($product['price']      ?? 0),
             'currency'          => $product['currency']           ?? 'USD',
             'purchase_links'    => $purchaseLinks,
@@ -807,7 +889,11 @@ class ProductController
             'price_desc' => ['price' => -1],
             'name_asc'   => ['name' => 1],
             'name_desc'  => ['name' => -1],
-            default      => ['created_at' => -1], // newest
+            'newest'     => ['created_at' => -1],
+            'oldest'     => ['created_at' => 1],
+            // Default = the order the admin arranged by drag-and-drop, with
+            // newest first as the tiebreak for anything never reordered.
+            default      => ['display_order' => 1, 'created_at' => -1],
         };
     }
 
