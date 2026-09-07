@@ -7,7 +7,6 @@ import ProductCard from '@/components/ProductCard'
 import HeroSlideshow, { type HeroSlide } from '@/components/HeroSlideshow'
 import FeaturedCarousel from '@/components/FeaturedCarousel'
 import BeforeAfter, { type BeforeAfterItem } from '@/components/BeforeAfter'
-import MobileHome from '@/components/mobile/MobileHome'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -144,13 +143,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd).replace(/</g, '\\u003c') }}
       />
 
-      {/* ── Mobile home (below md) — its own tree, restyled in a later phase ── */}
-      <div className="md:hidden">
-        <MobileHome settings={s} products={products} />
-      </div>
-
-      {/* ── Desktop (md+) ─────────────────────────────────────────────────── */}
-      <div className="hidden md:block">
+      <div>
         <HeroSlideshow slides={slides} />
 
         {/* Featured strip on a raised surface, bleeding off both edges */}

@@ -10,8 +10,7 @@ import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
 import CartDrawerProvider from '@/components/CartDrawerProvider'
 import CurrencyProvider from '@/components/CurrencyProvider'
-import MobileShell from '@/components/mobile/MobileShell'
-import WhatsAppFloat from '@/components/mobile/WhatsAppFloat'
+import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { getCategories, getSettings } from '@/lib/api'
 
 // ─── Brand fonts (self-hosted so builds never depend on Google's CDN) ──────
@@ -116,7 +115,7 @@ const siteJsonLd = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Categories feed the Navbar, MobileShell and Footer.
+  // Categories feed the Navbar and Footer.
   const [categories, settings] = await Promise.all([
     getCategories(),
     getSettings(),
@@ -144,10 +143,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SearchProvider>
               <CartDrawerProvider whatsappNumber={settings.whatsapp_number}>
                 <Preloader brandName={settings.brand_name || 'Opal'} />
-                <div className="hidden md:block">
-                  <Navbar categories={categories} />
-                </div>
-                <MobileShell categories={categories} settings={settings} />
+                <Navbar categories={categories} />
                 <main className="flex-1">{children}</main>
                 <Footer />
                 <WhatsAppFloat whatsappNumber={settings.whatsapp_number} />

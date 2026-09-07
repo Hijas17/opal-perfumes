@@ -112,7 +112,7 @@ export default function CollectionToolbar({
         </div>
 
         {/* Centre — count */}
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">
+        <p className="whitespace-nowrap text-xs uppercase tracking-[0.18em] text-muted">
           {count} {count === 1 ? 'Product' : 'Products'}
         </p>
 

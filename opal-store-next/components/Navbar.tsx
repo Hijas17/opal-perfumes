@@ -1,7 +1,13 @@
 'use client'
 
 /**
- * Desktop header — follows the reference storefront's structure:
+ * Site header — one responsive component for every breakpoint.
+ *
+ * Below `md` the primary nav has no room, so it moves into MenuDrawer behind a
+ * hamburger; the logo stays centred and the row keeps the same height as the
+ * old mobile bar (--mobile-header-height).
+ *
+ * Follows the reference storefront's structure at desktop widths:
  *
  *   row 1 : currency (left) · centred logo · search / account / cart (right)
  *   row 2 : centred primary nav
@@ -19,7 +25,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as NavigationMenu from '@radix-ui/react-navigation-menu'
-import { ChevronDown, Search, ShoppingBag, User } from 'lucide-react'
+import { ChevronDown, Menu, Search, ShoppingBag, User } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { authDisabled } from '@/lib/config'
@@ -29,6 +35,7 @@ import { useAuth } from './AuthProvider'
 import { useCart } from './CartProvider'
 import { useCartDrawer } from './CartDrawerProvider'
 import CurrencySelect from './CurrencySelect'
+import MenuDrawer from './MenuDrawer'
 
 interface NavbarProps {
   categories: Category[]
@@ -48,6 +55,7 @@ export default function Navbar({ categories }: NavbarProps) {
   const headerRef = useRef<HTMLElement>(null)
   const [hidden, setHidden] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   // Publish the real header height so `--sticky-area-height` is accurate.
   useEffect(() => {
@@ -76,7 +84,7 @@ export default function Navbar({ categories }: NavbarProps) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => { setUserMenuOpen(false) }, [pathname])
+  useEffect(() => { setUserMenuOpen(false); setMenuOpen(false) }, [pathname])
 
   const isProducts = pathname.startsWith('/products')
   const isAbout = pathname === '/about'
@@ -89,9 +97,31 @@ export default function Navbar({ categories }: NavbarProps) {
       className="sticky top-0 z-[4] border-b border-line bg-black transition-transform duration-[250ms] ease-in-out data-[hidden=true]:-translate-y-full"
     >
       {/* ── Row 1 ─────────────────────────────────────────────────────── */}
-      <div className="container-page--xl mx-auto flex items-center justify-between px-12 py-6">
-        <div className="w-40">
-          <CurrencySelect />
+      <div className="container-page--xl mx-auto flex items-center justify-between px-4 py-4 md:px-12 md:py-6">
+        {/* Left cluster. Below md the currency selector gives way to the
+            hamburger + search, which is where the nav links live. */}
+        <div className="flex w-28 items-center gap-3 md:w-40">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={menuOpen}
+            className="text-gold/70 transition-colors hover:text-gold md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={openSearch}
+            aria-label="Search"
+            className="text-gold/70 transition-colors hover:text-gold md:hidden"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+
+          <div className="hidden md:block">
+            <CurrencySelect />
+          </div>
         </div>
 
         <Link href="/" aria-label="Opal Perfume — home" className="flex-shrink-0">
@@ -104,16 +134,17 @@ export default function Navbar({ categories }: NavbarProps) {
           <img
             src="/logo-stacked.png"
             alt="Opal Perfume"
-            className="h-[96px] w-auto lg:h-[112px]"
+            className="h-[76px] w-auto md:h-[96px] lg:h-[112px]"
           />
         </Link>
 
-        <div className="flex w-40 items-center justify-end gap-5">
+        <div className="flex w-28 items-center justify-end gap-4 md:w-40 md:gap-5">
+          {/* Search sits on the left below md, beside the hamburger. */}
           <button
             type="button"
             onClick={openSearch}
             aria-label="Search"
-            className="text-gold/70 transition-colors hover:text-gold"
+            className="hidden text-gold/70 transition-colors hover:text-gold md:block"
           >
             <Search className="h-4 w-4" />
           </button>
@@ -173,7 +204,7 @@ export default function Navbar({ categories }: NavbarProps) {
       </div>
 
       {/* ── Row 2 — primary nav ───────────────────────────────────────── */}
-      <nav className="border-t border-line-soft">
+      <nav className="hidden border-t border-line-soft md:block">
         {/* Root spans the full width so the mega-menu viewport below can be
             full-bleed; the list itself stays centred. */}
         <NavigationMenu.Root className="relative w-full">
@@ -240,6 +271,9 @@ export default function Navbar({ categories }: NavbarProps) {
           </div>
         </NavigationMenu.Root>
       </nav>
+
+      {/* Primary nav for narrow screens */}
+      <MenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} />
     </header>
   )
 }

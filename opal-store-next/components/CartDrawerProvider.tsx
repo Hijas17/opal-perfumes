@@ -1,12 +1,10 @@
 'use client'
 
 /**
- * Desktop cart-drawer state.
+ * Cart-drawer state, for every breakpoint.
  *
- * The mobile tree has its own drawer inside MobileShell (deferred to the mobile
- * phase), so this provider renders its drawer at md+ only — otherwise both
- * would mount on small screens. When the mobile tree is unified, MobileShell's
- * drawer collapses into this one.
+ * The mobile tree used to carry its own drawer; that has been folded into this
+ * one, so there is a single cart drawer site-wide.
  */
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
@@ -62,14 +60,12 @@ export default function CartDrawerProvider({
   return (
     <Ctx.Provider value={{ open, openCart, closeCart }}>
       {children}
-      <div className="hidden md:block">
-        <CartDrawer
-          open={open}
-          onClose={closeCart}
-          whatsappNumber={whatsappNumber}
-          freeShippingThreshold={freeShippingThreshold}
-        />
-      </div>
+      <CartDrawer
+        open={open}
+        onClose={closeCart}
+        whatsappNumber={whatsappNumber}
+        freeShippingThreshold={freeShippingThreshold}
+      />
     </Ctx.Provider>
   )
 }
