@@ -178,7 +178,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="pt-16 md:pt-0">
+    <div className="pt-[var(--mobile-header-height)] md:pt-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c') }}

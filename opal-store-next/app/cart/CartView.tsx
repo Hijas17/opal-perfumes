@@ -55,7 +55,7 @@ export default function CartView({ settings }: Props) {
 
   if (!loading && cart.items.length === 0) {
     return (
-      <div className="section-spacing pt-16 md:pt-0">
+      <div className="section-spacing pt-[var(--mobile-header-height)] md:pt-0">
         <div className="container-page container-page--xs flex flex-col items-center gap-6 py-16 text-center">
           <h1 className="h2">Cart</h1>
           <p className="text-sm text-muted">Your cart is empty.</p>
@@ -66,7 +66,7 @@ export default function CartView({ settings }: Props) {
   }
 
   return (
-    <div className="section-spacing pt-16 md:pt-0">
+    <div className="section-spacing pt-[var(--mobile-header-height)] md:pt-0">
       <div className="container-page" style={{ maxWidth: '980px' }}>
         <h1 className="h2 text-center">Cart</h1>
 

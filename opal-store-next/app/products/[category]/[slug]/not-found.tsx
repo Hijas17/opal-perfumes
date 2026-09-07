@@ -3,7 +3,7 @@ import Link from 'next/link'
 /** Product-level 404 — same shape as the global one, scoped copy. */
 export default function NotFound() {
   return (
-    <div className="section-spacing bg-surface pt-16 md:pt-0">
+    <div className="section-spacing bg-surface pt-[var(--mobile-header-height)] md:pt-0">
       <div className="container-page container-page--xs flex flex-col items-center gap-6 py-16 text-center">
         <h1 className="h5 text-ink">404</h1>
         <p className="text-sm leading-relaxed text-muted">

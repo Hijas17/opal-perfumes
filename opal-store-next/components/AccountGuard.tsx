@@ -21,7 +21,7 @@ export default function AccountGuard({ children }: { children: ReactNode }) {
 
   if (loading || !isLoggedIn) {
     return (
-      <div className="pt-16 md:pt-0 min-h-screen flex items-center justify-center">
+      <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )

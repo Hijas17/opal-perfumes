@@ -53,7 +53,7 @@ export default async function AboutPage() {
   ]
 
   return (
-    <div className="pt-16 md:pt-0">
+    <div className="pt-[var(--mobile-header-height)] md:pt-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutJsonLd).replace(/</g, '\\u003c') }}

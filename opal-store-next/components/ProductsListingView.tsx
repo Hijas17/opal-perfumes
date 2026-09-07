@@ -71,7 +71,7 @@ export default async function ProductsListingView({ categorySlug, sort = '', sea
   }
 
   return (
-    <div className="pt-16 md:pt-0">
+    <div className="pt-[var(--mobile-header-height)] md:pt-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd).replace(/</g, '\\u003c') }}

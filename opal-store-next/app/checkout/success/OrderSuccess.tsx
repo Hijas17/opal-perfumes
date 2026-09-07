@@ -21,7 +21,7 @@ export default function OrderSuccess({ orderId }: { orderId: string | null }) {
   }, [orderId])
 
   return (
-    <div className="pt-16 md:pt-0 min-h-screen">
+    <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen">
       <div className="max-w-2xl mx-auto px-4 py-16">
         <div className="bg-surface rounded-[var(--radius-card)] shadow-[var(--shadow-card)] p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">

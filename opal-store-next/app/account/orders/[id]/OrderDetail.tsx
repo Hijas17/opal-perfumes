@@ -40,7 +40,7 @@ function Inner({ orderId }: { orderId: string }) {
 
   if (loading) {
     return (
-      <div className="pt-16 md:pt-0 min-h-screen flex items-center justify-center">
+      <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -48,7 +48,7 @@ function Inner({ orderId }: { orderId: string }) {
 
   if (error || !order) {
     return (
-      <div className="pt-16 md:pt-0 min-h-screen">
+      <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen">
         <div className="max-w-md mx-auto px-4 py-24 text-center">
           <h1 className="font-display text-3xl font-semibold text-ink mb-3">Order Not Found</h1>
           <p className="text-sm text-muted mb-6">{error || 'We couldn\'t find that order.'}</p>
@@ -61,7 +61,7 @@ function Inner({ orderId }: { orderId: string }) {
   }
 
   return (
-    <div className="pt-16 md:pt-0 min-h-screen">
+    <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <nav className="text-xs text-muted mb-4">
           <Link href="/account" className="hover:text-gold">My Account</Link> <span>/</span>{' '}

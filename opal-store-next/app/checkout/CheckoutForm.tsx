@@ -145,14 +145,14 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
 
   if (authLoading || !isLoggedIn || cart.items.length === 0) {
     return (
-      <div className="pt-16 md:pt-0 min-h-screen flex items-center justify-center">
+      <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="pt-16 md:pt-0 min-h-screen">
+    <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="font-display text-4xl font-semibold text-ink mb-2">Checkout</h1>
         <p className="text-sm text-muted mb-8">

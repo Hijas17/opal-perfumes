@@ -17,7 +17,7 @@ export default function MobileNavbar() {
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-40 bg-surface border-b border-line"
-      style={{ height: '64px' }}
+      style={{ height: 'var(--mobile-header-height)' }}
     >
       <div className="h-full flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
@@ -40,12 +40,12 @@ export default function MobileNavbar() {
         </div>
 
         <Link href="/" aria-label="Home" className="absolute left-1/2 -translate-x-1/2">
-          {/* Width-capped: the lockup is wide, so a height cap alone would
-              run it under the hamburger and cart icons on a 375px bar. */}
+          {/* Stacked lockup, matching the desktop header. HEIGHT-capped: at
+              roughly 0.7:1 a width cap would make it far too tall for the bar. */}
           <img
-            src="/logo.png"
+            src="/logo-stacked.png"
             alt="Opal Perfumes"
-            className="h-auto w-[170px] max-w-[55vw]"
+            className="h-[76px] w-auto"
           />
         </Link>
 

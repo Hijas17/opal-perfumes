@@ -42,7 +42,7 @@ export default function MobileHome({ settings, products }: Props) {
   ]
 
   return (
-    <div className="pt-[64px]">
+    <div className="pt-[var(--mobile-header-height)]">
       <MobileHeroCarousel slides={slides} />
 
       {/* Featured products */}

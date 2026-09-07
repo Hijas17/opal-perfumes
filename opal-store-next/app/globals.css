@@ -78,6 +78,9 @@
   /* Chrome heights — consumed by sticky offsets so they live in one place.
      The header overwrites these at runtime once it measures itself. */
   --header-height: 106px;
+  /* The mobile bar is position:fixed, so every page pads its top by this.
+     Kept as a token because ~17 places depend on it. */
+  --mobile-header-height: 104px;
   --sticky-area-height: var(--header-height);
 }
 
