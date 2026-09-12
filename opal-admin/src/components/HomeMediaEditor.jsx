@@ -202,6 +202,42 @@ export default function HomeMediaEditor({ settings, onChange }) {
 
       <Separator />
 
+      {/* ── Product-section backdrops ──────────────────────────────────── */}
+      <section>
+        <h3 className="mb-1 text-base font-semibold">Product Section Backgrounds</h3>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Photographs sitting behind the two product rows on the home page. They are
+          heavily darkened so the product titles stay readable, and the product cards
+          themselves are solid — so the image shows <em>around and between</em> the
+          cards rather than behind the bottles. Wide, dark images with empty space on
+          one side work best; around 1600&times;900. Leave empty to use the shipped
+          defaults.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-border p-4">
+            <h4 className="mb-3 text-sm font-medium">Featured Collection</h4>
+            <MediaField
+              label="Background image"
+              value={settings.home_featured_bg || ''}
+              onChange={(v) => onChange('home_featured_bg', v)}
+              hint="Subject is anchored to the left of the frame."
+            />
+          </div>
+          <div className="rounded-lg border border-border p-4">
+            <h4 className="mb-3 text-sm font-medium">Bestsellers</h4>
+            <MediaField
+              label="Background image"
+              value={settings.home_bestsellers_bg || ''}
+              onChange={(v) => onChange('home_bestsellers_bg', v)}
+              hint="Subject is anchored to the right of the frame."
+            />
+          </div>
+        </div>
+      </section>
+
+      <Separator />
+
       {/* ── Scented Delights tiles ─────────────────────────────────────── */}
       <section>
         <div className="mb-1 flex items-center justify-between">

@@ -7,6 +7,7 @@ import ProductCard from '@/components/ProductCard'
 import HeroSlideshow, { type HeroSlide } from '@/components/HeroSlideshow'
 import FeaturedCarousel from '@/components/FeaturedCarousel'
 import BeforeAfter, { type BeforeAfterItem } from '@/components/BeforeAfter'
+import SectionBackdrop from '@/components/SectionBackdrop'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -89,6 +90,16 @@ export default async function HomePage() {
         image: c.image ? getImageUrl(c.image) : null,
       }))
 
+  // ── Section backdrops ──────────────────────────────────────────────────
+  // Admin-managed via Settings › Home Media; the shipped images are the
+  // fallback so the sections never look bare before anything is configured.
+  const featuredBg = s.home_featured_bg
+    ? getImageUrl(s.home_featured_bg)
+    : '/section-bg-featured.jpg'
+  const bestsellersBg = s.home_bestsellers_bg
+    ? getImageUrl(s.home_bestsellers_bg)
+    : '/section-bg-bestsellers.jpg'
+
   // ── Before / after comparator ──────────────────────────────────────────
   // Both halves must have an image or the section is hidden entirely.
   const compare = s.home_compare
@@ -148,15 +159,18 @@ export default async function HomePage() {
 
         {/* Featured strip on a raised surface, bleeding off both edges */}
         {products.length > 0 && (
-          <section className="section-spacing border-y border-line bg-surface-2">
-            <div className="container-page mb-10 text-center">
+          <section className="relative section-spacing border-y border-line bg-surface-2">
+            <SectionBackdrop image={featuredBg} position="left center" />
+            <div className="relative z-[1] container-page mb-10 text-center">
               <p className="eyebrow">Weekly pick</p>
               <h2 className="h2 mt-2">Featured Collection</h2>
               <p className="mx-auto mt-3 max-w-xl text-sm text-muted">
                 Discover this week&rsquo;s curated fragrances and find your next signature scent.
               </p>
             </div>
-            <FeaturedCarousel products={products} vendor={brandName} />
+            <div className="relative z-[1]">
+              <FeaturedCarousel products={products} vendor={brandName} />
+            </div>
           </section>
         )}
 
@@ -198,8 +212,9 @@ export default async function HomePage() {
 
         {/* Featured grid + Explore */}
         {products.length > 0 && (
-          <section className="section-spacing">
-            <div className="container-page">
+          <section className="relative section-spacing">
+            <SectionBackdrop image={bestsellersBg} position="right center" />
+            <div className="relative z-[1] container-page">
               <div className="mb-10 text-center">
                 <p className="eyebrow">Curated for you</p>
                 <h2 className="h2 mt-2">Bestsellers</h2>
