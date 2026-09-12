@@ -29,10 +29,15 @@ import { useCart } from './CartProvider'
 import { useCartDrawer } from './CartDrawerProvider'
 import { useMoney } from './CurrencyProvider'
 
+// Two spellings of the same label reach us: the admin's product form writes
+// 'limited edition', while the bulk importer validates and stores 'limited'.
+// Both are accepted here so a bulk-imported product is not silently left
+// without a badge.
 const LABEL_CLASS: Record<string, string> = {
   'new':             'badge badge--new',
   'bestseller':      'badge badge--bestseller',
   'limited edition': 'badge badge--limited',
+  'limited':         'badge badge--limited',
   'featured':        'badge badge--featured',
 }
 
@@ -40,6 +45,7 @@ const LABEL_TEXT: Record<string, string> = {
   'new':             'New',
   'bestseller':      'Bestseller',
   'limited edition': 'Limited Edition',
+  'limited':         'Limited Edition',
   'featured':        'Featured',
 }
 

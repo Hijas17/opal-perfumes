@@ -24,11 +24,21 @@ class ProductController
         $sort     = $params['sort']     ?? 'featured';
         $search   = $params['search']   ?? '';
         $featured = $params['featured'] ?? '';
+        $label    = $params['label']    ?? '';
 
         $filter = ['status' => 'published'];
 
         if ($featured === 'true' || $featured === '1') {
             $filter['is_featured'] = true;
+        }
+
+        // Label filter — drives the home page's Featured Collection and
+        // Bestsellers rows from the label chosen per product in the admin.
+        // 'none' is the stored value for "no label", so it is never a filter
+        // anyone means to apply; treating it as one would return every unlabelled
+        // product under a heading that promises the opposite.
+        if ($label !== '' && strtolower($label) !== 'none') {
+            $filter['label'] = $label;
         }
 
         try {

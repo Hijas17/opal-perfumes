@@ -37,14 +37,28 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [s, featured, categories] = await Promise.all([
+  const [s, featured, labelledFeatured, labelledBestsellers, categories] = await Promise.all([
     getSettings(),
     getProducts({ featured: true }),
+    getProducts({ label: 'featured' }),
+    getProducts({ label: 'bestseller' }),
     getCategories(),
   ])
 
   const brandName = s.brand_name || 'Opal Perfume'
-  const products = featured.slice(0, 8)
+
+  // ── What each product row shows ────────────────────────────────────────
+  // The two rows are driven by the label set per product in the admin, so
+  // Featured Collection and Bestsellers can finally hold different products —
+  // before this they were the same is_featured list shown twice.
+  //
+  // An empty label list falls back to that is_featured list rather than
+  // rendering an empty row: on a catalogue where nobody has assigned labels
+  // yet, the home page should look exactly as it does today. The fallback is
+  // per row, so labelling only the bestsellers works without emptying the
+  // other row.
+  const featuredProducts = (labelledFeatured.length > 0 ? labelledFeatured : featured).slice(0, 8)
+  const bestsellerProducts = (labelledBestsellers.length > 0 ? labelledBestsellers : featured).slice(0, 4)
 
 
   // ── Hero slides ────────────────────────────────────────────────────────
@@ -124,8 +138,8 @@ export default async function HomePage() {
         '@type': 'ItemList',
         'name': 'Featured Perfumes',
         'url': `${SITE_URL}/products`,
-        'numberOfItems': products.length,
-        'itemListElement': products.slice(0, 6).map((p, i) => ({
+        'numberOfItems': featuredProducts.length,
+        'itemListElement': featuredProducts.slice(0, 6).map((p, i) => ({
           '@type': 'ListItem',
           'position': i + 1,
           'url': `${SITE_URL}/products/${p.subcategory_slug || 'all'}/${p.slug}`,
@@ -146,7 +160,7 @@ export default async function HomePage() {
         <HeroSlideshow slides={slides} />
 
         {/* Featured strip on a raised surface, bleeding off both edges */}
-        {products.length > 0 && (
+        {featuredProducts.length > 0 && (
           <section className="relative section-spacing section-soft section-soft--raised">
             <SectionBackdrop image={featuredBg} position="left center" />
             <div className="relative z-[1] container-page mb-10 text-center">
@@ -157,7 +171,7 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="relative z-[1]">
-              <FeaturedCarousel products={products} vendor={brandName} />
+              <FeaturedCarousel products={featuredProducts} vendor={brandName} />
             </div>
           </section>
         )}
@@ -204,7 +218,7 @@ export default async function HomePage() {
         )}
 
         {/* Featured grid + Explore */}
-        {products.length > 0 && (
+        {bestsellerProducts.length > 0 && (
           <section className="relative section-spacing">
             <SectionBackdrop image={bestsellersBg} position="right center" />
             <div className="relative z-[1] container-page">
@@ -213,7 +227,7 @@ export default async function HomePage() {
                 <h2 className="h2 mt-2">Bestsellers</h2>
               </div>
               <div className="grid grid-cols-2 gap-x-12 gap-y-16 lg:grid-cols-4">
-                {products.slice(0, 4).map((p) => (
+                {bestsellerProducts.map((p) => (
                   <ProductCard key={p.id || p.slug} product={p} vendor={brandName} />
                 ))}
               </div>

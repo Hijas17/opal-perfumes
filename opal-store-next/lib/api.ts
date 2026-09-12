@@ -91,6 +91,8 @@ export interface ProductQuery {
   category?: string
   search?: string
   featured?: boolean
+  /** Admin-assigned label, e.g. 'bestseller' | 'featured'. 'none' is ignored. */
+  label?: string
   sort?: string
   limit?: number
 }
@@ -100,6 +102,7 @@ export async function getProducts(query: ProductQuery = {}): Promise<Product[]> 
   if (query.category) params.set('category', query.category)
   if (query.search)   params.set('search',   query.search)
   if (query.featured) params.set('featured', '1')
+  if (query.label)    params.set('label',    query.label)
   if (query.sort)     params.set('sort',     query.sort)
   if (query.limit)    params.set('limit',    String(query.limit))
   const qs = params.toString()
