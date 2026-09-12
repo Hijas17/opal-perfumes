@@ -55,9 +55,19 @@ interface ProductCardProps {
   priority?: boolean
   /** Eyebrow above the title — the brand, standing in for the reference's vendor. */
   vendor?: string
+  /**
+   * Label to leave un-badged, for a section whose heading already says it —
+   * a "Featured" badge under a "Featured Collection" title is just noise.
+   *
+   * Matched against the product's own label rather than hiding badges
+   * outright, because these rows fall back to the is_featured list when
+   * nothing carries their label, and a product surfacing there as "New" or
+   * "Bestseller" should still say so.
+   */
+  suppressLabel?: string
 }
 
-export default function ProductCard({ product, priority = false, vendor }: ProductCardProps) {
+export default function ProductCard({ product, priority = false, vendor, suppressLabel }: ProductCardProps) {
   const money = useMoney()
   const { add } = useCart()
   const { openCart } = useCartDrawer()
@@ -67,7 +77,8 @@ export default function ProductCard({ product, priority = false, vendor }: Produ
   const primarySrc = imgs.primary ? getImageUrl(imgs.primary) : null
   const hoverSrc = imgs.hover ? getImageUrl(imgs.hover) : null
 
-  const labelKey = product.label?.toLowerCase()
+  const rawLabel = product.label?.toLowerCase()
+  const labelKey = rawLabel && rawLabel !== suppressLabel?.toLowerCase() ? rawLabel : undefined
   const labelClass = labelKey ? LABEL_CLASS[labelKey] : null
   const labelText = labelKey ? LABEL_TEXT[labelKey] : null
 

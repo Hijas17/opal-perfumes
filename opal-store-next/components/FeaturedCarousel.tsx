@@ -15,9 +15,11 @@ import ProductCard from './ProductCard'
 interface Props {
   products: Product[]
   vendor?: string
+  /** Passed straight to each card — see ProductCard's `suppressLabel`. */
+  suppressLabel?: string
 }
 
-export default function FeaturedCarousel({ products, vendor }: Props) {
+export default function FeaturedCarousel({ products, vendor, suppressLabel }: Props) {
   const scroller = useRef<HTMLDivElement>(null)
 
   const nudge = (dir: 1 | -1) => {
@@ -36,7 +38,7 @@ export default function FeaturedCarousel({ products, vendor }: Props) {
       >
         {products.map((p, i) => (
           <div key={p.id || p.slug} className="w-[260px] flex-shrink-0 snap-start">
-            <ProductCard product={p} vendor={vendor} priority={i < 4} />
+            <ProductCard product={p} vendor={vendor} priority={i < 4} suppressLabel={suppressLabel} />
           </div>
         ))}
       </div>

@@ -171,7 +171,7 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="relative z-[1]">
-              <FeaturedCarousel products={featuredProducts} vendor={brandName} />
+              <FeaturedCarousel products={featuredProducts} vendor={brandName} suppressLabel="featured" />
             </div>
           </section>
         )}
