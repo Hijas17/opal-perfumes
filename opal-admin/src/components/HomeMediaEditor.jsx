@@ -22,7 +22,6 @@ const MAX_SLIDES = 8
 const EMPTY_SLIDE = {
   image: '', eyebrow: '', headline: '', subtext: '', cta_label: 'Explore', cta_href: '/products',
 }
-const EMPTY_TILE = { image: '', title: '', href: '/products' }
 const EMPTY_SIDE = { image: '', label: '', href: '/products' }
 
 /** Settings values arrive as JSON from Mongo but may be absent or malformed. */
@@ -74,7 +73,6 @@ function RowShell({ title, index, count, onMove, onRemove, children }) {
 
 export default function HomeMediaEditor({ settings, onChange }) {
   const slides  = asArray(settings.home_hero_slides)
-  const tiles   = asArray(settings.home_delight_tiles)
   const compare = asObject(settings.home_compare, { before: { ...EMPTY_SIDE }, after: { ...EMPTY_SIDE } })
 
   // ── list helpers ───────────────────────────────────────────────────────
@@ -237,67 +235,6 @@ export default function HomeMediaEditor({ settings, onChange }) {
       </section>
 
       <Separator />
-
-      {/* ── Scented Delights tiles ─────────────────────────────────────── */}
-      <section>
-        <div className="mb-1 flex items-center justify-between">
-          <h3 className="text-base font-semibold">Scented Delights Tiles</h3>
-          <Button
-            type="button" variant="outline" size="sm"
-            onClick={() => addItem('home_delight_tiles', tiles, EMPTY_TILE)}
-          >
-            <Plus className="mr-1 h-4 w-4" /> Add tile
-          </Button>
-        </div>
-        <p className="mb-4 text-xs text-muted-foreground">
-          The three-across block partway down the home page. Square images look best — around 1000×1000.
-        </p>
-
-        {tiles.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No tiles yet. The home page falls back to your first three categories.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {tiles.map((tile, i) => (
-              <RowShell
-                key={i}
-                title={`Tile ${i + 1}`}
-                index={i}
-                count={tiles.length}
-                onMove={(from, to) => moveItem('home_delight_tiles', tiles, from, to)}
-                onRemove={(idx) => removeItem('home_delight_tiles', tiles, idx)}
-              >
-                <div className="grid gap-4 md:grid-cols-2">
-                  <MediaField
-                    label="Image"
-                    value={tile.image || ''}
-                    onChange={(v) => updateItem('home_delight_tiles', tiles, i, 'image', v)}
-                  />
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="mb-1.5 block">Title</Label>
-                      <Input
-                        value={tile.title || ''}
-                        placeholder="Perfumes"
-                        onChange={(e) => updateItem('home_delight_tiles', tiles, i, 'title', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label className="mb-1.5 block">Link</Label>
-                      <Input
-                        value={tile.href || ''}
-                        placeholder="/products"
-                        onChange={(e) => updateItem('home_delight_tiles', tiles, i, 'href', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </RowShell>
-            ))}
-          </div>
-        )}
-      </section>
 
       <Separator />
 

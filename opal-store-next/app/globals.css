@@ -324,25 +324,54 @@ h6 { font-size: var(--text-h6); }
 .quantity-selector--sm input { font-size: 0.62rem; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Product card — flat. Hover lifts the media 2px, cross-fades to the secondary
-   image, and rotates the always-visible quick-add + by 90°.
-   (No glass well, no drifting mist, no slide-up bar.)
+   Product card — transparent, so the product PNG sits directly on whatever is
+   behind it (the page, or a section backdrop).
+
+   The primary images are cut out with real transparency (69 of 70 at the time
+   of writing), but every SECONDARY image is opaque. So the media well itself
+   carries no background, and a dark plate fades in on hover underneath the
+   secondary image — without it, hovering any card would flash a hard
+   rectangle over the backdrop.
+
+   A product whose primary image has no alpha simply shows its own rectangle;
+   that resolves itself when the image is re-exported.
    ═══════════════════════════════════════════════════════════════════════════ */
 .product-card__media {
   position: relative;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: var(--color-surface);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: transparent;
+  transition: transform 0.2s ease;
 }
+
+/* The plate that backs the opaque secondary image. Sits beneath both images
+   (they are z-index 1 via their own stacking) and is invisible at rest. */
+.product-card__media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--color-surface);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+
+.product-img-primary,
+.product-img-hover { position: absolute; inset: 0; z-index: 1; }
 .product-img-primary { opacity: 1; transition: opacity 300ms ease; }
 .product-img-hover   { opacity: 0; transition: opacity 300ms ease; }
 
+/* Placeholder fill for cards with no image at all. */
+.product-card__media--empty { background: var(--color-surface); }
+
 @media (pointer: fine) {
-  .product-card:hover .product-card__media {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card-hover);
-  }
+  .product-card:hover .product-card__media { transform: translateY(-2px); }
+
+  /* Only raise the plate when there IS a secondary image to cover — a card
+     without one keeps its transparent well throughout the hover. */
+  .product-card:has(.product-img-hover):hover .product-card__media::before { opacity: 1; }
+
   .product-card:hover .product-img-primary { opacity: 0; }
   .product-card:hover .product-img-hover   { opacity: 1; }
 }

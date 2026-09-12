@@ -86,12 +86,6 @@ export interface HeroSlideSetting {
   cta_href?: string
 }
 
-export interface HomeTileSetting {
-  image?: string
-  title?: string
-  href?: string
-}
-
 export interface CompareSideSetting {
   image?: string
   label?: string
@@ -132,7 +126,6 @@ export interface SiteSettings {
   home_featured_bg?: string
   home_bestsellers_bg?: string
   home_hero_slides?: HeroSlideSetting[]
-  home_delight_tiles?: HomeTileSetting[]
   home_compare?: HomeCompareSetting
 
   // About / Home

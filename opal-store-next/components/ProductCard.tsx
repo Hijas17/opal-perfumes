@@ -3,8 +3,11 @@
 /**
  * Product grid tile — follows the reference card anatomy:
  *
- *  - square media, primary image cross-fading to a secondary on hover
- *  - the whole media block lifts 2px with a soft shadow on hover
+ *  - square, TRANSPARENT media well — the cut-out product PNG sits directly on
+ *    the page or section backdrop
+ *  - primary image cross-fading to a secondary on hover, over a dark plate
+ *    (secondary images are opaque, so without it hover flashes a rectangle)
+ *  - the whole media block lifts 2px on hover
  *  - an ALWAYS-VISIBLE quick-add button bottom-right whose "+" rotates 90°
  *    on hover; clicking it adds to cart and opens the drawer
  *  - centre-aligned info: vendor eyebrow, title, price — all 12px/400/0.18em
@@ -82,7 +85,10 @@ export default function ProductCard({ product, priority = false, vendor }: Produ
 
   return (
     <Link href={detailPath} className="product-card group block" prefetch>
-      <div className="product-card__media">
+      {/* The well is transparent so cut-out product PNGs sit on whatever is
+          behind the card; a card with no image at all gets a solid fill so it
+          does not read as a hole. */}
+      <div className={cn('product-card__media', !primarySrc && 'product-card__media--empty')}>
         {primarySrc ? (
           <>
             <Image

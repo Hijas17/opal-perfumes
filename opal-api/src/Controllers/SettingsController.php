@@ -33,12 +33,10 @@ class SettingsController
         // accepts any value type, so no special handling is needed; they only
         // have to be listed here to be exposed publicly.
         //   home_hero_slides  : [{ image, eyebrow, headline, subtext, cta_label, cta_href }]
-        //   home_delight_tiles: [{ image, title, href }]
         //   home_compare      : { before: {image,label,href}, after: {image,label,href} }
         'home_featured_bg',
         'home_bestsellers_bg',
         'home_hero_slides',
-        'home_delight_tiles',
         'home_compare',
         // About Us page
         'about_hero_image',

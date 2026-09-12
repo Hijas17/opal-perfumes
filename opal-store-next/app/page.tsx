@@ -75,21 +75,6 @@ export default async function HomePage() {
     })
   }
 
-  // ── "Scented Delights" tiles ───────────────────────────────────────────
-  // Admin tiles win; otherwise fall back to the first three categories.
-  const adminTiles = Array.isArray(s.home_delight_tiles) ? s.home_delight_tiles : []
-  const delightTiles = adminTiles.length
-    ? adminTiles.map((t) => ({
-        title: t.title || '',
-        href: t.href || '/products',
-        image: t.image ? getImageUrl(t.image) : null,
-      }))
-    : categories.slice(0, 3).map((c) => ({
-        title: c.name,
-        href: `/products/${c.slug}`,
-        image: c.image ? getImageUrl(c.image) : null,
-      }))
-
   // ── Section backdrops ──────────────────────────────────────────────────
   // Admin-managed via Settings › Home Media; the shipped images are the
   // fallback so the sections never look bare before anything is configured.
@@ -188,18 +173,22 @@ export default async function HomePage() {
                     <Link
                       key={cat.id || cat.slug}
                       href={`/products/${cat.slug}`}
-                      className="group relative grid aspect-[4/3] place-items-center overflow-hidden border border-line bg-black"
+                      className="group flex flex-col gap-4"
                     >
-                      {tileImage && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={tileImage}
-                          alt=""
-                          aria-hidden
-                          className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity duration-300 group-hover:opacity-80"
-                        />
-                      )}
-                      <span className="relative h4 text-gold transition-colors group-hover:text-ink">
+                      <div className="relative aspect-[4/3] w-full overflow-hidden border border-line bg-black">
+                        {tileImage && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={tileImage}
+                            alt=""
+                            aria-hidden
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        )}
+                      </div>
+                      {/* Label sits BELOW the image, so the artwork is no longer
+                          dimmed to keep overlaid text legible. */}
+                      <span className="h5 text-center text-gold transition-colors group-hover:text-ink">
                         {cat.name}
                       </span>
                     </Link>
@@ -229,37 +218,6 @@ export default async function HomePage() {
               </div>
             </div>
           </section>
-        )}
-
-        {/* Multi-column — "Scented Delights" */}
-        {delightTiles.length > 0 && (
-        <section className="section-spacing bg-surface">
-          <div className="container-page text-center">
-            <h2 className="h2">Scented Delights</h2>
-            <p className="eyebrow mt-3">A trio of luxurious fragrances</p>
-
-            <div className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-3">
-              {delightTiles.map((col) => (
-                <Link key={col.title} href={col.href} className="group flex flex-col gap-4">
-                  <div className="relative aspect-square w-full overflow-hidden border border-line bg-black">
-                    {col.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={col.image}
-                        alt=""
-                        aria-hidden
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    )}
-                  </div>
-                  <span className="h5 text-gold transition-colors group-hover:text-ink">
-                    {col.title}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
         )}
 
         {/* Before / after comparator */}
