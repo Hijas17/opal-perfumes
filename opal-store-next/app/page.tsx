@@ -84,6 +84,9 @@ export default async function HomePage() {
   const bestsellersBg = s.home_bestsellers_bg
     ? getImageUrl(s.home_bestsellers_bg)
     : '/section-bg-bestsellers.jpg'
+  const collectionsBg = s.home_collections_bg
+    ? getImageUrl(s.home_collections_bg)
+    : '/section-bg-collections.jpg'
 
   // ── Before / after comparator ──────────────────────────────────────────
   // Both halves must have an image or the section is hidden entirely.
@@ -144,7 +147,7 @@ export default async function HomePage() {
 
         {/* Featured strip on a raised surface, bleeding off both edges */}
         {products.length > 0 && (
-          <section className="relative section-spacing border-y border-line bg-surface-2">
+          <section className="relative section-spacing section-soft section-soft--raised">
             <SectionBackdrop image={featuredBg} position="left center" />
             <div className="relative z-[1] container-page mb-10 text-center">
               <p className="eyebrow">Weekly pick</p>
@@ -161,8 +164,9 @@ export default async function HomePage() {
 
         {/* Category tiles */}
         {categories.length > 0 && (
-          <section className="section-spacing bg-surface">
-            <div className="container-page">
+          <section className="relative section-spacing section-soft">
+            <SectionBackdrop image={collectionsBg} position="right center" />
+            <div className="relative z-[1] container-page">
               <div className="mb-10 text-center">
                 <h2 className="h2">Our Collections</h2>
               </div>
@@ -175,7 +179,7 @@ export default async function HomePage() {
                       href={`/products/${cat.slug}`}
                       className="group flex flex-col gap-4"
                     >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden border border-line bg-black">
+                      <div className="relative aspect-[4/3] w-full overflow-hidden border border-line bg-surface-2">
                         {tileImage && (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -245,7 +249,7 @@ export default async function HomePage() {
         </section>
 
         {/* Trust row */}
-        <section className="border-t border-line py-12">
+        <section className="section-rule-top py-12">
           <div className="container-page grid grid-cols-1 gap-10 text-center md:grid-cols-3">
             {[
               { t: 'International Shipping', d: 'Worldwide shipping — customs and duties excluded.' },

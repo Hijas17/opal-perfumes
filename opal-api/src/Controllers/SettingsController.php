@@ -36,6 +36,7 @@ class SettingsController
         //   home_compare      : { before: {image,label,href}, after: {image,label,href} }
         'home_featured_bg',
         'home_bestsellers_bg',
+        'home_collections_bg',
         'home_hero_slides',
         'home_compare',
         // About Us page

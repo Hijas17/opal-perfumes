@@ -2,10 +2,10 @@
  * Ambient photographic backdrop for a full-width section.
  *
  * Sits behind the section's content at z-0 with a heavy scrim over it, so the
- * photo reads as texture rather than a picture. That matters here: product
- * cards are opaque (their media well is filled with --color-surface), so the
- * image is only ever visible AROUND and BETWEEN the cards — and the card
- * titles sit directly on it with no background of their own.
+ * photo reads as texture rather than a picture. That matters more than it used
+ * to: product cards are transparent now, so the image shows THROUGH them as
+ * well as around them, and every title sits directly on it with no background
+ * of its own. Hence the scrim default well above half.
  *
  * Render inside a `relative` section and give the content `relative z-[1]`.
  */
@@ -42,9 +42,12 @@ export default function SectionBackdrop({
         style={{ opacity: scrim / 100 }}
       />
       {/* Feather the top and bottom edges so the section melts into the
-          neighbouring black rather than ending on a hard seam. */}
-      <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black to-transparent" />
+          neighbouring black rather than ending on a hard seam. Sized as a
+          share of the section rather than a fixed 96px, so it stays in step
+          with the section background's own fade (see .section-soft) instead of
+          finishing well before it on a tall section. */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-black to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-black to-transparent" />
     </div>
   )
 }

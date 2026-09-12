@@ -122,9 +122,10 @@ export interface SiteSettings {
   hero_subtext?: string
 
   // Home page media (admin-managed, see the interfaces above)
-  /** Backdrop filenames for the two product sections on the home page. */
+  /** Backdrop filenames for the three backdropped home-page sections. */
   home_featured_bg?: string
   home_bestsellers_bg?: string
+  home_collections_bg?: string
   home_hero_slides?: HeroSlideSetting[]
   home_compare?: HomeCompareSetting
 

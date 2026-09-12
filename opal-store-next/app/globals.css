@@ -183,6 +183,51 @@ h6 { font-size: var(--text-h6); }
 .section-spacing        { padding-block: var(--section-spacing); }
 .section-spacing--tight { padding-block: 3rem var(--section-spacing); }
 
+/* ── Soft section seams ────────────────────────────────────────────────────
+   Home-page sections used to meet at a hairline: a flat panel colour stopping
+   dead against black, with a 1px rule drawn over the join. Scrolling past that
+   reads as a series of stacked boxes.
+
+   Instead of a flat fill, a panel now fades its own colour out to the page
+   black at both edges, so neighbouring sections dissolve into each other and
+   there is no line to draw. Each section only needs to know its own colour —
+   every panel starts and ends at black, so any two can sit next to each other
+   in any order.
+
+   The fade is 15% of the section's height at each end rather than a fixed
+   distance, so a short section blends proportionally instead of being almost
+   entirely gradient. */
+.section-soft {
+  --section-soft-tint: var(--color-surface);
+  background: linear-gradient(
+    to bottom,
+    var(--color-bg) 0%,
+    var(--section-soft-tint) 15%,
+    var(--section-soft-tint) 85%,
+    var(--color-bg) 100%
+  );
+}
+.section-soft--raised { --section-soft-tint: var(--color-surface-2); }
+
+/* Hairline that fades out towards both ends, for places that still want a
+   divider — the trust row — without the hard edge-to-edge rule. */
+.section-rule-top { position: relative; }
+.section-rule-top::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-line) 25%,
+    var(--color-line) 75%,
+    transparent
+  );
+  pointer-events: none;
+}
+
 @media (max-width: 699px) {
   :root { --container-gutter: 1rem; }
 }

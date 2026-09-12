@@ -202,17 +202,17 @@ export default function HomeMediaEditor({ settings, onChange }) {
 
       {/* ── Product-section backdrops ──────────────────────────────────── */}
       <section>
-        <h3 className="mb-1 text-base font-semibold">Product Section Backgrounds</h3>
+        <h3 className="mb-1 text-base font-semibold">Section Backgrounds</h3>
         <p className="mb-4 text-xs text-muted-foreground">
-          Photographs sitting behind the two product rows on the home page. They are
-          heavily darkened so the product titles stay readable, and the product cards
-          themselves are solid — so the image shows <em>around and between</em> the
-          cards rather than behind the bottles. Wide, dark images with empty space on
-          one side work best; around 1600&times;900. Leave empty to use the shipped
-          defaults.
+          Photographs sitting behind three of the home page’s sections. They are
+          heavily darkened so the titles stay readable, and product cards are
+          transparent — so the image reads as texture behind and around everything
+          on the section. Wide, dark images with the subject on one side and empty
+          space on the other work best; around 1600&times;900. Leave empty to use
+          the shipped defaults.
         </p>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-border p-4">
             <h4 className="mb-3 text-sm font-medium">Featured Collection</h4>
             <MediaField
@@ -231,10 +231,17 @@ export default function HomeMediaEditor({ settings, onChange }) {
               hint="Subject is anchored to the right of the frame."
             />
           </div>
+          <div className="rounded-lg border border-border p-4">
+            <h4 className="mb-3 text-sm font-medium">Our Collections</h4>
+            <MediaField
+              label="Background image"
+              value={settings.home_collections_bg || ''}
+              onChange={(v) => onChange('home_collections_bg', v)}
+              hint="Subject is anchored to the right of the frame."
+            />
+          </div>
         </div>
       </section>
-
-      <Separator />
 
       <Separator />
 
