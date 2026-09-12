@@ -14,6 +14,7 @@ use Opal\Controllers\ProductController;
 use Opal\Controllers\SettingsController;
 use Opal\Middleware\AuthMiddleware;
 use Opal\Middleware\CustomerAuthMiddleware;
+use Opal\Middleware\StorefrontRevalidation;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
@@ -196,7 +197,10 @@ $app->group('/api', function (RouteCollectorProxy $api) {
         $admin->put('/settings',          [SettingsController::class, 'update']);
         $admin->post('/settings/image',   [SettingsController::class, 'uploadImage']);
 
-    })->add(new AuthMiddleware());
+    // Order matters: middleware runs last-added-first, so revalidation wraps
+    // auth and sees the final response. It only fires on a 2xx, which means an
+    // unauthorised write unwinding as a 401 never triggers a purge.
+    })->add(new AuthMiddleware())->add(new StorefrontRevalidation());
 
 });
 

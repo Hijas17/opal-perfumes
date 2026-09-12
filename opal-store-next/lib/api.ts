@@ -2,6 +2,11 @@
    Server-friendly typed API client (uses native fetch — works in Server
    Components AND Client Components). All GET helpers participate in Next.js
    data caching; tweak `revalidate` per call when you want fresher data.
+
+   Those TTLs are a ceiling on staleness, not the normal path: the API pings
+   POST /api/revalidate after every admin write, which purges the tags below at
+   once. Keep these tags and the TAGS list in that route handler in step — a
+   read tagged with something not on that list is one an admin edit cannot reach.
    ────────────────────────────────────────────────────────────────────────── */
 
 import type {
@@ -115,7 +120,10 @@ export async function getProduct(slug: string): Promise<Product | null> {
   try {
     const raw = await apiGet<ApiEnvelope<Product>>(`/products/${encodeURIComponent(slug)}`, {
       revalidate: 120,
-      tags: [`product:${slug}`],
+      // Carries the shared 'products' tag as well as its own: the purge the API
+      // fires after an admin write cannot know which slug changed, so a detail
+      // page tagged only by slug would keep serving the old copy.
+      tags: ['products', `product:${slug}`],
     })
     const data = unwrap(raw)
     return data && data.name ? data : null

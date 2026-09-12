@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the template. It holds no secrets, only the list of variables
+# the app needs and what each one does — which is exactly what someone
+# setting up a server has to read, so it belongs in the repo.
+!.env.example
 
 # vercel
 .vercel
