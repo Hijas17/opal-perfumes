@@ -4,9 +4,8 @@ namespace Opal\Controllers;
 
 use MongoDB\BSON\ObjectId;
 use Opal\Config\Database;
+use Opal\Helpers\Mailer;
 use Opal\Helpers\Response;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception as MailException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -248,63 +247,35 @@ class InquiryController
 
     private function sendAdminNotification(string $name, string $email, string $phone, string $subject, string $message): void
     {
-        $adminEmail = $_ENV['ADMIN_NOTIFICATION_EMAIL'] ?? '';
-        $fromEmail  = $_ENV['MAIL_FROM'] ?? 'noreply@opalperfumes.com';
-
-        if (empty($adminEmail)) {
+        $adminEmail = Mailer::adminAddress();
+        if ($adminEmail === '') {
             error_log("Inquiry notification: new inquiry from {$name} <{$email}> — subject: {$subject}");
             return;
         }
 
-        $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Opal Perfumes Website';
-
         $emailSubject = 'New Inquiry from Opal Perfumes Website'
             . ($subject !== '' ? ": {$subject}" : '');
-        $emailBody    = "You have received a new inquiry.\n\n"
-            . "Name: {$name}\n"
-            . "Email: {$email}\n"
-            . "Phone: " . ($phone !== '' ? $phone : '—') . "\n"
-            . "Subject: " . ($subject !== '' ? $subject : '—') . "\n\n"
-            . "Message:\n{$message}\n\n"
-            . "— Reply to this email to respond directly to the customer.\n";
+        $emailBody    = "You have received a new inquiry.
 
-        // Preferred: authenticated SMTP via PHPMailer (reliable, inbox not spam).
-        $smtpHost = $_ENV['SMTP_HOST'] ?? '';
-        if ($smtpHost !== '') {
-            try {
-                $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host     = $smtpHost;
-                $mail->SMTPAuth = true;
-                $mail->Username = $_ENV['SMTP_USER'] ?? '';
-                $mail->Password = $_ENV['SMTP_PASS'] ?? '';
+"
+            . "Name: {$name}
+"
+            . "Email: {$email}
+"
+            . "Phone: " . ($phone !== '' ? $phone : '—') . "
+"
+            . "Subject: " . ($subject !== '' ? $subject : '—') . "
 
-                $secure = strtolower($_ENV['SMTP_SECURE'] ?? 'tls');
-                $mail->SMTPSecure = $secure === 'ssl'
-                    ? PHPMailer::ENCRYPTION_SMTPS
-                    : PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = (int)($_ENV['SMTP_PORT'] ?? ($secure === 'ssl' ? 465 : 587));
+"
+            . "Message:
+{$message}
 
-                $mail->setFrom($fromEmail, $fromName);
-                $mail->addAddress($adminEmail);
-                $mail->addReplyTo($email, $name); // handler replies straight to the customer
+"
+            . "— Reply to this email to respond directly to the customer.
+";
 
-                $mail->Subject = $emailSubject;
-                $mail->Body    = $emailBody;
-
-                $mail->send();
-                return;
-            } catch (MailException $e) {
-                error_log('SMTP inquiry notification failed: ' . $mail->ErrorInfo);
-                // fall through to mail() as a last resort
-            }
-        }
-
-        // Fallback: PHP mail(). Reply-To = customer so the handler can reply directly.
-        $headers = "From: {$fromName} <{$fromEmail}>\r\nReply-To: {$name} <{$email}>\r\nContent-Type: text/plain; charset=UTF-8";
-        if (!@mail($adminEmail, $emailSubject, $emailBody, $headers)) {
-            error_log("Failed to send inquiry notification email to {$adminEmail}");
-        }
+        // Reply-To is the customer, so the handler can answer them directly.
+        Mailer::send($adminEmail, $emailSubject, $emailBody, $email, $name);
     }
 
     private function csvEscape(string $value): string

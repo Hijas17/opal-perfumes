@@ -137,7 +137,7 @@ function Inner({ orderId }: { orderId: string }) {
                   <dt className="font-semibold">Total</dt>
                   <dd className="font-semibold text-gold">{money(order.total, order.currency)}</dd>
                 </div>
-                <Row label="Payment" value={order.payment_method === 'cod' ? 'Cash on Delivery' : order.payment_method} />
+                <Row label="Payment" value={order.payment_method === 'card' ? 'Card' : 'Cash on Delivery'} />
                 <Row label="Status"  value={<span className="capitalize">{order.payment_status}</span>} />
               </dl>
             </Card>

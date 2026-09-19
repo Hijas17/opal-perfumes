@@ -6,6 +6,7 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Opal\Config\Database;
 use Opal\Config\Stripe as StripeConfig;
+use Opal\Helpers\OrderNotifier;
 use Opal\Helpers\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -144,6 +145,17 @@ class StripeWebhookController
                 ['customer_id' => $order['customer_id']],
                 ['$set' => ['items' => [], 'updated_at' => $now]]
             );
+        }
+
+        // Guarded by the modified-count check above, so retries of the same
+        // event don't send a second round of emails.
+        if ($order) {
+            // Re-read so the emails reflect the paid state we just wrote,
+            // rather than the pending state this event arrived to find.
+            $order['payment_status'] = 'paid';
+            $order['status']         = 'confirmed';
+            OrderNotifier::paid($order);
+            OrderNotifier::confirmationToCustomer($order);
         }
     }
 

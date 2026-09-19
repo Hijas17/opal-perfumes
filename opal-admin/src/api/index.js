@@ -89,6 +89,16 @@ export const updateCategory = (id, data) =>
 export const deleteCategory = (id) =>
   api.delete(`/admin/categories/${id}`)
 
+// Orders
+export const getOrders = (params) =>
+  api.get('/admin/orders', { params })
+
+export const getOrder = (id) =>
+  api.get(`/admin/orders/${id}`)
+
+export const updateOrderStatus = (id, data) =>
+  api.put(`/admin/orders/${id}/status`, data)
+
 // Inquiries
 export const getInquiries = (params) =>
   api.get('/admin/inquiries', { params })

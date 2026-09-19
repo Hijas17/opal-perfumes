@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Opal\Controllers\AdminOrderController;
 use Opal\Controllers\AuthController;
 use Opal\Controllers\CartController;
 use Opal\Controllers\CategoryController;
@@ -171,6 +172,11 @@ $app->group('/api', function (RouteCollectorProxy $api) {
 
         // Dashboard
         $admin->get('/dashboard', [DashboardController::class, 'index']);
+
+        // Orders
+        $admin->get('/orders',             [AdminOrderController::class, 'index']);
+        $admin->get('/orders/{id}',        [AdminOrderController::class, 'show']);
+        $admin->put('/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
 
         // Products
         $admin->get('/products',         [ProductController::class, 'adminIndex']);
