@@ -6,6 +6,7 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Opal\Config\Database;
 use Opal\Config\Stripe as StripeConfig;
+use Opal\Helpers\CartResolver;
 use Opal\Helpers\Coupons;
 use Opal\Helpers\OrderNotifier;
 use Opal\Helpers\Response;
@@ -15,8 +16,8 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Customer-facing order endpoints.
  *
- * Two payment paths, both building the same order document from the
- * server-side cart:
+ * Two payment paths, both building the same order document from the cart the
+ * storefront sends with the request (re-priced server-side by CartResolver):
  *
  *  - `cod`  — order is placed outright and the cart is cleared immediately.
  *  - `card` — order is written as `pending` and a Stripe Checkout Session is
@@ -65,13 +66,28 @@ class OrderController
 
         try {
             $db = Database::getInstance();
-            $cart = $db->carts->findOne(
-                ['customer_id' => new ObjectId($customerId)],
-                ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
-            );
-            $items = $cart['items'] ?? [];
-            if (empty($items)) {
-                return Response::error($response, 'Your cart is empty.', 400);
+
+            // The storefront keeps its cart in localStorage, so the basket
+            // arrives with the request. Only ids and quantities are taken from
+            // it — CartResolver re-reads every price from the products
+            // collection, so a tampered payload cannot change what is charged.
+            // Falls back to a server-side cart for any client that still keeps
+            // one.
+            if (isset($body['items'])) {
+                $resolved = CartResolver::resolve($body['items']);
+                if ($resolved['error'] !== null) {
+                    return Response::error($response, $resolved['error'], 400);
+                }
+                $items = $resolved['items'];
+            } else {
+                $cart = $db->carts->findOne(
+                    ['customer_id' => new ObjectId($customerId)],
+                    ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
+                );
+                $items = $cart['items'] ?? [];
+                if (empty($items)) {
+                    return Response::error($response, 'Your cart is empty.', 400);
+                }
             }
 
             // Normalise + recompute totals server-side (never trust client totals)

@@ -9,6 +9,7 @@
 import type {
   ApiEnvelope,
   Cart,
+  CartItem,
   CouponCheck,
   Customer,
   Order,
@@ -152,17 +153,29 @@ export function emptyCart(): Cart {
  * A preview only — the code is re-checked when the order is placed, so what
  * this returns is never what gets charged.
  */
-export async function checkCoupon(code: string): Promise<CouponCheck> {
+export async function checkCoupon(code: string, items: CartItem[]): Promise<CouponCheck> {
   const r = await request<ApiEnvelope<CouponCheck>>('/customer/coupons/validate', {
     method: 'POST',
-    body: { code },
+    body: { code, items: toCartPayload(items) },
   })
   if (!r.data) throw new Error('No response from the promo code check')
   return r.data
 }
 
+/**
+ * The cart lives in localStorage, so the basket travels with the request.
+ *
+ * Only ids and quantities are sent: the API re-reads every price from the
+ * products collection, so there is no point shipping names or prices, and no
+ * harm if someone edits what we do send.
+ */
+function toCartPayload(items: CartItem[]) {
+  return items.map((item) => ({ product_id: item.product_id, quantity: item.quantity }))
+}
+
 export async function placeOrder(payload: {
   shipping:        ShippingDetails
+  items:           CartItem[]
   payment_method?: 'cod' | 'card'
   coupon_code?:    string
 }): Promise<PlacedOrder> {
@@ -170,7 +183,11 @@ export async function placeOrder(payload: {
     '/customer/orders',
     {
       method: 'POST',
-      body: { ...payload, payment_method: payload.payment_method || 'cod' },
+      body: {
+        ...payload,
+        items: toCartPayload(payload.items),
+        payment_method: payload.payment_method || 'cod',
+      },
     },
   )
   if (!r.data) throw new Error('No order returned')

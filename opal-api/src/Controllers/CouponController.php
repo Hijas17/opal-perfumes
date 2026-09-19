@@ -4,6 +4,7 @@ namespace Opal\Controllers;
 
 use MongoDB\BSON\ObjectId;
 use Opal\Config\Database;
+use Opal\Helpers\CartResolver;
 use Opal\Helpers\Coupons;
 use Opal\Helpers\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -28,13 +29,23 @@ class CouponController
         $code = is_array($body) ? (string)($body['code'] ?? '') : '';
 
         try {
-            $cart = Database::getInstance()->carts->findOne(
-                ['customer_id' => new ObjectId($customerId)],
-                ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
-            );
-            $items = $cart['items'] ?? [];
-            if (empty($items)) {
-                return Response::error($response, 'Your cart is empty.', 400);
+            // Same cart source as order placement, so a code that previews as
+            // valid still applies when the order is submitted.
+            if (isset($body['items'])) {
+                $resolved = CartResolver::resolve($body['items']);
+                if ($resolved['error'] !== null) {
+                    return Response::error($response, $resolved['error'], 400);
+                }
+                $items = $resolved['items'];
+            } else {
+                $cart = Database::getInstance()->carts->findOne(
+                    ['customer_id' => new ObjectId($customerId)],
+                    ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
+                );
+                $items = $cart['items'] ?? [];
+                if (empty($items)) {
+                    return Response::error($response, 'Your cart is empty.', 400);
+                }
             }
 
             $result = Coupons::evaluate($code, $items, $customerId);

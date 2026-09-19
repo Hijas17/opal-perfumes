@@ -66,7 +66,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   const money = useMoney()
   const router = useRouter()
   const { customer, isLoggedIn, loading: authLoading } = useAuth()
-  const { cart, refresh: refreshCart } = useCart()
+  const { cart, clear: clearCart } = useCart()
 
   const [name,    setName]    = useState('')
   const [phone,   setPhone]   = useState('')
@@ -103,7 +103,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
     setCheckingCoupon(true)
     setCouponError('')
     try {
-      const result = await checkCoupon(code)
+      const result = await checkCoupon(code, cart.items)
       if (result.ok) {
         setApplied({ code: result.code, discount: result.discount })
         setCouponInput('')
@@ -189,6 +189,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
     try {
       const { order, clientSecret: secret } = await placeOrder({
         shipping,
+        items: cart.items,
         // Narrowed: the WhatsApp branch returned above.
         payment_method: paymentMethod as 'card' | 'cod',
         ...(applied ? { coupon_code: applied.code } : {}),
@@ -203,8 +204,9 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
         return
       }
 
-      // Cash on delivery: the API already cleared the cart.
-      await refreshCart()
+      // The cart lives in this browser, so the API cannot empty it — clearing
+      // is ours to do, and only once the order actually exists.
+      await clearCart()
       router.push(`/checkout/success?order=${order.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to place order.')

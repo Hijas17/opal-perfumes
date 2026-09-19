@@ -26,7 +26,7 @@ interface Props {
 
 export default function OrderSuccess({ orderId, sessionId }: Props) {
   const money = useMoney()
-  const { refresh: refreshCart } = useCart()
+  const { clear: clearCart } = useCart()
   const [order,   setOrder]   = useState<Order | null>(null)
   const [loading, setLoading] = useState(!!(orderId || sessionId))
   // True while the payment succeeded on Stripe's side but our webhook hasn't
@@ -57,9 +57,10 @@ export default function OrderSuccess({ orderId, sessionId }: Props) {
           const settled = result.payment_method !== 'card' || result.payment_status !== 'pending'
           if (settled) {
             setAwaitingPayment(false)
-            // The webhook clears the server cart; pull that down so the header
-            // count doesn't keep showing items the customer just bought.
-            if (result.payment_status === 'paid') void refreshCart()
+            // A card order is cleared here rather than at submission: the
+            // basket has to survive an abandoned payment, so it can only go
+            // once the money has actually landed.
+            if (result.payment_status === 'paid') void clearCart()
             return
           }
           setAwaitingPayment(true)
@@ -78,7 +79,7 @@ export default function OrderSuccess({ orderId, sessionId }: Props) {
 
     void load()
     return () => { cancelled = true }
-  }, [orderId, sessionId, refreshCart])
+  }, [orderId, sessionId, clearCart])
 
   const paid = order?.payment_status === 'paid'
   const heading = awaitingPayment ? 'Confirming your payment…' : 'Thank you!'
