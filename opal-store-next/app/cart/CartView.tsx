@@ -14,6 +14,7 @@ import { useCart } from '@/components/CartProvider'
 import { getImageUrl } from '@/lib/image'
 import {
   showPrices,
+  checkoutEnabled,
   useWhatsAppInquiry,
   buildWhatsAppUrl,
   buildCartInquiryMessage,
@@ -173,16 +174,24 @@ export default function CartView({ settings }: Props) {
             </p>
 
             <div className="flex w-full flex-col gap-3 md:max-w-xs">
-              {useWhatsAppInquiry ? (
+              {/* Both paths can be offered at once. When they are, checkout is
+                  the primary action and WhatsApp the secondary one. */}
+              {checkoutEnabled && (
+                <Link href="/checkout" className="btn w-full">Checkout</Link>
+              )}
+              {useWhatsAppInquiry && (
                 waHref ? (
-                  <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn w-full">
+                  <a
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={checkoutEnabled ? 'btn btn--outline w-full' : 'btn w-full'}
+                  >
                     Inquire on WhatsApp
                   </a>
                 ) : (
                   <p className="text-xs text-sale">WhatsApp number not configured.</p>
                 )
-              ) : (
-                <Link href="/checkout" className="btn w-full">Checkout</Link>
               )}
               <Link href="/products" className="btn btn--outline w-full">
                 Continue shopping

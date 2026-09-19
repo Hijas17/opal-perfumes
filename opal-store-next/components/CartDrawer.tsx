@@ -21,6 +21,7 @@ import { useCart } from './CartProvider'
 import { getImageUrl } from '@/lib/image'
 import {
   showPrices,
+  checkoutEnabled,
   useWhatsAppInquiry,
   buildWhatsAppUrl,
   buildCartInquiryMessage,
@@ -213,19 +214,25 @@ export default function CartDrawer({
                 View cart
               </Link>
 
-              {useWhatsAppInquiry ? (
+              {checkoutEnabled && (
+                <Link href="/checkout" onClick={onClose} className="btn w-full justify-between">
+                  <span>Checkout</span>
+                  {showPrices && <span>{money(cart.subtotal, cart.currency)}</span>}
+                </Link>
+              )}
+              {useWhatsAppInquiry && (
                 waHref ? (
-                  <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn w-full">
+                  <a
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={checkoutEnabled ? 'btn btn--outline w-full' : 'btn w-full'}
+                  >
                     Inquire on WhatsApp
                   </a>
                 ) : (
                   <p className="text-center text-xs text-sale">WhatsApp number not configured.</p>
                 )
-              ) : (
-                <Link href="/checkout" onClick={onClose} className="btn w-full justify-between">
-                  <span>Checkout</span>
-                  {showPrices && <span>{money(cart.subtotal, cart.currency)}</span>}
-                </Link>
               )}
             </div>
           </footer>
