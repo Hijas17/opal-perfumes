@@ -13,7 +13,14 @@
 /** Default true — set NEXT_PUBLIC_SHOW_PRICES=false to hide prices everywhere. */
 export const showPrices = process.env.NEXT_PUBLIC_SHOW_PRICES !== 'false'
 
-/** Default false — set NEXT_PUBLIC_USE_WHATSAPP_INQUIRY=true to swap cart flow for WhatsApp. */
+/**
+ * Default false — set NEXT_PUBLIC_USE_WHATSAPP_INQUIRY=true to offer a WhatsApp
+ * inquiry.
+ *
+ * This no longer *replaces* checkout. It used to, which is why enabling it was
+ * the same as turning ordering off; the two are now independent, and whether
+ * checkout is also offered is decided by `checkoutEnabled` below.
+ */
 export const useWhatsAppInquiry = process.env.NEXT_PUBLIC_USE_WHATSAPP_INQUIRY === 'true'
 
 /** Default false — set NEXT_PUBLIC_DISABLE_AUTH=true to hide login/signup/account UI and gate routes. */
@@ -29,6 +36,24 @@ export const comingSoon = process.env.NEXT_PUBLIC_COMING_SOON === 'true'
 export const whatsappFallback = process.env.NEXT_PUBLIC_WHATSAPP_FALLBACK ?? ''
 
 /**
+ * Whether the real checkout flow (cart → delivery details → pay) is offered.
+ *
+ * Unset, it mirrors the old behaviour: on unless WhatsApp inquiry has replaced
+ * it. Set `NEXT_PUBLIC_ENABLE_CHECKOUT=true` alongside
+ * `NEXT_PUBLIC_USE_WHATSAPP_INQUIRY=true` to offer both side by side.
+ *
+ * Forced off when auth is disabled, because it genuinely cannot work: an order
+ * is written against a logged-in customer, so with no accounts there is nobody
+ * to attach it to. Offering a Checkout button that 401s would be worse than
+ * hiding it.
+ */
+const checkoutFlag = process.env.NEXT_PUBLIC_ENABLE_CHECKOUT
+export const checkoutEnabled =
+  (checkoutFlag === undefined || checkoutFlag === ''
+    ? !useWhatsAppInquiry
+    : checkoutFlag === 'true') && !authDisabled
+
+/**
  * Stripe publishable key. Safe to ship to the browser by design — it can only
  * create tokens, never move money. The secret key lives in the API's env and
  * must never be given a NEXT_PUBLIC_ name.
@@ -40,7 +65,7 @@ export const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_K
  * one the checkout shows cash on delivery alone, rather than a card option
  * that would fail the moment it was clicked.
  */
-export const cardPaymentEnabled = stripePublishableKey !== ''
+export const cardPaymentEnabled = stripePublishableKey !== '' && checkoutEnabled
 
 /**
  * Build a wa.me link with a pre-filled message.

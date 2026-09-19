@@ -80,7 +80,9 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
 
   // Card is the default when Stripe is configured; cash on delivery is always
   // available as a fallback.
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>(
+  // WhatsApp sits alongside the payable methods rather than replacing them:
+  // it records no order server-side, it hands the basket to the merchant.
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod' | 'whatsapp'>(
     cardPaymentEnabled ? 'card' : 'cod',
   )
   // Non-null once the API has minted a Checkout Session — that is the signal
@@ -111,9 +113,9 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
     e.preventDefault()
     setError('')
 
-    // In inquiry mode the address fields are optional — only name + phone are required
-    // so the merchant can call back to confirm the rest in WhatsApp.
-    const required: [string, string][] = useWhatsAppInquiry
+    // A WhatsApp inquiry only needs enough to call the customer back — the rest
+    // gets settled in the conversation. A real order needs somewhere to deliver to.
+    const required: [string, string][] = paymentMethod === 'whatsapp'
       ? [[name, 'Name'], [phone, 'Phone']]
       : [[name, 'Name'], [phone, 'Phone'], [address, 'Address'], [city, 'City']]
     for (const [val, label] of required) {
@@ -130,7 +132,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
       notes:   notes.trim(),
     }
 
-    if (useWhatsAppInquiry) {
+    if (paymentMethod === 'whatsapp') {
       const number = whatsappNumber || whatsappFallback
       if (!number) {
         setError('WhatsApp is not configured yet. Please contact us from the Contact page.')
@@ -147,7 +149,8 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
     try {
       const { order, clientSecret: secret } = await placeOrder({
         shipping,
-        payment_method: paymentMethod,
+        // Narrowed: the WhatsApp branch returned above.
+        payment_method: paymentMethod as 'card' | 'cod',
       })
 
       if (secret) {
@@ -196,7 +199,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="font-display text-4xl font-semibold text-ink mb-2">Checkout</h1>
         <p className="text-sm text-muted mb-8">
-          {useWhatsAppInquiry
+          {paymentMethod === 'whatsapp'
             ? 'Send your selection to us on WhatsApp — we\'ll confirm availability and arrange delivery.'
             : cardPaymentEnabled
               ? 'Pay securely by card, or choose cash on delivery.'
@@ -217,40 +220,47 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
                 <Field label="Full Name" required value={name} onChange={setName} />
                 <Field label="Phone"     required value={phone} onChange={setPhone} type="tel" placeholder="+971 XX XXX XXXX" />
                 <Field label="Email" value={email} onChange={setEmail} type="email" />
-                <Field label="City" required={!useWhatsAppInquiry} value={city} onChange={setCity} />
+                <Field label="City" required={paymentMethod !== 'whatsapp'} value={city} onChange={setCity} />
               </div>
               <div className="mt-5">
-                <Field label="Street Address" required={!useWhatsAppInquiry} value={address} onChange={setAddress} />
+                <Field label="Street Address" required={paymentMethod !== 'whatsapp'} value={address} onChange={setAddress} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
                 <Field label="Country" value={country} onChange={setCountry} />
-                <Field label="Notes" value={notes} onChange={setNotes} placeholder={useWhatsAppInquiry ? 'Anything else we should know (optional)' : 'Delivery instructions (optional)'} />
+                <Field label="Notes" value={notes} onChange={setNotes} placeholder={paymentMethod === 'whatsapp' ? 'Anything else we should know (optional)' : 'Delivery instructions (optional)'} />
               </div>
             </div>
 
-            {!useWhatsAppInquiry && (
-              <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
-                <h2 className="font-display text-xl font-semibold text-ink mb-3">Payment Method</h2>
-                <div className="space-y-3">
-                  {cardPaymentEnabled && (
-                    <PaymentOption
-                      selected={paymentMethod === 'card'}
-                      onSelect={() => setPaymentMethod('card')}
-                      icon={<CreditCard className="w-4 h-4" />}
-                      title="Pay by Card"
-                      detail="Card, Apple Pay and Google Pay, secured by Stripe."
-                    />
-                  )}
+            <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
+              <h2 className="font-display text-xl font-semibold text-ink mb-3">How would you like to order?</h2>
+              <div className="space-y-3">
+                {cardPaymentEnabled && (
                   <PaymentOption
-                    selected={paymentMethod === 'cod'}
-                    onSelect={() => setPaymentMethod('cod')}
-                    icon={<Truck className="w-4 h-4" />}
-                    title="Cash on Delivery"
-                    detail="Pay when your order arrives at your door."
+                    selected={paymentMethod === 'card'}
+                    onSelect={() => setPaymentMethod('card')}
+                    icon={<CreditCard className="w-4 h-4" />}
+                    title="Pay by Card"
+                    detail="Card, Apple Pay and Google Pay, secured by Stripe."
                   />
-                </div>
+                )}
+                <PaymentOption
+                  selected={paymentMethod === 'cod'}
+                  onSelect={() => setPaymentMethod('cod')}
+                  icon={<Truck className="w-4 h-4" />}
+                  title="Cash on Delivery"
+                  detail="Pay when your order arrives at your door."
+                />
+                {useWhatsAppInquiry && (
+                  <PaymentOption
+                    selected={paymentMethod === 'whatsapp'}
+                    onSelect={() => setPaymentMethod('whatsapp')}
+                    icon={<MessageCircle className="w-4 h-4" />}
+                    title="Inquire on WhatsApp"
+                    detail="Send us your selection and we confirm availability and price in chat."
+                  />
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Summary */}
@@ -283,28 +293,28 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
                 </>
               )}
               {!showPrices && <div className="mb-6" />}
-              {useWhatsAppInquiry ? (
-                <button type="submit"
-                  className="btn btn--outline w-full">
-                  <MessageCircle className="w-4 h-4" />
-                  Inquire on WhatsApp
-                </button>
-              ) : (
-                <button type="submit" disabled={submitting}
-                  className="w-full btn disabled:opacity-60 flex items-center justify-center gap-2">
-                  {submitting ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      {paymentMethod === 'card' ? 'Preparing payment…' : 'Placing order…'}
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      {paymentMethod === 'card' ? 'Continue to Payment' : 'Place Order'}
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full btn disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    {paymentMethod === 'card' ? 'Preparing payment…' : 'Placing order…'}
+                  </>
+                ) : paymentMethod === 'whatsapp' ? (
+                  <>
+                    <MessageCircle className="w-4 h-4" />
+                    Inquire on WhatsApp
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    {paymentMethod === 'card' ? 'Continue to Payment' : 'Place Order'}
+                  </>
+                )}
+              </button>
               <Link href="/cart" className="block text-center text-sm text-muted mt-4 hover:text-gold transition-colors">
                 Back to cart
               </Link>

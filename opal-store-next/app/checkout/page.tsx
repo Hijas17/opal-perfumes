@@ -1,22 +1,25 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getSettings } from '@/lib/api'
-import { useWhatsAppInquiry, authDisabled } from '@/lib/config'
+import { checkoutEnabled, useWhatsAppInquiry } from '@/lib/config'
 import CheckoutForm from './CheckoutForm'
 
 export const metadata: Metadata = {
   title: 'Checkout',
-  description: 'Send your order to us on WhatsApp.',
+  description: 'Complete your order.',
   robots: { index: false, follow: false },
 }
 
 export default async function CheckoutPage() {
-  // With auth disabled, the WhatsApp inquiry happens directly from the cart drawer
-  // (no delivery-details form needed). Send visitors back to /cart.
-  if (authDisabled) redirect('/cart')
-  // Only fetch site settings (for WhatsApp number/brand) when we're in inquiry mode —
-  // saves a roundtrip on real-checkout deployments. Falls back gracefully if the
-  // settings call fails so the page still renders and the env fallback can kick in.
+  // Nothing to do here when checkout is off: a WhatsApp-only storefront starts
+  // that conversation straight from the cart, with no delivery form in between.
+  // `checkoutEnabled` is already false when auth is disabled, since an order
+  // needs a customer to belong to.
+  if (!checkoutEnabled) redirect('/cart')
+
+  // The WhatsApp number and brand are only needed when the inquiry option is
+  // offered alongside checkout. Falls back gracefully so the page still renders
+  // and the env fallback can take over.
   let whatsappNumber = ''
   let brandName = 'Opal Perfumes'
   if (useWhatsAppInquiry) {
