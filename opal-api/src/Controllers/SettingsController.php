@@ -39,6 +39,10 @@ class SettingsController
         'home_collections_bg',
         'home_hero_slides',
         'home_compare',
+        // Promotional strip under the navbar. `promo_banners` holds an ARRAY
+        // of banner objects; `promo_banners_enabled` is the master switch.
+        'promo_banners',
+        'promo_banners_enabled',
         // About Us page
         'about_hero_image',
         'about_story_heading',

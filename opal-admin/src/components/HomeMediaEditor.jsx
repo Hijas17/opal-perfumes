@@ -18,11 +18,13 @@ import { Separator } from './ui/separator.jsx'
  */
 
 const MAX_SLIDES = 8
+const MAX_BANNERS = 6
 
 const EMPTY_SLIDE = {
   image: '', eyebrow: '', headline: '', subtext: '', cta_label: 'Explore', cta_href: '/products',
 }
 const EMPTY_SIDE = { image: '', label: '', href: '/products' }
+const EMPTY_BANNER = { image: '', headline: '', subtext: '', promo_code: '', href: '/products' }
 
 /** Settings values arrive as JSON from Mongo but may be absent or malformed. */
 function asArray(value, fallback = []) {
@@ -72,7 +74,10 @@ function RowShell({ title, index, count, onMove, onRemove, children }) {
 }
 
 export default function HomeMediaEditor({ settings, onChange }) {
-  const slides  = asArray(settings.home_hero_slides)
+  const slides   = asArray(settings.home_hero_slides)
+  const banners  = asArray(settings.promo_banners)
+  // Stored loosely, so treat anything but an explicit true as off.
+  const bannersOn = settings.promo_banners_enabled === true
   const compare = asObject(settings.home_compare, { before: { ...EMPTY_SIDE }, after: { ...EMPTY_SIDE } })
 
   // ── list helpers ───────────────────────────────────────────────────────
@@ -106,6 +111,115 @@ export default function HomeMediaEditor({ settings, onChange }) {
 
   return (
     <div className="space-y-10">
+      {/* ── Promotional strip ───────────────────────────────────────────── */}
+      <section>
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-base font-semibold">Promotional Banners</h3>
+          <Button
+            type="button" variant="outline" size="sm"
+            disabled={banners.length >= MAX_BANNERS}
+            onClick={() => addItem('promo_banners', banners, EMPTY_BANNER, MAX_BANNERS)}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Add banner
+          </Button>
+        </div>
+        <p className="mb-3 text-xs text-muted-foreground">
+          A slim strip directly under the navigation on the home page, for
+          discounts and promotions. Banners rotate every 6 seconds and each one
+          links to the product listing unless you point it somewhere narrower.
+          Wide, short images work best — around 2400&times;300.
+        </p>
+
+        {/* Master switch, so the strip disappears between promotions instead of
+            forcing you to delete and re-enter the banners each time. */}
+        <label className="mb-4 flex cursor-pointer items-start gap-2 rounded-lg border border-border p-3">
+          <input
+            type="checkbox"
+            checked={bannersOn}
+            onChange={(e) => onChange('promo_banners_enabled', e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="text-sm">
+            Show the promotional strip
+            <span className="block text-xs text-muted-foreground">
+              {bannersOn
+                ? 'The strip is live on the home page.'
+                : 'Hidden. Your banners are kept and reappear when you switch this back on.'}
+            </span>
+          </span>
+        </label>
+
+        {banners.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No banners yet. The strip stays hidden until you add one.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {banners.map((banner, i) => (
+              <RowShell
+                key={i}
+                title={`Banner ${i + 1}`}
+                index={i}
+                count={banners.length}
+                onMove={(from, to) => moveItem('promo_banners', banners, from, to)}
+                onRemove={(idx) => removeItem('promo_banners', banners, idx)}
+              >
+                <div className="space-y-3">
+                  <MediaField
+                    label="Background image (optional)"
+                    value={banner.image || ''}
+                    onChange={(v) => updateItem('promo_banners', banners, i, 'image', v)}
+                  />
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <Label className="mb-1.5 block">Headline</Label>
+                      <Input
+                        value={banner.headline || ''}
+                        onChange={(e) => updateItem('promo_banners', banners, i, 'headline', e.target.value)}
+                        placeholder="20% off all Oud fragrances"
+                      />
+                    </div>
+                    <div>
+                      <Label className="mb-1.5 block">Supporting text</Label>
+                      <Input
+                        value={banner.subtext || ''}
+                        onChange={(e) => updateItem('promo_banners', banners, i, 'subtext', e.target.value)}
+                        placeholder="Until the end of the month"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div>
+                      <Label className="mb-1.5 block">Promo code (optional)</Label>
+                      <Input
+                        value={banner.promo_code || ''}
+                        onChange={(e) => updateItem('promo_banners', banners, i, 'promo_code', e.target.value.toUpperCase())}
+                        placeholder="OUD20"
+                        className="font-mono"
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Shown to the shopper only. Create the code itself under
+                        Coupons — typing one here does not make it work.
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="mb-1.5 block">Links to</Label>
+                      <Input
+                        value={banner.href || ''}
+                        onChange={(e) => updateItem('promo_banners', banners, i, 'href', e.target.value)}
+                        placeholder="/products"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </RowShell>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Separator />
+
       {/* ── Hero slideshow ─────────────────────────────────────────────── */}
       <section>
         <div className="mb-1 flex items-center justify-between">

@@ -5,6 +5,7 @@ import { getSettings, getProducts, getCategories } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
 import ProductCard from '@/components/ProductCard'
 import HeroSlideshow, { type HeroSlide } from '@/components/HeroSlideshow'
+import PromoBanner, { type PromoBannerItem } from '@/components/PromoBanner'
 import FeaturedCarousel from '@/components/FeaturedCarousel'
 import BeforeAfter, { type BeforeAfterItem } from '@/components/BeforeAfter'
 import SectionBackdrop from '@/components/SectionBackdrop'
@@ -60,6 +61,25 @@ export default async function HomePage() {
   const featuredProducts = (labelledFeatured.length > 0 ? labelledFeatured : featured).slice(0, 8)
   const bestsellerProducts = (labelledBestsellers.length > 0 ? labelledBestsellers : featured).slice(0, 4)
 
+
+  // ── Promotional strip ──────────────────────────────────────────────────
+  // Admin-managed via Settings › Home Media, behind a master switch so the
+  // strip disappears entirely between promotions rather than sitting there
+  // empty. Banners with no text and no image are dropped — an invisible
+  // banner is just a dead click target.
+  const promoBanners: PromoBannerItem[] = s.promo_banners_enabled === true
+    ? (Array.isArray(s.promo_banners) ? s.promo_banners : [])
+        .map((banner) => ({
+          image: banner?.image ? getImageUrl(banner.image) ?? undefined : undefined,
+          headline: banner?.headline || undefined,
+          subtext: banner?.subtext || undefined,
+          promoCode: banner?.promo_code || undefined,
+          // Clicking a promotion takes the shopper to the products they can
+          // spend it on. A per-banner href can point somewhere narrower.
+          href: banner?.href || '/products',
+        }))
+        .filter((banner) => banner.headline || banner.subtext || banner.image)
+    : []
 
   // ── Hero slides ────────────────────────────────────────────────────────
   // Admin-managed via Settings › Home Media. Falls back to the legacy single
@@ -157,6 +177,8 @@ export default async function HomePage() {
       />
 
       <div>
+        <PromoBanner banners={promoBanners} />
+
         <HeroSlideshow slides={slides} />
 
         {/* Featured strip on a raised surface, bleeding off both edges */}

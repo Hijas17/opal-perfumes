@@ -86,6 +86,22 @@ export interface HeroSlideSetting {
   cta_href?: string
 }
 
+/**
+ * A promotional banner shown in the strip under the navbar on the home page.
+ *
+ * `promo_code` is display-only — it tells the shopper what to type at
+ * checkout. The code's rules live in the `coupons` collection, never here,
+ * so a banner can never grant a discount by itself.
+ */
+export interface PromoBannerSetting {
+  image?: string
+  headline?: string
+  subtext?: string
+  promo_code?: string
+  /** Defaults to the product listing page when unset. */
+  href?: string
+}
+
 export interface CompareSideSetting {
   image?: string
   label?: string
@@ -127,6 +143,9 @@ export interface SiteSettings {
   home_bestsellers_bg?: string
   home_collections_bg?: string
   home_hero_slides?: HeroSlideSetting[]
+  promo_banners?: PromoBannerSetting[]
+  /** Master switch — the strip is hidden entirely when this is not true. */
+  promo_banners_enabled?: boolean
   home_compare?: HomeCompareSetting
 
   // About / Home
