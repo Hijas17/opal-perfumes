@@ -52,10 +52,10 @@ empties the cart.
 
 | Variable | Where | Value |
 |---|---|---|
-| `STRIPE_SECRET_KEY` | `opal-api/.env` (or Fly secret) | **Restricted** key `rk_…`, scoped to Checkout Sessions=write, PaymentIntents=read |
-| `STRIPE_WEBHOOK_SECRET` | `opal-api/.env` (or Fly secret) | `whsec_…` from the webhook endpoint |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `opal-store-next/.env.local` | `pk_…` — public by design, ships in the browser bundle |
-| `STOREFRONT_URL` | `opal-api/.env` | Origin Stripe returns the customer to |
+| `STRIPE_SECRET_KEY` | `/var/www/opal/.env` on the server | **Restricted** key `rk_…`. One permission only: Checkout Sessions = **Write**. That is the sole Stripe API call the code makes |
+| `STRIPE_WEBHOOK_SECRET` | `/var/www/opal/.env` on the server | `whsec_…` from the webhook endpoint |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `.env.production` (server) / `.env.local` (dev) | `pk_…` — public by design, ships in the browser bundle |
+| `STOREFRONT_URL` | `/var/www/opal/.env` on the server | Origin Stripe returns the customer to |
 
 Prefer a [restricted key](https://dashboard.stripe.com/apikeys) (`rk_`) over a
 secret key (`sk_`) — one that leaks can't drain the account. Never commit a
@@ -84,7 +84,7 @@ any future expiry and any CVC. To exercise the delayed-payment path, trigger
 
 ### Before going live
 
-1. Swap test keys for live ones (as Fly.io secrets, not a committed file).
+1. Swap test keys for live ones in `/var/www/opal/.env` on the server — never a committed file. See [DEPLOYMENT.md](DEPLOYMENT.md).
 2. Add the live webhook endpoint at `https://<api-host>/api/stripe/webhook`
    subscribed to `checkout.session.completed`,
    `checkout.session.async_payment_succeeded`,
@@ -100,117 +100,14 @@ any future expiry and any CVC. To exercise the delayed-payment path, trigger
 
 ---
 
-## Production deployment (free tier, always-on)
+## Production deployment
 
-Three accounts, all free, total **$0/month**:
+Production runs on a **Hostinger VPS** — Docker Compose for the API, pm2 for
+the storefront, nginx in front.
 
-| Service | Host | What it runs |
-|---|---|---|
-| **MongoDB Atlas M0** | https://cloud.mongodb.com | Database |
-| **Fly.io** (shared-cpu-1x) | https://fly.io | PHP API — always-on machine, no cold starts |
-| **Vercel** × 2 | https://vercel.com | Next.js storefront + Vite admin |
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for deploy commands, environment files,
+database operations, rollback and the Stripe webhook health check.
 
-### 1. MongoDB Atlas
-
-1. Sign up → **Build a Database** → **M0 Free**
-2. Provider: **AWS** · Region: **Mumbai `ap-south-1`** (closest to UAE) or Frankfurt
-3. Cluster name: `opal-test`
-4. **Security → Database Access** → *Add user* (username + auto-generated password — copy both)
-5. **Security → Network Access** → *Add IP* → **Allow Access from Anywhere** (`0.0.0.0/0`) for test
-6. **Clusters → Connect → Drivers → PHP** — copy the connection string. It looks like:
-
-   ```
-   mongodb+srv://USER:PASS@opal-test.xxxxx.mongodb.net/?retryWrites=true&w=majority
-   ```
-
-7. **Seed initial data**: from your local machine,
-   ```bash
-   export MONGO_URI="<paste connection string with password>"
-   export MONGO_DB="opal_perfumes"
-   docker exec opal_api php seed.php
-   ```
-   (Or use a one-time `docker compose run --rm api php seed.php` with the env vars set.)
-
-### 2. Fly.io — opal-api
-
-```bash
-# Install the CLI once (Windows PowerShell)
-iwr https://fly.io/install.ps1 -useb | iex
-
-# Auth
-fly auth login
-
-# From repo root
-cd opal-api
-
-# Create the app (uses fly.toml we ship in this folder) — DO NOT deploy yet
-fly launch --no-deploy --copy-config
-
-# 3 GB persistent volume for admin-uploaded product images
-fly volumes create opal_uploads --region fra --size 3
-
-# Secrets (replace with real values — they're injected as env vars at runtime)
-fly secrets set \
-  MONGO_URI='mongodb+srv://USER:PASS@opal-test.xxxxx.mongodb.net/?retryWrites=true&w=majority' \
-  JWT_SECRET='<generate a 32+ char random string>' \
-  ALLOWED_ORIGINS='https://opal-perfumes.vercel.app,https://opal-admin.vercel.app'
-
-# Deploy
-fly deploy
-
-# Note the resulting URL: https://opal-api.fly.dev
-```
-
-After Vercel deployments are up, **come back and update `ALLOWED_ORIGINS`** with the real Vercel URLs:
-
-```bash
-fly secrets set ALLOWED_ORIGINS='https://<your-vercel-domain>.vercel.app,https://<your-admin>.vercel.app'
-```
-
-### 3. Vercel — opal-store-next
-
-1. https://vercel.com/new → import `Hijas17/opal-perfumes`
-2. **Root Directory:** `opal-store-next`
-3. **Framework Preset:** Next.js (auto-detected)
-4. **Environment Variables:**
-   ```
-   NEXT_PUBLIC_API_URL      = https://opal-api.fly.dev/api
-   NEXT_PUBLIC_UPLOADS_URL  = https://opal-api.fly.dev/uploads
-   NEXT_PUBLIC_SITE_URL     = https://<this-deployment-url>.vercel.app
-   ```
-5. **Deploy.** Note the resulting URL.
-
-### 4. Vercel — opal-admin
-
-1. https://vercel.com/new → import the same repo *again* as a second project
-2. **Root Directory:** `opal-admin`
-3. **Framework Preset:** Vite (auto-detected)
-4. **Environment Variables:**
-   ```
-   VITE_API_URL      = https://opal-api.fly.dev/api
-   VITE_UPLOADS_URL  = https://opal-api.fly.dev/uploads
-   ```
-5. **Deploy.** Note the URL.
-
-### 5. Finalise CORS
-
-Once both Vercel URLs are known, update Fly with the real allow-list:
-
-```bash
-cd opal-api
-fly secrets set ALLOWED_ORIGINS='https://opal-perfumes.vercel.app,https://opal-admin.vercel.app'
-```
-
-This restart is automatic.
-
----
-
-## Free-tier limits & caveats
-
-| Limit | Tier | Mitigation if hit |
-|---|---|---|
-| 512 MB Atlas storage | M0 | Upgrade to M10 ($57/mo) when products + orders + media metadata grow |
-| 256 MB Fly RAM | shared-cpu-1x | `fly scale memory 512` ($1.94/mo for shared-cpu-2x) |
-| 3 GB Fly volume | volume created | `fly volumes extend opal_uploads --size 10` (free up to volume tier limits) |
-| 100 GB Vercel bandwidth/mo | hobby | Move to Pro ($20/mo) — only relevant if many real users |
-| Vercel commercial-use | hobby | Migrate to Pro before launch with real customers |
+> Earlier revisions of this README documented a Fly.io + Vercel setup. That is
+> no longer used, and `opal-api/fly.toml` is legacy — left in place pending a
+> decision to remove it.
