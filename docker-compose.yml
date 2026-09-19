@@ -4,12 +4,10 @@ services:
     image: mongo:7
     container_name: opal_mongodb
     restart: unless-stopped
-    ports:
-      # Bound to loopback by default. On a public VPS a bare "27017:27017"
-      # publishes an unauthenticated database to the whole internet, which gets
-      # found and ransomed within hours. Override BIND_ADDR only if you know
-      # you need LAN access (e.g. testing from a phone).
-      - "${BIND_ADDR:-127.0.0.1}:27017:27017"
+    # Deliberately NOT published to the host. The API reaches Mongo over the
+    # compose network as `mongodb:27017`, so nothing needs a host port — and
+    # publishing one on a public VPS risks exposing an unauthenticated database.
+    # For a shell, use: docker compose exec mongodb mongosh
     volumes:
       - mongo_data:/data/db
     environment:
