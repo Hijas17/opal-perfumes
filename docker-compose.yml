@@ -5,7 +5,11 @@ services:
     container_name: opal_mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      # Bound to loopback by default. On a public VPS a bare "27017:27017"
+      # publishes an unauthenticated database to the whole internet, which gets
+      # found and ransomed within hours. Override BIND_ADDR only if you know
+      # you need LAN access (e.g. testing from a phone).
+      - "${BIND_ADDR:-127.0.0.1}:27017:27017"
     volumes:
       - mongo_data:/data/db
     environment:
@@ -19,25 +23,44 @@ services:
     container_name: opal_api
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "${BIND_ADDR:-127.0.0.1}:8000:80"
     volumes:
       # Live-mount source — entrypoint installs vendor/ on first start
       - ./opal-api:/var/www/html
     environment:
-      MONGO_URI: mongodb://mongodb:27017
-      MONGO_DB: opal_perfumes
-      JWT_SECRET: opal_dev_jwt_secret_change_in_production
-      JWT_EXPIRY: 86400
+      # Every value below reads from a root-level `.env` (gitignored), falling
+      # back to a development default. Nothing environment-specific and nothing
+      # secret belongs in this file — it is committed, and edits made directly
+      # on a server collide with every subsequent `git pull`.
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
+      MONGO_DB: ${MONGO_DB:-opal_perfumes}
+      # MUST be overridden in production. The fallback is public in this repo,
+      # so anything signed with it can be forged by anyone.
+      JWT_SECRET: ${JWT_SECRET:-opal_dev_jwt_secret_change_in_production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-86400}
       UPLOAD_DIR: uploads
       MAX_FILE_SIZE: 52428800
-      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174
-      MAIL_FROM: noreply@opalperfumes.com
-      ADMIN_NOTIFICATION_EMAIL: admin@opalperfumes.com
-      # Where Stripe sends the customer back after embedded Checkout.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}
+
+      # ── Mail ───────────────────────────────────────────────────────────────
+      MAIL_FROM: ${MAIL_FROM:-noreply@opalperfumes.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Opal Perfumes Website}
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL:-admin@opalperfumes.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: "${SMTP_PORT:-465}"
+      SMTP_SECURE: ${SMTP_SECURE:-ssl}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+
+      # ── Storefront cache purge ─────────────────────────────────────────────
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
+
+      # ── Stripe ─────────────────────────────────────────────────────────────
+      # Also the base of the Checkout return URL, so a wrong value strands
+      # paying customers.
       STOREFRONT_URL: ${STOREFRONT_URL:-http://localhost:3000}
-      # Passed through from your shell or a root-level .env file — never
-      # hardcode a key here, this file is committed. Use a TEST key locally.
-      # Leave unset and card payment is simply unavailable; COD keeps working.
+      # Use a TEST key locally. Leave unset and card payment is simply
+      # unavailable; cash on delivery keeps working.
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       # Printed by `stripe listen --forward-to localhost:8000/api/stripe/webhook`
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
