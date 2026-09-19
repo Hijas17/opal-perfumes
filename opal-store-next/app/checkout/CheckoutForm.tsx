@@ -77,6 +77,10 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   const [notes,   setNotes]   = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error,    setError]    = useState('')
+  // Set the moment an order exists. Emptying the cart would otherwise trip the
+  // "cart is empty" guard below, which races the push to the success page and
+  // wins — the customer lands on an empty cart having just paid.
+  const [orderPlaced, setOrderPlaced] = useState(false)
 
   // Card is the default when Stripe is configured; cash on delivery is always
   // available as a fallback.
@@ -134,10 +138,12 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
     if (!authLoading && !isLoggedIn) router.replace('/login?next=/checkout')
   }, [authLoading, isLoggedIn, router])
 
-  // Redirect if cart is empty (after auth has loaded)
+  // Redirect if cart is empty (after auth has loaded). Stands down once an
+  // order has been placed, because the cart is *meant* to be empty then.
   useEffect(() => {
+    if (orderPlaced) return
     if (!authLoading && isLoggedIn && cart.items.length === 0) router.replace('/cart')
-  }, [authLoading, isLoggedIn, cart.items.length, router])
+  }, [authLoading, isLoggedIn, cart.items.length, orderPlaced, router])
 
   // Pre-fill from customer profile
   useEffect(() => {
@@ -196,6 +202,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
       })
 
       if (secret) {
+        setOrderPlaced(true)
         // Card: the order exists but is unpaid. Hand off to Stripe and leave
         // the cart alone — the webhook clears it once payment lands, so
         // abandoning here costs the customer nothing.
@@ -206,8 +213,11 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
 
       // The cart lives in this browser, so the API cannot empty it — clearing
       // is ours to do, and only once the order actually exists.
-      await clearCart()
+      setOrderPlaced(true)
       router.push(`/checkout/success?order=${order.id}`)
+      // Cleared after navigating, so an empty cart can never bounce the
+      // customer away from their own confirmation.
+      await clearCart()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to place order.')
       setSubmitting(false)
