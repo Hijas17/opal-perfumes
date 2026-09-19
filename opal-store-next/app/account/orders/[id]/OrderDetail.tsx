@@ -132,6 +132,12 @@ function Inner({ orderId }: { orderId: string }) {
             <Card title="Summary">
               <dl className="space-y-2 text-sm">
                 <Row label="Subtotal" value={money(order.subtotal, order.currency) || '—'} />
+                {order.discount > 0 && (
+                  <Row
+                    label={order.coupon?.code ? `Discount (${order.coupon.code})` : 'Discount'}
+                    value={`-${money(order.discount, order.currency) || ''}`}
+                  />
+                )}
                 <Row label="Shipping" value={order.shipping_fee > 0 ? money(order.shipping_fee, order.currency) || '—' : 'Free'} />
                 <div className="border-t border-line pt-2 mt-2 flex justify-between text-base">
                   <dt className="font-semibold">Total</dt>

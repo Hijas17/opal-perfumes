@@ -45,11 +45,18 @@ const BagIcon = () => (
   </svg>
 )
 
+const TicketIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7a2 2 0 012-2z" />
+  </svg>
+)
+
 const navLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: GridIcon },
   { to: '/orders', label: 'Orders', icon: BagIcon },
   { to: '/products', label: 'Products', icon: BoxIcon },
   { to: '/categories', label: 'Categories', icon: TagIcon },
+  { to: '/coupons', label: 'Coupons', icon: TicketIcon },
   { to: '/inquiries', label: 'Inquiries', icon: MailIcon },
   { to: '/media', label: 'Media Library', icon: ImageIcon },
   { to: '/settings', label: 'Settings', icon: GearIcon },

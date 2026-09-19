@@ -206,6 +206,9 @@ class AdminOrderController
         $payment = $order['payment'] ?? null;
         if ($payment !== null && !is_array($payment)) $payment = iterator_to_array($payment);
 
+        $coupon = $order['coupon'] ?? null;
+        if ($coupon !== null && !is_array($coupon)) $coupon = iterator_to_array($coupon);
+
         $createdAt = $order['created_at'] ?? null;
         $updatedAt = $order['updated_at'] ?? null;
 
@@ -213,6 +216,13 @@ class AdminOrderController
             'id'             => isset($order['_id']) ? (string)$order['_id'] : '',
             'order_number'   => $order['order_number']   ?? '',
             'subtotal'       => (float)($order['subtotal']     ?? 0),
+            'discount'       => (float)($order['discount']     ?? 0),
+            'coupon'         => $coupon === null ? null : [
+                'code'     => $coupon['code'] ?? '',
+                'type'     => $coupon['type'] ?? '',
+                'value'    => (float)($coupon['value']    ?? 0),
+                'discount' => (float)($coupon['discount'] ?? 0),
+            ],
             'shipping_fee'   => (float)($order['shipping_fee'] ?? 0),
             'total'          => (float)($order['total']        ?? 0),
             'currency'       => $order['currency']       ?? 'AED',

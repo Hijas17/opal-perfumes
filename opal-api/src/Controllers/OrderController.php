@@ -6,6 +6,7 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Opal\Config\Database;
 use Opal\Config\Stripe as StripeConfig;
+use Opal\Helpers\Coupons;
 use Opal\Helpers\OrderNotifier;
 use Opal\Helpers\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -97,7 +98,27 @@ class OrderController
             }
 
             $shippingFee = 0.0;            // free shipping for now
-            $total = $subtotal + $shippingFee;
+
+            // The coupon is re-checked here against the cart as it stands,
+            // never taken from what the browser previewed. Between the preview
+            // and this moment the cart can change, the code can be switched
+            // off, or its last redemption can be used by someone else.
+            $discount       = 0.0;
+            $couponSnapshot = null;
+            $couponCode     = strtoupper(trim($body['coupon_code'] ?? ''));
+
+            if ($couponCode !== '') {
+                $evaluated = Coupons::evaluate($couponCode, $orderItems, $customerId);
+                if (!$evaluated['ok']) {
+                    // Refuse rather than quietly charging full price: the
+                    // customer is expecting the discount they were shown.
+                    return Response::error($response, $evaluated['message'], 400);
+                }
+                $discount       = $evaluated['discount'];
+                $couponSnapshot = Coupons::snapshot($evaluated['coupon'], $discount);
+            }
+
+            $total = max(0.0, $subtotal - $discount + $shippingFee);
             $now   = new UTCDateTime();
 
             $order = [
@@ -105,6 +126,8 @@ class OrderController
                 'order_number'     => $this->generateOrderNumber(),
                 'items'            => $orderItems,
                 'subtotal'         => round($subtotal,    2),
+                'discount'         => round($discount,    2),
+                'coupon'           => $couponSnapshot,
                 'shipping_fee'     => round($shippingFee, 2),
                 'total'            => round($total,       2),
                 'currency'         => $currency,
@@ -314,7 +337,31 @@ class OrderController
             $params['customer_email'] = $shipping['email'];
         }
 
-        return StripeConfig::getClient()->checkout->sessions->create($params);
+        $client = StripeConfig::getClient();
+
+        // Stripe only accepts a discount as a Coupon it already holds, so the
+        // amount we calculated is pushed across as a throwaway coupon rather
+        // than by quietly shaving the line items — which would misreport what
+        // each product cost on the receipt.
+        //
+        // Our own rules stay authoritative: this coupon carries the final
+        // figure and nothing else, so Stripe never re-derives the discount.
+        $discount = (float)($order['discount'] ?? 0);
+        if ($discount > 0) {
+            $stripeCoupon = $client->coupons->create([
+                'amount_off'      => (int) round($discount * 100),
+                'currency'        => $currency,
+                'duration'        => 'once',
+                'name'            => 'Promo ' . ($order['coupon']['code'] ?? 'discount'),
+                // Single-use and short-lived: it exists for this one session
+                // and cannot be reused if the id ever leaked.
+                'max_redemptions' => 1,
+                'redeem_by'       => time() + 86400,
+            ]);
+            $params['discounts'] = [['coupon' => $stripeCoupon->id]];
+        }
+
+        return $client->checkout->sessions->create($params);
     }
 
     private function generateOrderNumber(): string
@@ -361,6 +408,9 @@ class OrderController
         // server-side, as it's the handle used for refunds and captures.
         $payment = $order['payment'] ?? null;
         if ($payment !== null && !is_array($payment)) $payment = iterator_to_array($payment);
+
+        $coupon = $order['coupon'] ?? null;
+        if ($coupon !== null && !is_array($coupon)) $coupon = iterator_to_array($coupon);
         $paidAt = $payment['paid_at'] ?? null;
 
         return [
@@ -368,6 +418,11 @@ class OrderController
             'order_number'    => $order['order_number']  ?? '',
             'items'           => $items,
             'subtotal'        => (float)($order['subtotal'] ?? 0),
+            'discount'        => (float)($order['discount'] ?? 0),
+            'coupon'          => $coupon === null ? null : [
+                'code'     => $coupon['code']     ?? '',
+                'discount' => (float)($coupon['discount'] ?? 0),
+            ],
             'shipping_fee'    => (float)($order['shipping_fee'] ?? 0),
             'total'           => (float)($order['total']    ?? 0),
             'currency'        => $order['currency']        ?? 'AED',

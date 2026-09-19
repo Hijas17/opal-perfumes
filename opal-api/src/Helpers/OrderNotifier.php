@@ -160,6 +160,14 @@ class OrderNotifier
             $out .= "Payment: {$method} — " . ($order['payment_status'] ?? 'pending') . "\n";
         }
 
+        $discount = (float)($order['discount'] ?? 0);
+        if ($discount > 0) {
+            $coupon = $order['coupon'] ?? [];
+            if (!is_array($coupon)) $coupon = iterator_to_array($coupon);
+            $out .= 'Discount: -' . $currency . ' ' . number_format($discount, 2)
+                . ' (' . ($coupon['code'] ?? 'promo') . ")\n";
+        }
+
         $out .= 'Total: ' . $currency . ' ' . number_format((float)($order['total'] ?? 0), 2) . "\n\n"
             . "Items:\n" . implode("\n", $lines) . "\n";
 

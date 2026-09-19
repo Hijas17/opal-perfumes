@@ -243,11 +243,27 @@ export interface PlacedOrder {
   clientSecret: string | null
 }
 
+/** What a promo code was worth on a given order. Null when none was used. */
+export interface OrderCoupon {
+  code:     string
+  discount: number
+}
+
+/** Result of checking a promo code against the current cart. */
+export interface CouponCheck {
+  ok:       boolean
+  message:  string
+  code:     string
+  discount: number
+}
+
 export interface Order {
   id:              string
   order_number:    string
   items:           CartItem[]
   subtotal:        number
+  discount:        number
+  coupon:          OrderCoupon | null
   shipping_fee:    number
   total:           number
   currency:        string

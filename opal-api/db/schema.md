@@ -236,8 +236,10 @@ Placed orders. One document per order.
 | `order_number` | string | ✓ | **unique**, format `OPL-YYYYMMDD-XXXXX` |
 | `items` | array | ✓ | Same shape as cart items above |
 | `subtotal` | float | ✓ | Sum of `price × quantity` for all items |
+| `discount` | float | ✓ | `0` when no promo code was used |
+| `coupon` | object \| null | ✗ | Snapshot of the code applied — see below |
 | `shipping_fee` | float | ✓ | Currently always `0` (free shipping). Future: tiered |
-| `total` | float | ✓ | `subtotal + shipping_fee` |
+| `total` | float | ✓ | `subtotal - discount + shipping_fee`, floored at 0 |
 | `currency` | string | ✓ | ISO 4217 |
 | `payment_method` | string | ✓ | Enum: `cod`, `card` (Stripe Checkout) |
 | `payment_status` | string | ✓ | Enum: `pending`, `paid`, `refunded`, `failed` |
@@ -278,11 +280,62 @@ not cleared**. Only the Stripe webhook (`POST /api/stripe/webhook`) flips it to
 which a customer may never load. The update is conditioned on
 `payment_status: { $ne: 'paid' }` so Stripe's retries are harmless.
 
+**`coupon` object** (present only when a promo code was used)
+
+```jsonc
+{
+  "code":         "OUD20",
+  "type":         "percentage",   // or "fixed"
+  "value":        20,
+  "max_discount": 100,            // null when uncapped
+  "discount":     45.00,          // what it actually took off
+  "applied_at":   "UTCDateTime"
+}
+```
+
+Stored as a **snapshot**, not a reference: the coupon can be edited or deleted
+afterwards and the order must still explain what was charged and why.
+
 **Indexes**
 - `{ customer_id: 1, created_at: -1 }` — fast order history lookup
 - `{ order_number: 1 }` **unique**
 - `{ status: 1 }` — admin filter
 - `{ 'payment.stripe_session_id': 1 }` — webhook + success-page lookup
+- `{ 'coupon.code': 1 }` **sparse** — coupon usage is counted from orders, so
+  this is read on every promo-code check
+
+---
+
+### `coupons`
+
+Promo codes customers enter at checkout. Admin CRUD via `/api/admin/coupons`.
+This collection is the **only** thing that grants a discount — a code printed
+on a home page banner is just text until a coupon with that code exists here.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `_id` | ObjectId | ✓ | |
+| `code` | string | ✓ | **unique**, stored and matched uppercase |
+| `description` | string | ✗ | Internal note, never shown to customers |
+| `type` | string | ✓ | Enum: `percentage`, `fixed` |
+| `value` | float | ✓ | Percent (≤ 100) or a flat amount |
+| `max_discount` | float \| null | ✗ | Caps a percentage discount |
+| `min_order` | float \| null | ✗ | Minimum cart subtotal |
+| `starts_at`, `ends_at` | UTCDateTime \| null | ✗ | Either end may be open |
+| `max_redemptions` | int \| null | ✗ | Across all customers |
+| `max_per_customer` | int \| null | ✗ | Per customer |
+| `applies_to` | object | ✓ | `{ scope: 'all'\|'products'\|'subcategories', product_ids: [], subcategory_slugs: [] }` |
+| `status` | string | ✓ | Enum: `active`, `inactive` |
+| `created_at`, `updated_at` | UTCDateTime | ✓ | |
+
+There is **no redemption counter**. Usage is counted from the `orders`
+collection (`coupon.code`, excluding `payment_status: 'failed'`) so the number
+can never drift out of step with the orders that actually exist, and an
+abandoned card checkout doesn't burn a redemption.
+
+**Indexes**
+- `{ code: 1 }` **unique**
+- `{ status: 1 }`
 
 ---
 

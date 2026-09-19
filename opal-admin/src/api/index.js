@@ -89,6 +89,19 @@ export const updateCategory = (id, data) =>
 export const deleteCategory = (id) =>
   api.delete(`/admin/categories/${id}`)
 
+// Coupons
+export const getCoupons = () =>
+  api.get('/admin/coupons')
+
+export const createCoupon = (data) =>
+  api.post('/admin/coupons', data)
+
+export const updateCoupon = (id, data) =>
+  api.put(`/admin/coupons/${id}`, data)
+
+export const deleteCoupon = (id) =>
+  api.delete(`/admin/coupons/${id}`)
+
 // Orders
 export const getOrders = (params) =>
   api.get('/admin/orders', { params })

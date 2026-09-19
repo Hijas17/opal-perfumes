@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Opal\Controllers\AdminCouponController;
 use Opal\Controllers\AdminOrderController;
+use Opal\Controllers\CouponController;
 use Opal\Controllers\AuthController;
 use Opal\Controllers\CartController;
 use Opal\Controllers\CategoryController;
@@ -159,6 +161,10 @@ $app->group('/api', function (RouteCollectorProxy $api) {
         $cust->delete('/cart/items/{productId}',     [CartController::class, 'removeItem']);
         $cust->delete('/cart',                       [CartController::class, 'clear']);
 
+        // Promo codes — a preview before the order is submitted. Placement
+        // re-evaluates the code, so this can't be replayed to lock a discount in.
+        $cust->post('/coupons/validate', [CouponController::class, 'validateCode']);
+
         // Orders
         $cust->post('/orders',     [OrderController::class, 'place']);
         $cust->get ('/orders',     [OrderController::class, 'index']);
@@ -172,6 +178,12 @@ $app->group('/api', function (RouteCollectorProxy $api) {
 
         // Dashboard
         $admin->get('/dashboard', [DashboardController::class, 'index']);
+
+        // Coupons
+        $admin->get   ('/coupons',      [AdminCouponController::class, 'index']);
+        $admin->post  ('/coupons',      [AdminCouponController::class, 'store']);
+        $admin->put   ('/coupons/{id}', [AdminCouponController::class, 'update']);
+        $admin->delete('/coupons/{id}', [AdminCouponController::class, 'destroy']);
 
         // Orders
         $admin->get('/orders',             [AdminOrderController::class, 'index']);

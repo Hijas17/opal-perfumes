@@ -87,6 +87,13 @@ $indexes = [
         // Sparse: only card orders carry a payment sub-document, and a
         // non-sparse index would hold an entry for every COD order too.
         [['payment.stripe_session_id' => 1], ['name' => 'stripe_session', 'sparse' => true]],
+        // Coupon usage is counted from orders rather than a stored counter,
+        // so this is read on every promo-code check.
+        [['coupon.code' => 1], ['name' => 'coupon_code', 'sparse' => true]],
+    ],
+    'coupons' => [
+        [['code' => 1], ['unique' => true, 'name' => 'code_unique']],
+        [['status' => 1], ['name' => 'status']],
     ],
 ];
 

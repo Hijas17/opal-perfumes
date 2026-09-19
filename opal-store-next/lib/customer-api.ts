@@ -9,6 +9,7 @@
 import type {
   ApiEnvelope,
   Cart,
+  CouponCheck,
   Customer,
   Order,
   PlacedOrder,
@@ -145,9 +146,25 @@ export function emptyCart(): Cart {
 
 // ─── Orders ──────────────────────────────────────────────────────────────
 
+/**
+ * Ask the API what a promo code is worth against the current cart.
+ *
+ * A preview only — the code is re-checked when the order is placed, so what
+ * this returns is never what gets charged.
+ */
+export async function checkCoupon(code: string): Promise<CouponCheck> {
+  const r = await request<ApiEnvelope<CouponCheck>>('/customer/coupons/validate', {
+    method: 'POST',
+    body: { code },
+  })
+  if (!r.data) throw new Error('No response from the promo code check')
+  return r.data
+}
+
 export async function placeOrder(payload: {
   shipping:        ShippingDetails
   payment_method?: 'cod' | 'card'
+  coupon_code?:    string
 }): Promise<PlacedOrder> {
   const r = await request<ApiEnvelope<Order> & { checkout?: { client_secret: string } }>(
     '/customer/orders',

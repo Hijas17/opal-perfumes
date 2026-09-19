@@ -7,7 +7,7 @@ import { CreditCard, Lock, MessageCircle, Truck } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
 import StripeCheckout from '@/components/StripeCheckout'
-import { placeOrder } from '@/lib/customer-api'
+import { checkCoupon, placeOrder } from '@/lib/customer-api'
 import { formatPrice } from '@/lib/format'
 import { useMoney } from '@/components/CurrencyProvider'
 import {
@@ -89,6 +89,46 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   // to swap the form out for Stripe's embedded payment UI.
   const [clientSecret, setClientSecret] = useState<string | null>(null)
 
+  // Promo code. `applied` is only set once the API has confirmed the code is
+  // worth something against this cart — the typed value alone never discounts
+  // anything, here or on the server.
+  const [couponInput, setCouponInput] = useState('')
+  const [applied, setApplied] = useState<{ code: string; discount: number } | null>(null)
+  const [couponError, setCouponError] = useState('')
+  const [checkingCoupon, setCheckingCoupon] = useState(false)
+
+  async function applyCoupon() {
+    const code = couponInput.trim()
+    if (code === '' || checkingCoupon) return
+    setCheckingCoupon(true)
+    setCouponError('')
+    try {
+      const result = await checkCoupon(code)
+      if (result.ok) {
+        setApplied({ code: result.code, discount: result.discount })
+        setCouponInput('')
+      } else {
+        setApplied(null)
+        setCouponError(result.message)
+      }
+    } catch (err) {
+      setApplied(null)
+      setCouponError(err instanceof Error ? err.message : 'Could not check that code.')
+    } finally {
+      setCheckingCoupon(false)
+    }
+  }
+
+  // A code is validated against the cart it was applied to, so changing the
+  // cart has to drop it rather than carry a stale discount to submission.
+  useEffect(() => {
+    setApplied(null)
+    setCouponError('')
+  }, [cart.subtotal, cart.item_count])
+
+  const discount = applied?.discount ?? 0
+  const total = Math.max(0, cart.subtotal - discount)
+
   // Redirect if not logged in
   useEffect(() => {
     if (!authLoading && !isLoggedIn) router.replace('/login?next=/checkout')
@@ -151,6 +191,7 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
         shipping,
         // Narrowed: the WhatsApp branch returned above.
         payment_method: paymentMethod as 'card' | 'cod',
+        ...(applied ? { coupon_code: applied.code } : {}),
       })
 
       if (secret) {
@@ -282,13 +323,68 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
               </ul>
               {showPrices && (
                 <>
+                  {/* Promo code. Hidden on the WhatsApp path, where the
+                      merchant quotes the price in chat and no order exists
+                      server-side to discount. */}
+                  {paymentMethod !== 'whatsapp' && (
+                    <div className="border-t border-line pt-3 mb-3">
+                      {applied ? (
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <span className="flex items-center gap-2">
+                            <span className="font-mono text-xs border border-dashed border-gold text-gold rounded px-2 py-0.5">
+                              {applied.code}
+                            </span>
+                            <span className="text-green-700">applied</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => { setApplied(null); setCouponError('') }}
+                            className="text-xs text-muted hover:text-gold transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex gap-2">
+                            <input
+                              value={couponInput}
+                              onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError('') }}
+                              // Enter would otherwise submit the whole order.
+                              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon() } }}
+                              placeholder="Promo code"
+                              className="flex-1 min-w-0 border border-line rounded px-3 py-2 text-sm font-mono bg-surface"
+                            />
+                            <button
+                              type="button"
+                              onClick={applyCoupon}
+                              disabled={checkingCoupon || couponInput.trim() === ''}
+                              className="btn btn--outline px-4 disabled:opacity-50"
+                            >
+                              {checkingCoupon ? '…' : 'Apply'}
+                            </button>
+                          </div>
+                          {couponError && (
+                            <p className="mt-2 text-xs text-red-600">{couponError}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   <dl className="space-y-2 text-sm border-t border-line pt-3">
                     <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{money(cart.subtotal, cart.currency)}</dd></div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-green-700">
+                        <dt>Discount</dt>
+                        <dd>-{money(discount, cart.currency)}</dd>
+                      </div>
+                    )}
                     <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="text-green-700">Free</dd></div>
                   </dl>
                   <div className="border-t border-line pt-3 mt-3 mb-6 flex justify-between text-base">
                     <span className="font-semibold">Total</span>
-                    <span className="font-semibold text-gold">{money(cart.subtotal, cart.currency)}</span>
+                    <span className="font-semibold text-gold">{money(total, cart.currency)}</span>
                   </div>
                 </>
               )}
