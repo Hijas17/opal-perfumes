@@ -17,11 +17,81 @@ import { cn } from '../lib/utils.js'
 
 const SECTION_LABELS = {
   general:   'General',
+  notify:    'Notifications',
   home:      'Home Page',
   homeMedia: 'Home Media',
   about:     'About Us',
   social:    'Social Media',
   contact:   'Contact',
+}
+
+/**
+ * Editable list of staff email addresses that order notifications go to.
+ *
+ * Stored as an array under `order_notification_emails`. It is deliberately not
+ * in SettingsController::PUBLIC_KEYS — these are internal addresses and must
+ * not be served to the storefront.
+ */
+function EmailListField({ value, onChange }) {
+  const emails = Array.isArray(value) ? value : []
+  const [draft, setDraft] = useState('')
+  const [error, setError] = useState('')
+
+  function add() {
+    const email = draft.trim()
+    if (email === '') return
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setError('That does not look like an email address.')
+      return
+    }
+    if (emails.some((e) => e.toLowerCase() === email.toLowerCase())) {
+      setError('That address is already on the list.')
+      return
+    }
+    onChange([...emails, email])
+    setDraft('')
+    setError('')
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <Input
+          type="email"
+          value={draft}
+          onChange={(e) => { setDraft(e.target.value); setError('') }}
+          // Enter would otherwise submit the whole settings form.
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
+          placeholder="staff@opalperfume.com"
+        />
+        <Button type="button" variant="outline" onClick={add}>Add</Button>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {emails.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No addresses yet — notifications fall back to the address in the server
+          configuration. Add one or more so your staff are told about new orders.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {emails.map((email) => (
+            <li key={email} className="flex items-center justify-between gap-3 bg-muted rounded px-3 py-2">
+              <span className="text-sm">{email}</span>
+              <button
+                type="button"
+                onClick={() => onChange(emails.filter((e) => e !== email))}
+                className="text-sm text-destructive hover:underline"
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
 }
 
 function ImageSettingField({ label, settingKey, currentValue, onUpdate }) {
@@ -153,6 +223,31 @@ export default function Settings() {
         <div className="space-y-1.5">
           <Label>Footer Tagline</Label>
           <Input value={s.footer_tagline || ''} onChange={(e) => handleChange('footer_tagline', e.target.value)} placeholder="Luxury fragrances for every moment" />
+        </div>
+      </div>
+    ),
+
+    notify: (
+      <div className="space-y-6">
+        <div className="space-y-1.5">
+          <Label>Order notification recipients</Label>
+          <p className="text-sm text-muted-foreground">
+            Everyone here is emailed whenever an order is placed and whenever a
+            card payment is received. Add as many addresses as you need.
+          </p>
+          <EmailListField
+            value={s.order_notification_emails}
+            onChange={(v) => handleChange('order_notification_emails', v)}
+          />
+        </div>
+
+        <div className="border-t pt-4">
+          <Label>Customer emails</Label>
+          <p className="text-sm text-muted-foreground mt-1">
+            Customers are emailed automatically when they place an order and
+            whenever you change its status under Orders. Each status change has
+            an opt-out if you would rather not notify them.
+          </p>
         </div>
       </div>
     ),

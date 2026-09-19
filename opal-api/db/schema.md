@@ -157,6 +157,7 @@ Key-value store editable from admin → Settings.
 | `hero_image`, `hero_bottle_image` | string (filename) | hero background + product image |
 | `about_title`, `about_description`, `about_image` | string | About Us page |
 | `cta_message`, `about_snippet` | string | Home page sections |
+| `order_notification_emails` | array of string | Staff addresses emailed on every new order and payment. **Not** in `PUBLIC_KEYS` — internal addresses must never reach the storefront. Empty falls back to the `ADMIN_NOTIFICATION_EMAIL` env var. |
 
 **Public exposure** is controlled by `SettingsController::PUBLIC_KEYS`. Adding a new key the storefront should read also requires updating that list.
 

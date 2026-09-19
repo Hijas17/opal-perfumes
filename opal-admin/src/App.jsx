@@ -10,6 +10,7 @@ import ProductForm from './pages/products/ProductForm.jsx'
 import BulkUpload from './pages/products/BulkUpload.jsx'
 import Categories from './pages/Categories.jsx'
 import Inquiries from './pages/Inquiries.jsx'
+import Orders from './pages/Orders.jsx'
 import Media from './pages/Media.jsx'
 import Settings from './pages/Settings.jsx'
 
@@ -39,6 +40,7 @@ function AppRoutes() {
                 <Route path="products/new" element={<ProductForm />} />
                 <Route path="products/bulk-upload" element={<BulkUpload />} />
                 <Route path="products/:id/edit" element={<ProductForm />} />
+                <Route path="orders" element={<Orders />} />
                 <Route path="categories" element={<Categories />} />
                 <Route path="inquiries" element={<Inquiries />} />
                 <Route path="media" element={<Media />} />

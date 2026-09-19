@@ -6,6 +6,7 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Opal\Config\Database;
 use Opal\Config\Stripe as StripeConfig;
+use Opal\Helpers\OrderNotifier;
 use Opal\Helpers\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -149,6 +150,11 @@ class OrderController
                 ['customer_id' => new ObjectId($customerId)],
                 ['$set' => ['items' => [], 'updated_at' => $now]]
             );
+
+            // Card orders are announced by the webhook once paid, not here —
+            // an unpaid order isn't news yet.
+            OrderNotifier::placed($order);
+            OrderNotifier::confirmationToCustomer($order);
 
             return Response::json($response, [
                 'error' => false,
