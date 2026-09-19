@@ -64,3 +64,8 @@ coverage/
 
 # ─── Deprecated apps (kept on disk, excluded from repo) ───────────────────
 opal-store/
+
+# ─── Vendored agent skills ─────────────────────────────────────────────────
+# Stripe's reference docs, pulled in by `npx skills add https://docs.stripe.com`.
+# Regenerable from skills-lock.json, so treat them like node_modules.
+.agents/

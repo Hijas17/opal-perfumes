@@ -7,10 +7,12 @@ export const metadata: Metadata = {
 }
 
 interface PageProps {
-  searchParams: Promise<{ order?: string }>
+  // `order` is set by the cash-on-delivery flow; `session_id` is what Stripe
+  // appends when it returns the customer from embedded Checkout.
+  searchParams: Promise<{ order?: string; session_id?: string }>
 }
 
 export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
-  const { order } = await searchParams
-  return <OrderSuccess orderId={order || null} />
+  const { order, session_id } = await searchParams
+  return <OrderSuccess orderId={order || null} sessionId={session_id || null} />
 }

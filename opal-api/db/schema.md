@@ -236,8 +236,9 @@ Placed orders. One document per order.
 | `shipping_fee` | float | ✓ | Currently always `0` (free shipping). Future: tiered |
 | `total` | float | ✓ | `subtotal + shipping_fee` |
 | `currency` | string | ✓ | ISO 4217 |
-| `payment_method` | string | ✓ | Enum: `cod`. Future: `card`, `applepay`, etc. |
+| `payment_method` | string | ✓ | Enum: `cod`, `card` (Stripe Checkout) |
 | `payment_status` | string | ✓ | Enum: `pending`, `paid`, `refunded`, `failed` |
+| `payment` | object | ✗ | Stripe details. Absent on `cod` orders — see below |
 | `shipping` | object | ✓ | See below |
 | `status` | string | ✓ | Enum: `pending`, `confirmed`, `shipped`, `delivered`, `cancelled` |
 | `status_history` | array of objects | ✓ | `[{ status, note, at: UTCDateTime }, …]` — audit trail |
@@ -258,10 +259,27 @@ Placed orders. One document per order.
 }
 ```
 
+**`payment` object** (card orders only)
+
+```jsonc
+{
+  "stripe_session_id":  "cs_test_a1b2c3…",   // set when the order is created
+  "payment_intent_id":  "pi_3Ab4c5…",        // set by the webhook, server-side only
+  "paid_at":            "UTCDateTime"         // set by the webhook
+}
+```
+
+A `card` order is written with `payment_status: 'pending'` and **the cart is
+not cleared**. Only the Stripe webhook (`POST /api/stripe/webhook`) flips it to
+`paid` / `confirmed` and empties the cart — never the checkout success page,
+which a customer may never load. The update is conditioned on
+`payment_status: { $ne: 'paid' }` so Stripe's retries are harmless.
+
 **Indexes**
 - `{ customer_id: 1, created_at: -1 }` — fast order history lookup
 - `{ order_number: 1 }` **unique**
 - `{ status: 1 }` — admin filter
+- `{ 'payment.stripe_session_id': 1 }` — webhook + success-page lookup
 
 ---
 

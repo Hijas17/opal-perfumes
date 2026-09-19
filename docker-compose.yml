@@ -33,6 +33,14 @@ services:
       ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174
       MAIL_FROM: noreply@opalperfumes.com
       ADMIN_NOTIFICATION_EMAIL: admin@opalperfumes.com
+      # Where Stripe sends the customer back after embedded Checkout.
+      STOREFRONT_URL: ${STOREFRONT_URL:-http://localhost:3000}
+      # Passed through from your shell or a root-level .env file — never
+      # hardcode a key here, this file is committed. Use a TEST key locally.
+      # Leave unset and card payment is simply unavailable; COD keeps working.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      # Printed by `stripe listen --forward-to localhost:8000/api/stripe/webhook`
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
     depends_on:
       - mongodb
 

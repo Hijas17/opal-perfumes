@@ -84,6 +84,9 @@ $indexes = [
         [['customer_id' => 1, 'created_at' => -1], ['name' => 'customer_history']],
         [['order_number' => 1], ['unique' => true, 'name' => 'order_number_unique']],
         [['status' => 1], ['name' => 'status']],
+        // Sparse: only card orders carry a payment sub-document, and a
+        // non-sparse index would hold an entry for every COD order too.
+        [['payment.stripe_session_id' => 1], ['name' => 'stripe_session', 'sparse' => true]],
     ],
 ];
 

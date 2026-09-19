@@ -205,6 +205,25 @@ export interface OrderStatusEntry {
   at:     string | null
 }
 
+/** Stripe details attached to a card order. Null for cash on delivery. */
+export interface OrderPayment {
+  stripe_session_id: string | null
+  /** ISO timestamp set by the webhook when payment actually landed. */
+  paid_at:           string | null
+}
+
+/**
+ * Result of placing an order.
+ *
+ * `clientSecret` is present only for `card`, and its presence is what tells
+ * the checkout page to mount embedded Checkout instead of going straight to
+ * the success page.
+ */
+export interface PlacedOrder {
+  order:        Order
+  clientSecret: string | null
+}
+
 export interface Order {
   id:              string
   order_number:    string
@@ -215,6 +234,7 @@ export interface Order {
   currency:        string
   payment_method:  string
   payment_status:  string
+  payment:         OrderPayment | null
   shipping:        ShippingDetails
   status:          OrderStatus
   status_history:  OrderStatusEntry[]
