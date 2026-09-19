@@ -14,7 +14,14 @@ export interface PromoBannerItem {
 const ROTATE_MS = 6000
 
 /**
- * The promotional strip directly under the navbar on the home page.
+ * The promotional banner directly under the navbar on the home page.
+ *
+ * A full 16:9 block, so promotional artwork reads as artwork rather than as a
+ * thin notification bar. Capped at 78vh: strict 16:9 on an ultrawide monitor
+ * would be over a thousand pixels tall and push the hero entirely off screen.
+ *
+ * A banner with no image falls back to a compact text band — an empty 16:9
+ * area with one line of text floating in it just looks broken.
  *
  * Rotates on its own, but pauses on hover and whenever the tab is hidden —
  * a banner advancing in a background tab is wasted, and one sliding out from
@@ -49,6 +56,9 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
   if (count === 0) return null
 
   const active = banners[index]
+  // Every banner shares the tallest treatment any of them needs, so rotating
+  // between an image banner and a text-only one doesn't make the page jump.
+  const anyImage = banners.some((b) => b.image)
 
   return (
     <section
@@ -61,53 +71,53 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
         href={active.href}
         className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
       >
-        <div className="relative overflow-hidden">
+        <div
+          className={`relative overflow-hidden ${
+            anyImage ? 'aspect-[16/9] max-h-[78vh]' : 'min-h-[84px]'
+          }`}
+        >
           {active.image && (
-            // Background art. Decorative — the text below carries the meaning,
-            // so it stays out of the accessibility tree.
+            // Decorative — the copy below carries the meaning, so it stays out
+            // of the accessibility tree.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={active.image}
               alt=""
               aria-hidden
-              className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-[1.03]"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] group-hover:scale-[1.02]"
             />
           )}
 
           <div
-            className={
+            className={`relative flex h-full flex-col items-center justify-center gap-3 px-12 py-8 text-center ${
               active.image
-                ? 'relative flex min-h-[72px] items-center justify-center gap-x-4 gap-y-1 px-12 py-3 text-center bg-gradient-to-r from-black/55 via-black/35 to-black/55 sm:min-h-[88px]'
-                : 'relative flex min-h-[56px] items-center justify-center gap-x-4 gap-y-1 px-12 py-3 text-center'
-            }
+                ? 'bg-gradient-to-t from-black/70 via-black/25 to-black/40'
+                : ''
+            }`}
           >
-            <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-              {active.headline && (
-                <span
-                  className={`text-sm font-medium tracking-wide sm:text-base ${
-                    active.image ? 'text-white' : 'text-ink'
-                  }`}
-                >
-                  {active.headline}
-                </span>
-              )}
-              {active.subtext && (
-                <span className={`text-xs sm:text-sm ${active.image ? 'text-white/80' : 'text-muted'}`}>
-                  {active.subtext}
-                </span>
-              )}
-              {active.promoCode && (
-                <span
-                  className={`rounded border border-dashed px-2 py-0.5 font-mono text-xs tracking-widest ${
-                    active.image
-                      ? 'border-white/60 text-white'
-                      : 'border-gold text-gold'
-                  }`}
-                >
-                  {active.promoCode}
-                </span>
-              )}
-            </p>
+            {active.headline && (
+              <h2
+                className={`font-display text-2xl font-semibold leading-tight tracking-wide sm:text-4xl lg:text-5xl ${
+                  active.image ? 'text-white drop-shadow-sm' : 'text-ink'
+                }`}
+              >
+                {active.headline}
+              </h2>
+            )}
+            {active.subtext && (
+              <p className={`max-w-2xl text-sm sm:text-base ${active.image ? 'text-white/85' : 'text-muted'}`}>
+                {active.subtext}
+              </p>
+            )}
+            {active.promoCode && (
+              <span
+                className={`mt-1 rounded border border-dashed px-3 py-1 font-mono text-xs tracking-[0.2em] sm:text-sm ${
+                  active.image ? 'border-white/70 text-white' : 'border-gold text-gold'
+                }`}
+              >
+                {active.promoCode}
+              </span>
+            )}
           </div>
         </div>
       </Link>
@@ -119,7 +129,7 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
             type="button"
             aria-label="Previous promotion"
             onClick={() => go(index - 1)}
-            className="absolute left-1 top-1/2 -translate-y-1/2 px-2 py-1 text-lg leading-none text-muted transition-colors hover:text-gold"
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/30 px-3 py-1.5 text-2xl leading-none text-white/80 backdrop-blur-sm transition-colors hover:bg-black/50 hover:text-white sm:left-4"
           >
             ‹
           </button>
@@ -127,12 +137,12 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
             type="button"
             aria-label="Next promotion"
             onClick={() => go(index + 1)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 text-lg leading-none text-muted transition-colors hover:text-gold"
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/30 px-3 py-1.5 text-2xl leading-none text-white/80 backdrop-blur-sm transition-colors hover:bg-black/50 hover:text-white sm:right-4"
           >
             ›
           </button>
 
-          <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1.5">
+          <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
             {banners.map((_, i) => (
               <button
                 key={i}
@@ -140,8 +150,8 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
                 aria-label={`Promotion ${i + 1} of ${count}`}
                 aria-current={i === index}
                 onClick={() => go(i)}
-                className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                  i === index ? 'bg-gold' : 'bg-muted/40 hover:bg-muted'
+                className={`h-2 w-2 rounded-full transition-colors ${
+                  i === index ? 'bg-gold' : 'bg-white/40 hover:bg-white/70'
                 }`}
               />
             ))}

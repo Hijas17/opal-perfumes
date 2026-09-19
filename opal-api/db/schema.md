@@ -158,7 +158,7 @@ Key-value store editable from admin → Settings.
 | `about_title`, `about_description`, `about_image` | string | About Us page |
 | `cta_message`, `about_snippet` | string | Home page sections |
 | `promo_banners_enabled` | bool | Master switch for the promotional strip under the navbar on the home page |
-| `promo_banners` | array | `[{ image, headline, subtext, promo_code, href }]` — rotating banners in that strip. `promo_code` is display-only; the code's rules live in `coupons`. `href` defaults to `/products`. |
+| `promo_banners` | array | `[{ image, headline, subtext, promo_code, href }]` — rotating 16:9 banners in that strip. `promo_code` is display-only; the code's rules live in `coupons`. `href` defaults to `/products`. |
 | `order_notification_emails` | array of string | Staff addresses emailed on every new order and payment. **Not** in `PUBLIC_KEYS` — internal addresses must never reach the storefront. Empty falls back to the `ADMIN_NOTIFICATION_EMAIL` env var. |
 
 **Public exposure** is controlled by `SettingsController::PUBLIC_KEYS`. Adding a new key the storefront should read also requires updating that list.

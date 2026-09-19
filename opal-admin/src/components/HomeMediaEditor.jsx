@@ -124,10 +124,12 @@ export default function HomeMediaEditor({ settings, onChange }) {
           </Button>
         </div>
         <p className="mb-3 text-xs text-muted-foreground">
-          A slim strip directly under the navigation on the home page, for
-          discounts and promotions. Banners rotate every 6 seconds and each one
-          links to the product listing unless you point it somewhere narrower.
-          Wide, short images work best — around 2400&times;300.
+          A full-width banner directly under the navigation on the home page,
+          for discounts and promotions. Banners rotate every 6 seconds and each
+          one links to the product listing unless you point it somewhere
+          narrower. Use <strong>16:9</strong> images — around 1920&times;1080.
+          Keep the important part of the picture near the middle; the edges are
+          cropped on narrow screens.
         </p>
 
         {/* Master switch, so the strip disappears between promotions instead of
@@ -166,7 +168,7 @@ export default function HomeMediaEditor({ settings, onChange }) {
               >
                 <div className="space-y-3">
                   <MediaField
-                    label="Background image (optional)"
+                    label="Background image (16:9, optional)"
                     value={banner.image || ''}
                     onChange={(v) => updateItem('promo_banners', banners, i, 'image', v)}
                   />
