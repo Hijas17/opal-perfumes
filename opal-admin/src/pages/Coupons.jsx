@@ -170,10 +170,10 @@ function CouponModal({ coupon, open, onClose, onSaved, products, categories }) {
                     type="number" min="0" step="0.01"
                     value={form.max_discount}
                     onChange={(e) => set('max_discount', e.target.value)}
-                    placeholder="100"
+                    placeholder="No cap"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Caps what 20% can cost you on a very large basket.
+                    Caps what a percentage can cost you on a very large basket.
                   </p>
                 </div>
               )}
@@ -201,7 +201,7 @@ function CouponModal({ coupon, open, onClose, onSaved, products, categories }) {
                 type="number" min="0" step="0.01"
                 value={form.min_order}
                 onChange={(e) => set('min_order', e.target.value)}
-                placeholder="200"
+                placeholder="No minimum"
               />
             </div>
             <div>
@@ -210,7 +210,7 @@ function CouponModal({ coupon, open, onClose, onSaved, products, categories }) {
                 type="number" min="0" step="1"
                 value={form.max_redemptions}
                 onChange={(e) => set('max_redemptions', e.target.value)}
-                placeholder="100"
+                placeholder="No limit"
               />
             </div>
             <div>
@@ -219,10 +219,16 @@ function CouponModal({ coupon, open, onClose, onSaved, products, categories }) {
                 type="number" min="0" step="1"
                 value={form.max_per_customer}
                 onChange={(e) => set('max_per_customer', e.target.value)}
-                placeholder="1"
+                placeholder="No limit"
               />
             </div>
           </div>
+
+          <p className="-mt-3 text-xs text-muted-foreground">
+            These three are optional. <strong>Anything left blank is
+            unlimited</strong> — a blank &ldquo;max uses per customer&rdquo;
+            lets the same person redeem the code on every order they place.
+          </p>
 
           <div>
             <Label className="mb-1.5 block">Applies to</Label>
@@ -367,7 +373,7 @@ export default function Coupons() {
     if (c.min_order) parts.push(`min ${money(c.min_order)}`)
     if (c.max_redemptions) parts.push(`${c.redemptions}/${c.max_redemptions} used`)
     else if (c.redemptions) parts.push(`${c.redemptions} used`)
-    if (c.max_per_customer) parts.push(`${c.max_per_customer} per customer`)
+    parts.push(c.max_per_customer ? `${c.max_per_customer} per customer` : 'unlimited per customer')
     if (c.applies_to?.scope === 'products') parts.push('selected products')
     if (c.applies_to?.scope === 'subcategories') parts.push('selected collections')
     return parts.join(' · ') || '—'
