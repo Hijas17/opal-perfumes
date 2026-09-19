@@ -49,6 +49,8 @@ services:
       SMTP_SECURE: ${SMTP_SECURE:-ssl}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
+      # Absolute base for product thumbnails in order emails.
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-}
 
       # ── Storefront cache purge ─────────────────────────────────────────────
       REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}

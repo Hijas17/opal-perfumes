@@ -29,6 +29,7 @@ class Mailer
         string $body,
         ?string $replyTo = null,
         ?string $replyToName = null,
+        ?string $html = null,
     ): bool {
         if (trim($to) === '') {
             error_log("Mailer: no recipient configured; dropping message: {$subject}");
@@ -61,7 +62,15 @@ class Mailer
                 }
 
                 $mail->Subject = $subject;
-                $mail->Body    = $body;
+                if ($html !== null && $html !== '') {
+                    $mail->isHTML(true);
+                    $mail->Body    = $html;
+                    // Plain-text alternative: for clients with HTML off, and
+                    // because a text part meaningfully helps deliverability.
+                    $mail->AltBody = $body;
+                } else {
+                    $mail->Body = $body;
+                }
 
                 $mail->send();
                 return true;
@@ -71,13 +80,21 @@ class Mailer
             }
         }
 
-        $headers = "From: {$fromName} <{$fromEmail}>\r\nContent-Type: text/plain; charset=UTF-8";
+        // mail() fallback: send whichever single part we have. Hand-rolling
+        // a multipart message here would be more ways to get it wrong than
+        // it is worth for a path that only runs when SMTP is unconfigured.
+        $isHtml      = $html !== null && $html !== '';
+        $contentType = $isHtml ? 'text/html' : 'text/plain';
+        $payload     = $isHtml ? $html : $body;
+        $headers = "From: {$fromName} <{$fromEmail}>" . "\r\n"
+            . "MIME-Version: 1.0" . "\r\n"
+            . "Content-Type: {$contentType}; charset=UTF-8";
         if ($replyTo !== null && $replyTo !== '') {
             $name    = $replyToName !== null && $replyToName !== '' ? "{$replyToName} " : '';
             $headers .= "\r\nReply-To: {$name}<{$replyTo}>";
         }
 
-        if (!@mail($to, $subject, $body, $headers)) {
+        if (!@mail($to, $subject, $payload, $headers)) {
             error_log("Failed to send email to {$to}: {$subject}");
             return false;
         }

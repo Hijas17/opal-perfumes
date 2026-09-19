@@ -28,9 +28,10 @@ class Settings
                 ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
             );
             $value = $doc['value'] ?? $default;
-        } catch (\Exception $e) {
-            // Never let a settings lookup break the caller — an order email
-            // going to the fallback address beats an order failing to save.
+        } catch (\Throwable $e) {
+            // Throwable, not Exception: a driver or class-loading failure is an
+            // Error and would otherwise escape, taking down the order email —
+            // or the order — over a lookup that has a perfectly good default.
             error_log("Settings::get({$key}) failed: " . $e->getMessage());
             $value = $default;
         }

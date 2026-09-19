@@ -64,6 +64,12 @@ class OrderNotifier
 
         $customerEmail = trim($shipping['email'] ?? '');
 
+        $html = EmailTemplate::order($order, [
+            'heading'     => $subjectPrefix,
+            'intro'       => $intro,
+            'footer_note' => 'Manage this order in the admin portal under Orders.',
+        ]);
+
         foreach ($recipients as $to) {
             Mailer::send(
                 $to,
@@ -72,6 +78,7 @@ class OrderNotifier
                 // Reply-To is the customer, so hitting reply reaches them.
                 $customerEmail !== '' ? $customerEmail : null,
                 $shipping['name'] ?? null,
+                $html,
             );
         }
     }
@@ -97,7 +104,17 @@ class OrderNotifier
             . "\nWe will email you as your order progresses.\n\n"
             . self::signoff();
 
-        Mailer::send($to, "Your order {$number}", $body);
+        $html = EmailTemplate::order($order, [
+            'heading'     => 'Thank you for your order',
+            'intro'       => $paid
+                ? 'We have received your payment and your order is confirmed.'
+                : 'We will contact you shortly to confirm delivery.',
+            'cta_label'   => 'View your order',
+            'cta_url'     => self::orderUrl($order),
+            'footer_note' => 'We will email you as your order progresses.',
+        ]);
+
+        Mailer::send($to, "Your order {$number}", $body, null, null, $html);
     }
 
     /**
@@ -123,10 +140,39 @@ class OrderNotifier
             . "\n" . self::summary($order, false)
             . "\n" . self::signoff();
 
-        Mailer::send($to, "Update on your order {$number} — " . ucfirst($status), $body);
+        $html = EmailTemplate::order($order, [
+            'heading'     => ucfirst($status),
+            'intro'       => $message,
+            'cta_label'   => 'Track your order',
+            'cta_url'     => self::orderUrl($order),
+            'footer_note' => $note,
+        ]);
+
+        Mailer::send(
+            $to,
+            "Update on your order {$number} — " . ucfirst($status),
+            $body,
+            null,
+            null,
+            $html,
+        );
     }
 
     // ─── Shared formatting ──────────────────────────────────────────────
+
+    /**
+     * Where the customer can see this order.
+     *
+     * Empty when STOREFRONT_URL is unset or still points at a dev machine,
+     * which drops the button rather than mailing a link to localhost.
+     */
+    private static function orderUrl(array $order): string
+    {
+        $base = trim($_ENV['STOREFRONT_URL'] ?? getenv('STOREFRONT_URL') ?: '');
+        $id   = isset($order['_id']) ? (string)$order['_id'] : '';
+        if ($base === '' || $id === '' || str_contains($base, 'localhost')) return '';
+        return rtrim($base, '/') . '/account/orders/' . $id;
+    }
 
     private static function shipping(array $order): array
     {
