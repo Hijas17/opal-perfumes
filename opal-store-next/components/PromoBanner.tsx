@@ -71,9 +71,20 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
         href={active.href}
         className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
       >
+        {/*
+          True 16:9 at full width, with no height cap, so the whole picture is
+          always visible. Promotional artwork usually carries its own headline,
+          code and call to action inside the image — cropping it to fit a
+          height limit cuts those off, which is worse than a tall banner.
+
+          `w-full` is load-bearing, not decoration: with `aspect-ratio` and no
+          definite width, a height constraint makes the browser shrink the
+          WIDTH to keep the ratio, which left a black gap down the right-hand
+          side of wide screens.
+        */}
         <div
-          className={`relative overflow-hidden ${
-            anyImage ? 'aspect-[16/9] max-h-[78vh]' : 'min-h-[84px]'
+          className={`relative w-full overflow-hidden ${
+            anyImage ? 'aspect-[16/9]' : 'min-h-[84px]'
           }`}
         >
           {active.image && (
