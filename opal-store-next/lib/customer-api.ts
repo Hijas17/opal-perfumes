@@ -11,6 +11,7 @@ import type {
   Cart,
   Customer,
   Order,
+  PlacedOrder,
   ShippingDetails,
 } from './types'
 
@@ -146,13 +147,32 @@ export function emptyCart(): Cart {
 
 export async function placeOrder(payload: {
   shipping:        ShippingDetails
-  payment_method?: string
-}): Promise<Order> {
-  const r = await request<ApiEnvelope<Order>>('/customer/orders', {
-    method: 'POST',
-    body: { ...payload, payment_method: payload.payment_method || 'cod' },
-  })
+  payment_method?: 'cod' | 'card'
+}): Promise<PlacedOrder> {
+  const r = await request<ApiEnvelope<Order> & { checkout?: { client_secret: string } }>(
+    '/customer/orders',
+    {
+      method: 'POST',
+      body: { ...payload, payment_method: payload.payment_method || 'cod' },
+    },
+  )
   if (!r.data) throw new Error('No order returned')
+  // For `card` the API also returns a Checkout Session secret. The order
+  // exists but is unpaid until the webhook says otherwise.
+  return { order: r.data, clientSecret: r.checkout?.client_secret ?? null }
+}
+
+/**
+ * Look up an order by its Stripe Checkout Session id.
+ *
+ * Embedded Checkout returns the customer to `?session_id=...`, so the success
+ * page has no order id to work with until it resolves one this way.
+ */
+export async function fetchOrderBySession(sessionId: string): Promise<Order> {
+  const r = await request<ApiEnvelope<Order>>(
+    `/customer/orders/by-session/${encodeURIComponent(sessionId)}`,
+  )
+  if (!r.data) throw new Error('Order not found')
   return r.data
 }
 

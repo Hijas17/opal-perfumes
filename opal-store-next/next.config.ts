@@ -16,6 +16,15 @@ try {
   /* fall through to defaults */
 }
 
+// The browser talks to the PHP API directly, so its origin must be allowed by
+// connect-src or every fetch from the storefront is blocked.
+let apiOrigin = ''
+try {
+  apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api').origin
+} catch {
+  /* leave empty — 'self' still covers same-origin setups */
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
@@ -30,6 +39,43 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'drive.google.com' },
       { protocol: 'https', hostname: '**.googleusercontent.com' },
     ],
+  },
+
+  /**
+   * Content Security Policy.
+   *
+   * Stripe.js relies on the page having a CSP to hold up its own XSS
+   * protections, and the payment iframe simply will not load without
+   * `frame-src`/`script-src` entries for Stripe. `*.link.com` covers Link,
+   * Stripe's saved-details checkout.
+   *
+   * `'unsafe-inline'` on script-src is required by Next.js's inlined
+   * hydration bootstrap; tightening it means moving to nonces.
+   */
+  async headers() {
+    const csp = [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com`,
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      `img-src 'self' data: blob: https:`,
+      `connect-src 'self' https://api.stripe.com https://*.stripe.com ${apiOrigin}`.trim(),
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://*.link.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
+
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Content-Security-Policy', value: csp },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+    ]
   },
 
   // Performance

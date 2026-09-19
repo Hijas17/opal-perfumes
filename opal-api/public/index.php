@@ -12,6 +12,7 @@ use Opal\Controllers\MediaController;
 use Opal\Controllers\OrderController;
 use Opal\Controllers\ProductController;
 use Opal\Controllers\SettingsController;
+use Opal\Controllers\StripeWebhookController;
 use Opal\Middleware\AuthMiddleware;
 use Opal\Middleware\CustomerAuthMiddleware;
 use Opal\Middleware\StorefrontRevalidation;
@@ -133,6 +134,12 @@ $app->group('/api', function (RouteCollectorProxy $api) {
     // ── Public: Inquiries ────────────────────────────────────────────────────
     $api->post('/inquiries', [InquiryController::class, 'store']);
 
+    // ── Stripe webhook ───────────────────────────────────────────────────────
+    // Public by necessity — Stripe carries no JWT. Authenticated instead by
+    // the Stripe-Signature header, which the controller verifies before
+    // reading anything. Must stay OUTSIDE the customer auth group.
+    $api->post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
+
     // ── Customer auth (public — anyone can register/login) ──────────────────
     $api->post('/customer/register', [CustomerAuthController::class, 'register']);
     $api->post('/customer/login',    [CustomerAuthController::class, 'login']);
@@ -154,6 +161,8 @@ $app->group('/api', function (RouteCollectorProxy $api) {
         // Orders
         $cust->post('/orders',     [OrderController::class, 'place']);
         $cust->get ('/orders',     [OrderController::class, 'index']);
+        // Must precede /orders/{id} — Slim matches in registration order.
+        $cust->get ('/orders/by-session/{sessionId}', [OrderController::class, 'showBySession']);
         $cust->get ('/orders/{id}',[OrderController::class, 'show']);
     })->add(new CustomerAuthMiddleware());
 

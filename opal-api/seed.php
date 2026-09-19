@@ -150,6 +150,8 @@ $db->carts->createIndex(['customer_id' => 1], ['unique' => true]);
 $db->orders->createIndex(['customer_id' => 1, 'created_at' => -1]);
 $db->orders->createIndex(['order_number' => 1], ['unique' => true]);
 $db->orders->createIndex(['status' => 1]);
+// Sparse — only card orders carry a payment sub-document.
+$db->orders->createIndex(['payment.stripe_session_id' => 1], ['sparse' => true]);
 
 echo "  Indexes created.\n";
 

@@ -5,19 +5,27 @@ namespace Opal\Controllers;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Opal\Config\Database;
+use Opal\Config\Stripe as StripeConfig;
 use Opal\Helpers\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Customer-facing order endpoints. For now we only support cash-on-delivery —
- * the order is created from the current cart, the cart is cleared, and a
- * pending order is returned. Payment gateway integration will plug into
- * `place()` later by branching on `payment_method`.
+ * Customer-facing order endpoints.
+ *
+ * Two payment paths, both building the same order document from the
+ * server-side cart:
+ *
+ *  - `cod`  — order is placed outright and the cart is cleared immediately.
+ *  - `card` — order is written as `pending` and a Stripe Checkout Session is
+ *             returned for the browser to mount. The cart is *not* cleared
+ *             here; the webhook clears it once the money actually lands, so an
+ *             abandoned checkout leaves the basket intact.
  */
 class OrderController
 {
-    private const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+    private const ORDER_STATUSES  = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+    private const PAYMENT_METHODS = ['cod', 'card'];
 
     /** Create order from the current cart (customer-facing). */
     public function place(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
@@ -45,8 +53,12 @@ class OrderController
         }
 
         $paymentMethod = strtolower(trim($body['payment_method'] ?? 'cod'));
-        if ($paymentMethod !== 'cod') {
-            return Response::error($response, 'Only cash on delivery is supported at the moment.', 400);
+        if (!in_array($paymentMethod, self::PAYMENT_METHODS, true)) {
+            return Response::error($response, 'Unsupported payment method.', 400);
+        }
+        if ($paymentMethod === 'card' && !StripeConfig::isConfigured()) {
+            // Fail closed rather than writing an order nobody can ever pay for.
+            return Response::error($response, 'Card payment is not available right now.', 503);
         }
 
         try {
@@ -95,27 +107,49 @@ class OrderController
                 'shipping_fee'     => round($shippingFee, 2),
                 'total'            => round($total,       2),
                 'currency'         => $currency,
-                'payment_method'   => 'cod',
+                'payment_method'   => $paymentMethod,
                 'payment_status'   => 'pending',
                 'shipping'         => $shipping,
                 'status'           => 'pending',
                 'status_history'   => [
-                    ['status' => 'pending', 'note' => 'Order placed', 'at' => $now],
+                    ['status' => 'pending', 'note' => $paymentMethod === 'card'
+                        ? 'Order created — awaiting payment'
+                        : 'Order placed', 'at' => $now],
                 ],
                 'created_at'       => $now,
                 'updated_at'       => $now,
             ];
 
             $insert = $db->orders->insertOne($order);
-            $orderId = (string)$insert->getInsertedId();
+            $order['_id'] = $insert->getInsertedId();
 
-            // Empty the cart now that the order is placed
+            if ($paymentMethod === 'card') {
+                // The cart stays put until the webhook confirms payment.
+                $session = $this->createCheckoutSession($order, $shipping);
+
+                $db->orders->updateOne(
+                    ['_id' => $insert->getInsertedId()],
+                    ['$set' => [
+                        'payment.stripe_session_id' => $session->id,
+                        'updated_at'                => new UTCDateTime(),
+                    ]]
+                );
+
+                return Response::json($response, [
+                    'error' => false,
+                    'data'  => $this->serialize($order),
+                    // Stripe.js mounts embedded Checkout from this secret. It is
+                    // scoped to this one session and safe to hand to the browser.
+                    'checkout' => ['client_secret' => $session->client_secret],
+                ], 201);
+            }
+
+            // Cash on delivery — nothing else to collect, so empty the cart now.
             $db->carts->updateOne(
                 ['customer_id' => new ObjectId($customerId)],
                 ['$set' => ['items' => [], 'updated_at' => $now]]
             );
 
-            $order['_id'] = $insert->getInsertedId();
             return Response::json($response, [
                 'error' => false,
                 'data'  => $this->serialize($order),
@@ -174,7 +208,108 @@ class OrderController
         }
     }
 
+    /**
+     * Look up an order by its Stripe Checkout Session id.
+     *
+     * Embedded Checkout returns the customer to `?session_id=…`, not to an
+     * order id, so the success page needs this to show what was bought. It is
+     * scoped to the requesting customer like `show()` — a session id is not a
+     * capability to read someone else's order.
+     */
+    public function showBySession(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $customerId = $request->getAttribute('customer_id');
+        if (!$customerId) return Response::error($response, 'Unauthorised.', 401);
+
+        $sessionId = $args['sessionId'] ?? '';
+        if ($sessionId === '') return Response::error($response, 'Session id required.', 400);
+
+        try {
+            $order = Database::getInstance()->orders->findOne(
+                [
+                    'payment.stripe_session_id' => $sessionId,
+                    'customer_id'               => new ObjectId($customerId),
+                ],
+                ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
+            );
+            if (!$order) return Response::error($response, 'Order not found.', 404);
+
+            return Response::json($response, ['error' => false, 'data' => $this->serialize($order)]);
+        } catch (\Exception $e) {
+            return Response::error($response, 'Failed to fetch order: ' . $e->getMessage(), 500);
+        }
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Build an embedded Checkout Session from the order we just wrote.
+     *
+     * Line items are priced from the stored order, which was itself recomputed
+     * from the server-side cart — the client never gets a say in what is
+     * charged.
+     *
+     * Note there is no `payment_method_types`: omitting it turns on dynamic
+     * payment methods, so cards, Apple Pay, Google Pay and any regional method
+     * enabled in the Dashboard appear automatically, ranked per customer. It
+     * would be a mistake to pin this to `['card']`.
+     */
+    private function createCheckoutSession(array $order, array $shipping): \Stripe\Checkout\Session
+    {
+        $currency = strtolower($order['currency'] ?? 'AED');
+
+        $lineItems = [];
+        foreach ($order['items'] as $item) {
+            $product = ['name' => $item['name'] !== '' ? $item['name'] : 'Opal Perfumes item'];
+            // Stripe fetches these itself, so a bare upload filename is no use.
+            if (is_string($item['image'] ?? null) && str_starts_with($item['image'], 'http')) {
+                $product['images'] = [$item['image']];
+            }
+
+            $lineItems[] = [
+                'quantity'   => $item['quantity'],
+                'price_data' => [
+                    'currency'     => $currency,
+                    // Minor units. round() before the cast, or 14.99 * 100 lands
+                    // on 1498 through float representation.
+                    'unit_amount'  => (int) round($item['price'] * 100),
+                    'product_data' => $product,
+                ],
+            ];
+        }
+
+        if (($order['shipping_fee'] ?? 0) > 0) {
+            $lineItems[] = [
+                'quantity'   => 1,
+                'price_data' => [
+                    'currency'     => $currency,
+                    'unit_amount'  => (int) round($order['shipping_fee'] * 100),
+                    'product_data' => ['name' => 'Shipping'],
+                ],
+            ];
+        }
+
+        $params = [
+            'mode'                   => 'payment',
+            'ui_mode'                => 'embedded',
+            'line_items'             => $lineItems,
+            'return_url'             => StripeConfig::storefrontUrl()
+                . '/checkout/success?session_id={CHECKOUT_SESSION_ID}',
+            // Surfaces the order number in the Dashboard next to the payment.
+            'client_reference_id'    => $order['order_number'],
+            'metadata'               => [
+                'order_id'     => (string) $order['_id'],
+                'order_number' => $order['order_number'],
+            ],
+            'integration_identifier' => StripeConfig::INTEGRATION_IDENTIFIER,
+        ];
+
+        if (($shipping['email'] ?? '') !== '') {
+            $params['customer_email'] = $shipping['email'];
+        }
+
+        return StripeConfig::getClient()->checkout->sessions->create($params);
+    }
 
     private function generateOrderNumber(): string
     {
@@ -216,6 +351,12 @@ class OrderController
         $createdAt = $order['created_at'] ?? null;
         $updatedAt = $order['updated_at'] ?? null;
 
+        // Only the Stripe session id is exposed — the PaymentIntent id stays
+        // server-side, as it's the handle used for refunds and captures.
+        $payment = $order['payment'] ?? null;
+        if ($payment !== null && !is_array($payment)) $payment = iterator_to_array($payment);
+        $paidAt = $payment['paid_at'] ?? null;
+
         return [
             'id'              => isset($order['_id']) ? (string)$order['_id'] : '',
             'order_number'    => $order['order_number']  ?? '',
@@ -226,6 +367,12 @@ class OrderController
             'currency'        => $order['currency']        ?? 'AED',
             'payment_method'  => $order['payment_method']  ?? 'cod',
             'payment_status'  => $order['payment_status']  ?? 'pending',
+            'payment'         => $payment === null ? null : [
+                'stripe_session_id' => $payment['stripe_session_id'] ?? null,
+                'paid_at'           => $paidAt instanceof UTCDateTime
+                    ? $paidAt->toDateTime()->format(\DateTime::ATOM)
+                    : null,
+            ],
             'shipping'        => $shipping,
             'status'          => $order['status']          ?? 'pending',
             'status_history'  => $statusHistory,

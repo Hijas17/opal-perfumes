@@ -3,14 +3,16 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Lock, MessageCircle } from 'lucide-react'
+import { CreditCard, Lock, MessageCircle, Truck } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { useCart } from '@/components/CartProvider'
+import StripeCheckout from '@/components/StripeCheckout'
 import { placeOrder } from '@/lib/customer-api'
 import { formatPrice } from '@/lib/format'
 import { useMoney } from '@/components/CurrencyProvider'
 import {
   buildWhatsAppUrl,
+  cardPaymentEnabled,
   showPrices,
   useWhatsAppInquiry,
   whatsappFallback,
@@ -76,6 +78,15 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [error,    setError]    = useState('')
 
+  // Card is the default when Stripe is configured; cash on delivery is always
+  // available as a fallback.
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>(
+    cardPaymentEnabled ? 'card' : 'cod',
+  )
+  // Non-null once the API has minted a Checkout Session — that is the signal
+  // to swap the form out for Stripe's embedded payment UI.
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+
   // Redirect if not logged in
   useEffect(() => {
     if (!authLoading && !isLoggedIn) router.replace('/login?next=/checkout')
@@ -134,7 +145,21 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
 
     setSubmitting(true)
     try {
-      const order = await placeOrder({ shipping, payment_method: 'cod' })
+      const { order, clientSecret: secret } = await placeOrder({
+        shipping,
+        payment_method: paymentMethod,
+      })
+
+      if (secret) {
+        // Card: the order exists but is unpaid. Hand off to Stripe and leave
+        // the cart alone — the webhook clears it once payment lands, so
+        // abandoning here costs the customer nothing.
+        setClientSecret(secret)
+        setSubmitting(false)
+        return
+      }
+
+      // Cash on delivery: the API already cleared the cart.
       await refreshCart()
       router.push(`/checkout/success?order=${order.id}`)
     } catch (err) {
@@ -151,6 +176,21 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
     )
   }
 
+  // Payment step — Stripe's embedded Checkout replaces the shipping form.
+  if (clientSecret) {
+    return (
+      <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h1 className="font-display text-4xl font-semibold text-ink mb-2">Payment</h1>
+          <p className="text-sm text-muted mb-8">
+            Your order is reserved. Complete payment below to confirm it.
+          </p>
+          <StripeCheckout clientSecret={clientSecret} onCancel={() => setClientSecret(null)} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="pt-[var(--mobile-header-height)] md:pt-0 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -158,7 +198,9 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
         <p className="text-sm text-muted mb-8">
           {useWhatsAppInquiry
             ? 'Send your selection to us on WhatsApp — we\'ll confirm availability and arrange delivery.'
-            : 'Cash on delivery — pay when your order arrives.'}
+            : cardPaymentEnabled
+              ? 'Pay securely by card, or choose cash on delivery.'
+              : 'Cash on delivery — pay when your order arrives.'}
         </p>
 
         <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -189,13 +231,24 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
             {!useWhatsAppInquiry && (
               <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-card)]">
                 <h2 className="font-display text-xl font-semibold text-ink mb-3">Payment Method</h2>
-                <label className="flex items-start gap-3 p-4 border border-gold rounded-[var(--radius-card)] bg-surface-2/50">
-                  <input type="radio" name="payment" checked readOnly className="mt-0.5 accent-gold" />
-                  <span>
-                    <span className="block text-sm font-medium text-ink">Cash on Delivery</span>
-                    <span className="block text-xs text-muted mt-0.5">Pay when your order arrives at your door.</span>
-                  </span>
-                </label>
+                <div className="space-y-3">
+                  {cardPaymentEnabled && (
+                    <PaymentOption
+                      selected={paymentMethod === 'card'}
+                      onSelect={() => setPaymentMethod('card')}
+                      icon={<CreditCard className="w-4 h-4" />}
+                      title="Pay by Card"
+                      detail="Card, Apple Pay and Google Pay, secured by Stripe."
+                    />
+                  )}
+                  <PaymentOption
+                    selected={paymentMethod === 'cod'}
+                    onSelect={() => setPaymentMethod('cod')}
+                    icon={<Truck className="w-4 h-4" />}
+                    title="Cash on Delivery"
+                    detail="Pay when your order arrives at your door."
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -242,12 +295,12 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
                   {submitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Placing order…
+                      {paymentMethod === 'card' ? 'Preparing payment…' : 'Placing order…'}
                     </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4" />
-                      Place Order
+                      {paymentMethod === 'card' ? 'Continue to Payment' : 'Place Order'}
                     </>
                   )}
                 </button>
@@ -285,5 +338,42 @@ function Field(props: {
         className="w-full border border-line rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
       />
     </div>
+  )
+}
+
+/**
+ * A selectable payment method row. A real radio input drives it so keyboard
+ * and screen-reader behaviour comes for free — the styling hangs off
+ * `selected` rather than replacing the control with a div.
+ */
+function PaymentOption(props: {
+  selected: boolean
+  onSelect: () => void
+  icon:     React.ReactNode
+  title:    string
+  detail:   string
+}) {
+  const { selected, onSelect, icon, title, detail } = props
+  return (
+    <label
+      className={`flex items-start gap-3 p-4 border rounded-[var(--radius-card)] cursor-pointer transition-colors ${
+        selected ? 'border-gold bg-surface-2/50' : 'border-line hover:border-gold/50'
+      }`}
+    >
+      <input
+        type="radio"
+        name="payment"
+        checked={selected}
+        onChange={onSelect}
+        className="mt-0.5 accent-gold"
+      />
+      <span className="flex-1">
+        <span className="flex items-center gap-2 text-sm font-medium text-ink">
+          {icon}
+          {title}
+        </span>
+        <span className="block text-xs text-muted mt-0.5">{detail}</span>
+      </span>
+    </label>
   )
 }

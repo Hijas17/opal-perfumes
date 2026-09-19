@@ -29,6 +29,20 @@ export const comingSoon = process.env.NEXT_PUBLIC_COMING_SOON === 'true'
 export const whatsappFallback = process.env.NEXT_PUBLIC_WHATSAPP_FALLBACK ?? ''
 
 /**
+ * Stripe publishable key. Safe to ship to the browser by design — it can only
+ * create tokens, never move money. The secret key lives in the API's env and
+ * must never be given a NEXT_PUBLIC_ name.
+ */
+export const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
+
+/**
+ * Card payment is offered only when a publishable key is configured. Without
+ * one the checkout shows cash on delivery alone, rather than a card option
+ * that would fail the moment it was clicked.
+ */
+export const cardPaymentEnabled = stripePublishableKey !== ''
+
+/**
  * Build a wa.me link with a pre-filled message.
  * Number may include `+`, spaces, parens — they're stripped.
  */
