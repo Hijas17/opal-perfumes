@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 
 import { getSettings, getProducts, getCategories } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
+import type { HeroSlideSetting } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
 import HeroSlideshow, { type HeroSlide } from '@/components/HeroSlideshow'
 import PromoBanner, { type PromoBannerItem } from '@/components/PromoBanner'
@@ -82,6 +83,17 @@ export default async function HomePage() {
     : []
 
   // ── Hero slides ────────────────────────────────────────────────────────
+  // object-position for a slide: the dragged focal point, else the older
+  // left/centre/right setting, else the centre.
+  const heroPosition = (slide: HeroSlideSetting): string | undefined => {
+    const pct = (n: unknown) =>
+      typeof n === 'number' && Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50
+    if (slide.focal) return `${pct(slide.focal.x)}% ${pct(slide.focal.y)}%`
+    if (slide.focus === 'left') return '0% 50%'
+    if (slide.focus === 'right') return '100% 50%'
+    return undefined
+  }
+
   // Admin-managed via Settings › Home Media. Falls back to the legacy single
   // hero_* fields so the page still renders before any slides are configured.
   const adminSlides = Array.isArray(s.home_hero_slides) ? s.home_hero_slides : []
@@ -90,7 +102,7 @@ export default async function HomePage() {
     .map((slide) => ({
       image: getImageUrl(slide.image!) ?? '',
       mobileImage: (slide.mobile_image && getImageUrl(slide.mobile_image)) || undefined,
-      focus: slide.focus,
+      position: heroPosition(slide),
       eyebrow: slide.eyebrow || undefined,
       headline: (slide.headline || '').replace(/\n/g, ' '),
       subtext: slide.subtext || undefined,

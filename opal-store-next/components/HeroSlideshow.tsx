@@ -11,33 +11,26 @@
  * prefers-reduced-motion.
  *
  * The hero fills the viewport, so on a portrait phone a landscape image is
- * cropped to a narrow vertical slice of its middle. Two admin options deal
- * with that without shrinking the image: a separate portrait `mobileImage`
- * swapped in on portrait screens (as the reference store does), and a
- * `focus` side that decides which slice of the landscape image survives.
+ * cropped to a narrow vertical slice of its middle (and on a wide desktop, to
+ * a horizontal band). Two admin options deal with that without shrinking the
+ * image: a separate portrait `mobileImage` swapped in on portrait screens (as
+ * the reference store does), and a `position` the admin sets by dragging the
+ * image in phone- and desktop-shaped previews.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const AUTOPLAY_MS = 4000
 
-export type HeroFocus = 'left' | 'center' | 'right'
-
-const FOCUS_CLASS: Record<HeroFocus, string> = {
-  left: 'object-left',
-  center: 'object-center',
-  right: 'object-right',
-}
-
 export interface HeroSlide {
   image: string
   /** Portrait artwork for portrait screens; falls back to `image`. */
   mobileImage?: string
-  /** Side of `image` to keep when it is cropped. Defaults to the centre. */
-  focus?: HeroFocus
+  /** CSS object-position for `image`, e.g. "20% 50%". Defaults to the centre. */
+  position?: string
   eyebrow?: string
   headline: string
   subtext?: string
@@ -102,9 +95,12 @@ export default function HeroSlideshow({ slides }: Props) {
               src={slide.image}
               alt=""
               aria-hidden
+              // The position was chosen against the landscape image; the
+              // portrait one is framed for phones already, so centre it there.
+              style={{ '--hero-pos': slide.position ?? '50% 50%' } as CSSProperties}
               className={cn(
-                'absolute inset-0 h-full w-full object-cover',
-                FOCUS_CLASS[slide.focus ?? 'center'] ?? FOCUS_CLASS.center,
+                'absolute inset-0 h-full w-full object-cover [object-position:var(--hero-pos)]',
+                slide.mobileImage && 'portrait:[object-position:50%_50%]',
               )}
             />
           </picture>

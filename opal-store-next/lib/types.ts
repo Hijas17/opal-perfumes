@@ -81,7 +81,12 @@ export interface HeroSlideSetting {
   image?: string
   /** Optional portrait artwork shown instead of `image` on portrait screens. */
   mobile_image?: string
-  /** Which part of `image` to keep when a portrait screen crops it. */
+  /**
+   * Where `image` is anchored when cropped, as percentages for CSS
+   * object-position — set by dragging in the admin's preview frames.
+   */
+  focal?: { x?: number; y?: number }
+  /** Older left/centre/right setting, superseded by `focal`. */
   focus?: 'left' | 'center' | 'right'
   eyebrow?: string
   headline?: string

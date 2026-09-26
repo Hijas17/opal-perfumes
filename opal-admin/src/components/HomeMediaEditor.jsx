@@ -2,6 +2,8 @@ import React from 'react'
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 
 import MediaField from './MediaField.jsx'
+import FocalPointPicker from './FocalPointPicker.jsx'
+import { UPLOADS_URL } from '../api/index.js'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
 import { Textarea } from './ui/textarea.jsx'
@@ -21,15 +23,20 @@ const MAX_SLIDES = 8
 const MAX_BANNERS = 6
 
 const EMPTY_SLIDE = {
-  image: '', mobile_image: '', focus: 'center',
+  image: '', mobile_image: '', focal: { x: 50, y: 50 },
   eyebrow: '', headline: '', subtext: '', cta_label: 'Explore', cta_href: '/products',
 }
 
-const FOCUS_OPTIONS = [
-  { value: 'left',   label: 'Left' },
-  { value: 'center', label: 'Centre' },
-  { value: 'right',  label: 'Right' },
-]
+/**
+ * The slide's saved position, reading the older left/centre/right `focus`
+ * for slides saved before the drag picker existed.
+ */
+function slideFocal(slide) {
+  if (slide.focal && typeof slide.focal === 'object') return slide.focal
+  return { x: { left: 0, right: 100 }[slide.focus] ?? 50, y: 50 }
+}
+
+const mediaUrl = (v) => (v && !v.startsWith('http') ? `${UPLOADS_URL}/${v}` : v)
 const EMPTY_SIDE = { image: '', label: '', href: '/products' }
 const EMPTY_BANNER = { image: '', headline: '', subtext: '', promo_code: '', href: '/products' }
 
@@ -246,9 +253,10 @@ export default function HomeMediaEditor({ settings, onChange }) {
           a single slide simply stays put. Landscape images work best — around 2400×1350.
         </p>
         <p className="mb-4 text-xs text-muted-foreground">
-          A phone held upright only shows a narrow strip of a landscape image.
-          Add a <strong>portrait image</strong> (around 1080×1350) to show on
-          phones instead, or choose which side of the landscape image to keep.
+          Phones and desktops crop the image differently — drag it in the two
+          previews so the important part stays visible on both. For the best
+          result on phones, also add a <strong>portrait image</strong> (around
+          1080×1350); it replaces the landscape one on upright phones.
         </p>
 
         {slides.length === 0 ? (
@@ -278,33 +286,6 @@ export default function HomeMediaEditor({ settings, onChange }) {
                       value={slide.mobile_image || ''}
                       onChange={(v) => updateItem('home_hero_slides', slides, i, 'mobile_image', v)}
                     />
-                    <div>
-                      <Label className="mb-1.5 block">
-                        Keep this side on phones
-                        <span className="ml-1 font-normal text-xs text-muted-foreground">
-                          (when there is no phone image)
-                        </span>
-                      </Label>
-                      <div className="inline-flex rounded-md border border-border p-0.5">
-                        {FOCUS_OPTIONS.map((opt) => {
-                          const active = (slide.focus || 'center') === opt.value
-                          return (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              aria-pressed={active}
-                              onClick={() => updateItem('home_hero_slides', slides, i, 'focus', opt.value)}
-                              className={
-                                'rounded px-3 py-1 text-sm transition-colors ' +
-                                (active ? 'bg-gold text-white' : 'text-muted-foreground hover:text-foreground')
-                              }
-                            >
-                              {opt.label}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
                   </div>
                   <div className="space-y-3">
                     <div>
@@ -325,6 +306,23 @@ export default function HomeMediaEditor({ settings, onChange }) {
                     </div>
                   </div>
                 </div>
+
+                {slide.image && (
+                  <div className="mt-4">
+                    <Label className="mb-1.5 block">Position</Label>
+                    <FocalPointPicker
+                      src={mediaUrl(slide.image)}
+                      value={slideFocal(slide)}
+                      onChange={(v) => updateItem('home_hero_slides', slides, i, 'focal', v)}
+                    />
+                    {slide.mobile_image && (
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Upright phones show the portrait image instead, so only
+                        the Desktop preview matters while it is set.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-3">
                   <Label className="mb-1.5 block">Subtext</Label>
