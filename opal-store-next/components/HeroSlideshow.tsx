@@ -9,6 +9,12 @@
  *
  * Autoplay pauses on hover/focus and is disabled entirely under
  * prefers-reduced-motion.
+ *
+ * The hero fills the viewport, so on a portrait phone a landscape image is
+ * cropped to a narrow vertical slice of its middle. Two admin options deal
+ * with that without shrinking the image: a separate portrait `mobileImage`
+ * swapped in on portrait screens (as the reference store does), and a
+ * `focus` side that decides which slice of the landscape image survives.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -18,8 +24,20 @@ import { cn } from '@/lib/utils'
 
 const AUTOPLAY_MS = 4000
 
+export type HeroFocus = 'left' | 'center' | 'right'
+
+const FOCUS_CLASS: Record<HeroFocus, string> = {
+  left: 'object-left',
+  center: 'object-center',
+  right: 'object-right',
+}
+
 export interface HeroSlide {
   image: string
+  /** Portrait artwork for portrait screens; falls back to `image`. */
+  mobileImage?: string
+  /** Side of `image` to keep when it is cropped. Defaults to the centre. */
+  focus?: HeroFocus
   eyebrow?: string
   headline: string
   subtext?: string
@@ -76,8 +94,20 @@ export default function HeroSlideshow({ slides }: Props) {
         >
           {/* Plain <img> — these are full-bleed decorative backgrounds and we
               want the very first frame painted without the optimiser in the way. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={slide.image} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+          <picture>
+            {/* Orientation rather than width: a phone turned sideways is a
+                landscape box and the landscape image already fits it. */}
+            {slide.mobileImage && <source media="(orientation: portrait)" srcSet={slide.mobileImage} />}
+            <img
+              src={slide.image}
+              alt=""
+              aria-hidden
+              className={cn(
+                'absolute inset-0 h-full w-full object-cover',
+                FOCUS_CLASS[slide.focus ?? 'center'] ?? FOCUS_CLASS.center,
+              )}
+            />
+          </picture>
           <div className="absolute inset-0 bg-black/55" aria-hidden />
 
           <div className="relative flex h-full flex-col items-center justify-center gap-6 px-6 text-center">

@@ -79,6 +79,10 @@ export interface Category {
 
 export interface HeroSlideSetting {
   image?: string
+  /** Optional portrait artwork shown instead of `image` on portrait screens. */
+  mobile_image?: string
+  /** Which part of `image` to keep when a portrait screen crops it. */
+  focus?: 'left' | 'center' | 'right'
   eyebrow?: string
   headline?: string
   subtext?: string

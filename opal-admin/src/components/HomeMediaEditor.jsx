@@ -21,8 +21,15 @@ const MAX_SLIDES = 8
 const MAX_BANNERS = 6
 
 const EMPTY_SLIDE = {
-  image: '', eyebrow: '', headline: '', subtext: '', cta_label: 'Explore', cta_href: '/products',
+  image: '', mobile_image: '', focus: 'center',
+  eyebrow: '', headline: '', subtext: '', cta_label: 'Explore', cta_href: '/products',
 }
+
+const FOCUS_OPTIONS = [
+  { value: 'left',   label: 'Left' },
+  { value: 'center', label: 'Centre' },
+  { value: 'right',  label: 'Right' },
+]
 const EMPTY_SIDE = { image: '', label: '', href: '/products' }
 const EMPTY_BANNER = { image: '', headline: '', subtext: '', promo_code: '', href: '/products' }
 
@@ -238,6 +245,11 @@ export default function HomeMediaEditor({ settings, onChange }) {
           Full-width slides at the top of the home page. They rotate every 4 seconds;
           a single slide simply stays put. Landscape images work best — around 2400×1350.
         </p>
+        <p className="mb-4 text-xs text-muted-foreground">
+          A phone held upright only shows a narrow strip of a landscape image.
+          Add a <strong>portrait image</strong> (around 1080×1350) to show on
+          phones instead, or choose which side of the landscape image to keep.
+        </p>
 
         {slides.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
@@ -255,11 +267,45 @@ export default function HomeMediaEditor({ settings, onChange }) {
                 onRemove={(idx) => removeItem('home_hero_slides', slides, idx)}
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <MediaField
-                    label="Image"
-                    value={slide.image || ''}
-                    onChange={(v) => updateItem('home_hero_slides', slides, i, 'image', v)}
-                  />
+                  <div className="space-y-4">
+                    <MediaField
+                      label="Image (landscape)"
+                      value={slide.image || ''}
+                      onChange={(v) => updateItem('home_hero_slides', slides, i, 'image', v)}
+                    />
+                    <MediaField
+                      label="Phone image (portrait, optional)"
+                      value={slide.mobile_image || ''}
+                      onChange={(v) => updateItem('home_hero_slides', slides, i, 'mobile_image', v)}
+                    />
+                    <div>
+                      <Label className="mb-1.5 block">
+                        Keep this side on phones
+                        <span className="ml-1 font-normal text-xs text-muted-foreground">
+                          (when there is no phone image)
+                        </span>
+                      </Label>
+                      <div className="inline-flex rounded-md border border-border p-0.5">
+                        {FOCUS_OPTIONS.map((opt) => {
+                          const active = (slide.focus || 'center') === opt.value
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => updateItem('home_hero_slides', slides, i, 'focus', opt.value)}
+                              className={
+                                'rounded px-3 py-1 text-sm transition-colors ' +
+                                (active ? 'bg-gold text-white' : 'text-muted-foreground hover:text-foreground')
+                              }
+                            >
+                              {opt.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3">
                     <div>
                       <Label className="mb-1.5 block">Eyebrow</Label>

@@ -99,8 +99,8 @@ export default function Navbar({ categories }: NavbarProps) {
       {/* ── Row 1 ─────────────────────────────────────────────────────── */}
       <div className="container-page--xl mx-auto flex items-center justify-between px-4 py-4 md:px-12 md:py-6">
         {/* Left cluster. Below md the delivery controls give way to the
-            hamburger + search (they move into the menu drawer). Both side
-            clusters share a width so the logo stays centred. */}
+            hamburger + search (they get their own strip under this row).
+            Both side clusters share a width so the logo stays centred. */}
         <div className="flex w-28 items-center gap-3 md:w-60 lg:w-80">
           <button
             type="button"
@@ -203,6 +203,15 @@ export default function Navbar({ categories }: NavbarProps) {
             )}
           </button>
         </div>
+      </div>
+
+      {/* ── Delivery strip, narrow screens only ────────────────────────
+          On desktop these sit in row 1's left cluster; below md there is no
+          room beside the logo, and hiding them in the menu meant shoppers
+          never saw them. */}
+      <div className="flex items-center gap-5 border-t border-line-soft px-4 py-2.5 md:hidden">
+        <CountryLabel />
+        <LocationButton fullLabel />
       </div>
 
       {/* ── Row 2 — primary nav ───────────────────────────────────────── */}

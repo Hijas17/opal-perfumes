@@ -89,6 +89,8 @@ export default async function HomePage() {
     .filter((slide) => slide?.image)
     .map((slide) => ({
       image: getImageUrl(slide.image!) ?? '',
+      mobileImage: (slide.mobile_image && getImageUrl(slide.mobile_image)) || undefined,
+      focus: slide.focus,
       eyebrow: slide.eyebrow || undefined,
       headline: (slide.headline || '').replace(/\n/g, ' '),
       subtext: slide.subtext || undefined,
