@@ -30,8 +30,7 @@ import {
 import FreeShippingBar from './FreeShippingBar'
 import QuantitySelector from './QuantitySelector'
 import { useMoney } from './CurrencyProvider'
-
-const DEFAULT_THRESHOLD = 250
+import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/shipping'
 
 interface Props {
   open: boolean
@@ -44,7 +43,7 @@ export default function CartDrawer({
   open,
   onClose,
   whatsappNumber,
-  freeShippingThreshold = DEFAULT_THRESHOLD,
+  freeShippingThreshold = DEFAULT_FREE_SHIPPING_THRESHOLD,
 }: Props) {
   const money = useMoney()
   const { cart, update, remove } = useCart()

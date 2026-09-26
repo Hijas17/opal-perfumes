@@ -20,6 +20,10 @@ class SettingsController
         'youtube_url',
         'whatsapp_number',
         'currency',
+        // Shipping — the storefront previews the fee with these; the order
+        // API charges from the same keys via Settings::shippingFee().
+        'shipping_fee',
+        'free_shipping_threshold',
         // Home page
         'hero_image',
         'hero_bottle_image',
@@ -96,6 +100,20 @@ class SettingsController
 
         if (empty($body) || !is_array($body)) {
             return Response::error($response, 'Request body must be a JSON object of key-value pairs.', 400);
+        }
+
+        // Money settings the order API charges from: refuse anything that is
+        // not a non-negative number rather than store it and fall back later.
+        // A blank threshold is allowed and means "no free shipping".
+        foreach (['shipping_fee', 'free_shipping_threshold'] as $moneyKey) {
+            if (!array_key_exists($moneyKey, $body)) continue;
+            $v = $body[$moneyKey];
+            if ($moneyKey === 'free_shipping_threshold' && ($v === '' || $v === null)) continue;
+            if (!is_numeric($v) || (float)$v < 0) {
+                $label = $moneyKey === 'shipping_fee' ? 'Shipping fee' : 'Free shipping threshold';
+                return Response::error($response, "{$label} must be a number of 0 or more.", 400);
+            }
+            $body[$moneyKey] = round((float)$v, 2);
         }
 
         try {

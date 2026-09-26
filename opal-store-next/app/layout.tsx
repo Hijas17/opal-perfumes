@@ -13,6 +13,7 @@ import CurrencyProvider from '@/components/CurrencyProvider'
 import LocationProvider from '@/components/LocationProvider'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { getCategories, getSettings } from '@/lib/api'
+import { shippingRates } from '@/lib/shipping'
 
 // ─── Brand fonts (self-hosted so builds never depend on Google's CDN) ──────
 // Per the Opal brand guide:
@@ -143,7 +144,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthProvider>
           <CartProvider>
             <SearchProvider>
-              <CartDrawerProvider whatsappNumber={settings.whatsapp_number}>
+              <CartDrawerProvider
+                whatsappNumber={settings.whatsapp_number}
+                freeShippingThreshold={shippingRates(settings).freeOver ?? 0}
+              >
                 <Preloader brandName={settings.brand_name || 'Opal'} />
                 <Navbar categories={categories} />
                 <main className="flex-1">{children}</main>

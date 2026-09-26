@@ -10,6 +10,7 @@ use Opal\Helpers\CartResolver;
 use Opal\Helpers\Coupons;
 use Opal\Helpers\OrderNotifier;
 use Opal\Helpers\Response;
+use Opal\Helpers\Settings;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -113,7 +114,7 @@ class OrderController
                 ];
             }
 
-            $shippingFee = 0.0;            // free shipping for now
+            $shippingFee = Settings::shippingFee($subtotal);
 
             // The coupon is re-checked here against the cart as it stands,
             // never taken from what the browser previewed. Between the preview

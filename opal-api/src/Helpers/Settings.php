@@ -13,6 +13,12 @@ use Opal\Config\Database;
  */
 class Settings
 {
+    /** Used until the admin sets `shipping_fee`. */
+    public const DEFAULT_SHIPPING_FEE = 30.0;
+
+    /** Used until the admin sets `free_shipping_threshold`. */
+    public const DEFAULT_FREE_SHIPPING_THRESHOLD = 149.0;
+
     /** Per-request cache — a single order email reads several keys. */
     private static array $cache = [];
 
@@ -37,6 +43,35 @@ class Settings
         }
 
         return self::$cache[$key] = $value;
+    }
+
+    /**
+     * Delivery charge for an order with this subtotal (before any discount).
+     *
+     * The flat `shipping_fee` applies unless the subtotal reaches
+     * `free_shipping_threshold`. A blank or zero threshold means there is no
+     * free-shipping level; an unset one falls back to the default. The
+     * storefront mirrors this in lib/shipping.ts to preview the fee — keep the
+     * two in step, though this is the one that is actually charged.
+     */
+    public static function shippingFee(float $subtotal): float
+    {
+        $fee = self::get('shipping_fee');
+        $fee = is_numeric($fee) && (float)$fee >= 0 ? (float)$fee : self::DEFAULT_SHIPPING_FEE;
+
+        $threshold = self::get('free_shipping_threshold');
+        if ($threshold === null) {
+            $threshold = self::DEFAULT_FREE_SHIPPING_THRESHOLD;
+        } elseif (!is_numeric($threshold) || (float)$threshold <= 0) {
+            $threshold = null;
+        } else {
+            $threshold = (float)$threshold;
+        }
+
+        if ($threshold !== null && $subtotal >= $threshold) {
+            return 0.0;
+        }
+        return round($fee, 2);
     }
 
     /**

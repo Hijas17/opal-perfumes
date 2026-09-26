@@ -19,10 +19,12 @@ import {
   whatsappFallback,
 } from '@/lib/config'
 import type { Cart, ShippingDetails } from '@/lib/types'
+import { shippingFeeFor, type ShippingRates } from '@/lib/shipping'
 
 interface Props {
   whatsappNumber: string
   brandName: string
+  shippingRates: ShippingRates
 }
 
 /**
@@ -63,7 +65,7 @@ function buildInquiryMessage(
   return lines.join('\n')
 }
 
-export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
+export default function CheckoutForm({ whatsappNumber, brandName, shippingRates }: Props) {
   const money = useMoney()
   const router = useRouter()
   const { customer, isLoggedIn, loading: authLoading } = useAuth()
@@ -136,7 +138,9 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   }, [cart.subtotal, cart.item_count])
 
   const discount = applied?.discount ?? 0
-  const total = Math.max(0, cart.subtotal - discount)
+  // A preview — the API works out the fee it actually charges the same way.
+  const shippingFee = shippingFeeFor(cart.subtotal, shippingRates)
+  const total = Math.max(0, cart.subtotal - discount + shippingFee)
 
   // Redirect if not logged in
   useEffect(() => {
@@ -397,11 +401,23 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
                         <dd>-{money(discount, cart.currency)}</dd>
                       </div>
                     )}
-                    <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd className="text-green-700">Free</dd></div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted">Shipping</dt>
+                      {shippingFee > 0
+                        ? <dd>{money(shippingFee, cart.currency)}</dd>
+                        : <dd className="text-green-700">Free</dd>}
+                    </div>
                   </dl>
-                  <div className="border-t border-line pt-3 mt-3 mb-6 flex justify-between text-base">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-semibold text-gold">{money(total, cart.currency)}</span>
+                  <div className="border-t border-line pt-3 mt-3 mb-6">
+                    <div className="flex justify-between text-base">
+                      <span className="font-semibold">Total</span>
+                      <span className="font-semibold text-gold">{money(total, cart.currency)}</span>
+                    </div>
+                    {shippingFee > 0 && shippingRates.freeOver !== null && (
+                      <p className="mt-2 text-xs text-muted-2">
+                        Free shipping on orders of {money(shippingRates.freeOver, cart.currency)} or more.
+                      </p>
+                    )}
                   </div>
                 </>
               )}

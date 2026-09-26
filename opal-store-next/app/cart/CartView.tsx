@@ -23,9 +23,8 @@ import {
 import FreeShippingBar from '@/components/FreeShippingBar'
 import QuantitySelector from '@/components/QuantitySelector'
 import type { SiteSettings } from '@/lib/types'
+import { shippingRates } from '@/lib/shipping'
 import { useMoney } from '@/components/CurrencyProvider'
-
-const DEFAULT_THRESHOLD = 250
 
 interface Props {
   settings: SiteSettings
@@ -42,7 +41,8 @@ export default function CartView({ settings }: Props) {
     ? buildWhatsAppUrl(waNumber, buildCartInquiryMessage(cart.items))
     : null
 
-  const threshold = Number(settings.free_shipping_threshold) || DEFAULT_THRESHOLD
+  // 0 hides the bar — the admin has switched free shipping off.
+  const threshold = shippingRates(settings).freeOver ?? 0
 
   async function changeQty(productId: string, q: number) {
     setBusyId(productId)

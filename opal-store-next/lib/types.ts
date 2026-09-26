@@ -119,6 +119,11 @@ export interface SiteSettings {
   footer_tagline?: string
   currency?: string
 
+  // Shipping (admin Settings → Shipping; see lib/shipping.ts). Numbers once
+  // saved from the admin; a blank threshold means no free-shipping level.
+  shipping_fee?: number | string
+  free_shipping_threshold?: number | string | null
+
   // Contact
   contact_email?: string
   contact_phone?: string

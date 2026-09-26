@@ -15,8 +15,13 @@ import {
 } from '../components/ui/select.jsx'
 import { cn } from '../lib/utils.js'
 
+// Mirror Settings::DEFAULT_* in the API — shown until the admin saves a value.
+const DEFAULT_SHIPPING_FEE = 30
+const DEFAULT_FREE_SHIPPING_THRESHOLD = 149
+
 const SECTION_LABELS = {
   general:   'General',
+  shipping:  'Shipping',
   notify:    'Notifications',
   home:      'Home Page',
   homeMedia: 'Home Media',
@@ -224,6 +229,52 @@ export default function Settings() {
           <Label>Footer Tagline</Label>
           <Input value={s.footer_tagline || ''} onChange={(e) => handleChange('footer_tagline', e.target.value)} placeholder="Luxury fragrances for every moment" />
         </div>
+      </div>
+    ),
+
+    shipping: (
+      <div className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>Shipping Fee ({s.currency || 'AED'})</Label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={s.shipping_fee ?? DEFAULT_SHIPPING_FEE}
+              onChange={(e) => handleChange('shipping_fee', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Charged on every order below the free-shipping amount. Set 0 to
+              make all delivery free.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Free Shipping From ({s.currency || 'AED'})</Label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              // Unset (never saved) shows the default the API applies; a
+              // cleared field stays blank, which means no free shipping.
+              value={s.free_shipping_threshold ?? DEFAULT_FREE_SHIPPING_THRESHOLD}
+              onChange={(e) => handleChange('free_shipping_threshold', e.target.value)}
+              placeholder="No free shipping"
+            />
+            <p className="text-xs text-muted-foreground">
+              Orders whose subtotal (before discounts) reaches this amount ship
+              free. Leave blank to always charge the fee.
+            </p>
+          </div>
+        </div>
+        <p className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          The storefront's cart shows customers how far they are from free
+          shipping, and checkout shows the fee before they pay. Changes apply
+          to new orders only — orders already placed keep the fee they were
+          charged.
+        </p>
       </div>
     ),
 

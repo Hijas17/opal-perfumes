@@ -238,7 +238,7 @@ Placed orders. One document per order.
 | `subtotal` | float | ✓ | Sum of `price × quantity` for all items |
 | `discount` | float | ✓ | `0` when no promo code was used |
 | `coupon` | object \| null | ✗ | Snapshot of the code applied — see below |
-| `shipping_fee` | float | ✓ | Currently always `0` (free shipping). Future: tiered |
+| `shipping_fee` | float | ✓ | Flat `shipping_fee` setting (default 30), or `0` once the subtotal reaches `free_shipping_threshold` (default 149). See `Settings::shippingFee()` |
 | `total` | float | ✓ | `subtotal - discount + shipping_fee`, floored at 0 |
 | `currency` | string | ✓ | ISO 4217 |
 | `payment_method` | string | ✓ | Enum: `cod`, `card` (Stripe Checkout) |
