@@ -209,25 +209,6 @@ h6 { font-size: var(--text-h6); }
 }
 .section-soft--raised { --section-soft-tint: var(--color-surface-2); }
 
-/* Hairline that fades out towards both ends, for places that still want a
-   divider — the trust row — without the hard edge-to-edge rule. */
-.section-rule-top { position: relative; }
-.section-rule-top::before {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--color-line) 25%,
-    var(--color-line) 75%,
-    transparent
-  );
-  pointer-events: none;
-}
-
 @media (max-width: 699px) {
   :root { --container-gutter: 1rem; }
 }

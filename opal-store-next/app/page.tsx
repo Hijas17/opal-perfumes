@@ -297,22 +297,6 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-
-        {/* Trust row */}
-        <section className="section-rule-top py-12">
-          <div className="container-page grid grid-cols-1 gap-10 text-center md:grid-cols-3">
-            {[
-              { t: 'International Shipping', d: 'Worldwide shipping — customs and duties excluded.' },
-              { t: 'Customer Service',       d: 'Get in touch with us on WhatsApp.' },
-              { t: 'Secure Payment',         d: 'Your payment information is processed securely.' },
-            ].map((item) => (
-              <div key={item.t} className="flex flex-col gap-2">
-                <h3 className="h6">{item.t}</h3>
-                <p className="text-sm text-muted">{item.d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   )
