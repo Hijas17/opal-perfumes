@@ -13,12 +13,43 @@ import { Move } from 'lucide-react'
  *   - the PHONE frame is tall, so the image overflows sideways → drag left/right;
  *   - the DESKTOP frame is wide, so it overflows top/bottom → drag up/down.
  *
- * One {x, y} (0–100) drives both, since each frame only crops along one axis.
- * Frame shapes approximate the real hero: an upright phone below the header,
- * and a typical laptop/desktop window.
+ * One {x, y} (0–100) drives every frame, since each only crops along one axis.
+ * Pass `frames` shaped like the places the image really appears — the presets
+ * below approximate each storefront section.
  */
 
 const clamp = (n) => Math.max(0, Math.min(100, n))
+
+const PHONE_W = 'w-[130px]'
+const WIDE_W = 'w-[260px] max-w-full'
+
+/** Frame shapes per storefront placement, as { label, className }. */
+export const FRAMES = {
+  // Home hero: full viewport under the header.
+  hero: [
+    { label: 'Phone',   className: `aspect-[9/14] ${PHONE_W}` },
+    { label: 'Desktop', className: `aspect-[2/1] ${WIDE_W}` },
+  ],
+  // About Us banner: 60% of the viewport height, full width.
+  aboutHero: [
+    { label: 'Phone',   className: `aspect-[3/4] ${PHONE_W}` },
+    { label: 'Desktop', className: `aspect-[8/3] ${WIDE_W}` },
+  ],
+  // Half of a 50/50 image-with-text row: 4:3 on phones, roughly 7:5 on desktop.
+  halfSplit: [
+    { label: 'Phone',   className: `aspect-[4/3] w-[180px]` },
+    { label: 'Desktop', className: `aspect-[7/5] w-[220px]` },
+  ],
+  // Full-section backgrounds behind product rows: tall on phones, wide on desktop.
+  backdrop: [
+    { label: 'Phone',   className: `aspect-[9/16] ${PHONE_W}` },
+    { label: 'Desktop', className: `aspect-[16/9] ${WIDE_W}` },
+  ],
+  // Fixed 16:9 on every screen (promo banners, before/after).
+  wide: [
+    { label: 'All screens', className: `aspect-[16/9] ${WIDE_W}` },
+  ],
+}
 
 function Frame({ src, pos, onChange, label, className }) {
   const boxRef = useRef(null)
@@ -102,24 +133,39 @@ function Frame({ src, pos, onChange, label, className }) {
   )
 }
 
-export default function FocalPointPicker({ src, value, onChange }) {
+/**
+ * @param frames       one of FRAMES (defaults to the hero's)
+ * @param defaultValue position used until the admin drags — and what
+ *                     "Reset" returns to — matching the storefront's fallback
+ */
+export default function FocalPointPicker({
+  src,
+  value,
+  onChange,
+  frames = FRAMES.hero,
+  defaultValue = { x: 50, y: 50 },
+}) {
   const pos = {
-    x: Number.isFinite(value?.x) ? value.x : 50,
-    y: Number.isFinite(value?.y) ? value.y : 50,
+    x: Number.isFinite(value?.x) ? value.x : defaultValue.x,
+    y: Number.isFinite(value?.y) ? value.y : defaultValue.y,
   }
-  const centred = pos.x === 50 && pos.y === 50
+  const atDefault = pos.x === defaultValue.x && pos.y === defaultValue.y
+  const many = frames.length > 1
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-end gap-4">
-        <Frame src={src} pos={pos} onChange={onChange} label="Phone" className="aspect-[9/14] w-[130px]" />
-        <Frame src={src} pos={pos} onChange={onChange} label="Desktop" className="aspect-[2/1] w-[260px] max-w-full" />
+        {frames.map((f) => (
+          <Frame key={f.label} src={src} pos={pos} onChange={onChange} label={f.label} className={f.className} />
+        ))}
       </div>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span>Drag the picture so the important part is inside both frames.</span>
-        {!centred && (
-          <button type="button" onClick={() => onChange({ x: 50, y: 50 })} className="text-gold hover:underline">
-            Reset to centre
+        <span>
+          Drag the picture so the important part is inside {many ? 'every frame' : 'the frame'}.
+        </span>
+        {!atDefault && (
+          <button type="button" onClick={() => onChange({ ...defaultValue })} className="text-gold hover:underline">
+            Reset
           </button>
         )}
       </div>

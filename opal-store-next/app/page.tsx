@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getSettings, getProducts, getCategories } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
 import type { HeroSlideSetting } from '@/lib/types'
+import { focalPosition } from '@/lib/focal'
 import ProductCard from '@/components/ProductCard'
 import HeroSlideshow, { type HeroSlide } from '@/components/HeroSlideshow'
 import PromoBanner, { type PromoBannerItem } from '@/components/PromoBanner'
@@ -78,6 +79,7 @@ export default async function HomePage() {
           // Clicking a promotion takes the shopper to the products they can
           // spend it on. A per-banner href can point somewhere narrower.
           href: banner?.href || '/products',
+          position: focalPosition(banner?.focal),
         }))
         .filter((banner) => banner.headline || banner.subtext || banner.image)
     : []
@@ -85,14 +87,11 @@ export default async function HomePage() {
   // ── Hero slides ────────────────────────────────────────────────────────
   // object-position for a slide: the dragged focal point, else the older
   // left/centre/right setting, else the centre.
-  const heroPosition = (slide: HeroSlideSetting): string | undefined => {
-    const pct = (n: unknown) =>
-      typeof n === 'number' && Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50
-    if (slide.focal) return `${pct(slide.focal.x)}% ${pct(slide.focal.y)}%`
-    if (slide.focus === 'left') return '0% 50%'
-    if (slide.focus === 'right') return '100% 50%'
-    return undefined
-  }
+  const heroPosition = (slide: HeroSlideSetting): string =>
+    focalPosition(
+      slide.focal,
+      slide.focus === 'left' ? '0% 50%' : slide.focus === 'right' ? '100% 50%' : '50% 50%',
+    )
 
   // Admin-managed via Settings › Home Media. Falls back to the legacy single
   // hero_* fields so the page still renders before any slides are configured.
@@ -135,6 +134,11 @@ export default async function HomePage() {
   const collectionsBg = s.home_collections_bg
     ? getImageUrl(s.home_collections_bg)
     : '/section-bg-collections.jpg'
+  // Until dragged in the admin, each keeps the side it was tuned to show so
+  // its subject isn't hidden behind the product cards.
+  const featuredBgPos = focalPosition(s.home_featured_bg_focal, '0% 50%')
+  const bestsellersBgPos = focalPosition(s.home_bestsellers_bg_focal, '100% 50%')
+  const collectionsBgPos = focalPosition(s.home_collections_bg_focal, '100% 50%')
 
   // ── Before / after comparator ──────────────────────────────────────────
   // Both halves must have an image or the section is hidden entirely.
@@ -149,6 +153,7 @@ export default async function HomePage() {
         image,
         label: cfg.label || '',
         href: cfg.href || '/products',
+        position: focalPosition(cfg.focal),
         ctaLabel: 'Buy now',
       }
     })
@@ -198,7 +203,7 @@ export default async function HomePage() {
         {/* Featured strip on a raised surface, bleeding off both edges */}
         {featuredProducts.length > 0 && (
           <section className="relative section-spacing section-soft section-soft--raised">
-            <SectionBackdrop image={featuredBg} position="left center" />
+            <SectionBackdrop image={featuredBg} position={featuredBgPos} />
             <div className="relative z-[1] container-page mb-10 text-center">
               <p className="eyebrow">Weekly pick</p>
               <h2 className="h2 mt-2">Featured Collection</h2>
@@ -215,7 +220,7 @@ export default async function HomePage() {
         {/* Category tiles */}
         {categories.length > 0 && (
           <section className="relative section-spacing section-soft">
-            <SectionBackdrop image={collectionsBg} position="right center" />
+            <SectionBackdrop image={collectionsBg} position={collectionsBgPos} />
             <div className="relative z-[1] container-page">
               <div className="mb-10 text-center">
                 <h2 className="h2">Our Collections</h2>
@@ -256,7 +261,7 @@ export default async function HomePage() {
         {/* Featured grid + Explore */}
         {bestsellerProducts.length > 0 && (
           <section className="relative section-spacing">
-            <SectionBackdrop image={bestsellersBg} position="right center" />
+            <SectionBackdrop image={bestsellersBg} position={bestsellersBgPos} />
             <div className="relative z-[1] container-page">
               <div className="mb-10 text-center">
                 <p className="eyebrow">Curated for you</p>

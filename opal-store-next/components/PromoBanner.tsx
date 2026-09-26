@@ -9,6 +9,8 @@ export interface PromoBannerItem {
   subtext?: string
   promoCode?: string
   href: string
+  /** CSS object-position — the admin's dragged focal point. */
+  position?: string
 }
 
 const ROTATE_MS = 6000
@@ -96,6 +98,7 @@ export default function PromoBanner({ banners }: { banners: PromoBannerItem[] })
               alt=""
               aria-hidden
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] group-hover:scale-[1.02]"
+              style={{ objectPosition: active.position }}
             />
           )}
 

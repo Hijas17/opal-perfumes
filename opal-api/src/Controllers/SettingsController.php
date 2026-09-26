@@ -41,6 +41,11 @@ class SettingsController
         'home_featured_bg',
         'home_bestsellers_bg',
         'home_collections_bg',
+        // Dragged image positions ({x, y} percentages) for single-image
+        // settings; images inside arrays/objects carry a `focal` field instead.
+        'home_featured_bg_focal',
+        'home_bestsellers_bg_focal',
+        'home_collections_bg_focal',
         'home_hero_slides',
         'home_compare',
         // Promotional strip under the navbar. `promo_banners` holds an ARRAY
@@ -49,10 +54,12 @@ class SettingsController
         'promo_banners_enabled',
         // About Us page
         'about_hero_image',
+        'about_hero_image_focal',
         'about_story_heading',
         'brand_story',
         'mission_statement',
         'founder_photo',
+        'founder_photo_focal',
         'founder_bio',
     ];
 

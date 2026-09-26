@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 
 import { getSettings } from '@/lib/api'
 import { getImageUrl } from '@/lib/image'
+import { focalPosition } from '@/lib/focal'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -63,7 +64,13 @@ export default async function AboutPage() {
       <section className="relative grid min-h-[60vh] place-items-center overflow-hidden bg-black">
         {heroImageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={heroImageUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+          <img
+            src={heroImageUrl}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ objectPosition: focalPosition(s.about_hero_image_focal) }}
+          />
         )}
         <div className="absolute inset-0 bg-black/60" aria-hidden />
         <div className="relative flex flex-col items-center gap-4 px-6 py-24 text-center">
@@ -77,7 +84,13 @@ export default async function AboutPage() {
         <div className="relative aspect-[4/3] bg-surface md:aspect-auto md:min-h-[520px]">
           {founderPhotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={founderPhotoUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+            <img
+              src={founderPhotoUrl}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ objectPosition: focalPosition(s.founder_photo_focal) }}
+            />
           )}
         </div>
         <div className="flex flex-col justify-center gap-4 px-6 py-16 md:px-12">

@@ -15,7 +15,7 @@ interface Props {
   image?: string | null
   /** 0–100. Higher darkens more; the default keeps gold type comfortably legible. */
   scrim?: number
-  /** Horizontal focal point, so the subject isn't hidden behind the cards. */
+  /** CSS object-position — the admin's dragged focal point, so the subject isn't hidden behind the cards. */
   position?: string
 }
 

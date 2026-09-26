@@ -20,6 +20,8 @@ export interface BeforeAfterItem {
   label: string
   href: string
   ctaLabel?: string
+  /** CSS object-position — the admin's dragged focal point. */
+  position?: string
 }
 
 interface Props {
@@ -86,7 +88,7 @@ export default function BeforeAfter({ before, after, initial = 50 }: Props) {
       {/* Base layer — the "after" half */}
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={after.image} alt="" aria-hidden className="h-full w-full object-cover" />
+        <img src={after.image} alt="" aria-hidden className="h-full w-full object-cover" style={{ objectPosition: after.position }} />
       </div>
 
       {/* Clipped layer — the "before" half. clip-path keeps the image at full
@@ -96,7 +98,7 @@ export default function BeforeAfter({ before, after, initial = 50 }: Props) {
         style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={before.image} alt="" aria-hidden className="h-full w-full object-cover" />
+        <img src={before.image} alt="" aria-hidden className="h-full w-full object-cover" style={{ objectPosition: before.position }} />
       </div>
 
       {/* Labels */}

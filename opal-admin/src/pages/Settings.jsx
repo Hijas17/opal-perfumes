@@ -3,6 +3,7 @@ import { getAdminSettings, updateSettings, UPLOADS_URL } from '../api/index.js'
 import api from '../api/index.js'
 import RichTextEditor from '../components/RichTextEditor.jsx'
 import HomeMediaEditor from '../components/HomeMediaEditor.jsx'
+import FocalPointPicker, { FRAMES } from '../components/FocalPointPicker.jsx'
 import { Button } from '../components/ui/button.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Textarea } from '../components/ui/textarea.jsx'
@@ -99,7 +100,12 @@ function EmailListField({ value, onChange }) {
   )
 }
 
-function ImageSettingField({ label, settingKey, currentValue, onUpdate }) {
+/**
+ * Pass `frames` (a FocalPointPicker preset) for images the storefront crops:
+ * a drag-to-position picker then appears under the preview, saved to the
+ * sibling `<settingKey>_focal` setting with the rest of the form.
+ */
+function ImageSettingField({ label, settingKey, currentValue, onUpdate, frames, focalValue }) {
   const inputRef   = useRef(null)
   const [uploading, setUploading] = useState(false)
   const previewUrl = currentValue ? `${UPLOADS_URL}/${currentValue}` : null
@@ -117,6 +123,8 @@ function ImageSettingField({ label, settingKey, currentValue, onUpdate }) {
       })
       const newVal = res.data?.data?.value || res.data?.value || ''
       onUpdate(settingKey, newVal)
+      // A position chosen for the old picture means nothing for this one.
+      if (frames) onUpdate(`${settingKey}_focal`, null)
     } catch {
       // silent
     } finally {
@@ -157,6 +165,16 @@ function ImageSettingField({ label, settingKey, currentValue, onUpdate }) {
         className="hidden"
         onChange={handleUpload}
       />
+      {frames && previewUrl && (
+        <div className="mt-3">
+          <FocalPointPicker
+            src={previewUrl}
+            value={focalValue}
+            onChange={(v) => onUpdate(`${settingKey}_focal`, v)}
+            frames={frames}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -393,6 +411,8 @@ export default function Settings() {
           settingKey="about_hero_image"
           currentValue={s.about_hero_image}
           onUpdate={handleChange}
+          frames={FRAMES.aboutHero}
+          focalValue={s.about_hero_image_focal}
         />
         <div className="space-y-1.5">
           <Label>
@@ -421,6 +441,8 @@ export default function Settings() {
           settingKey="founder_photo"
           currentValue={s.founder_photo}
           onUpdate={handleChange}
+          frames={FRAMES.halfSplit}
+          focalValue={s.founder_photo_focal}
         />
         <div className="space-y-1.5">
           <Label>Founder Bio</Label>

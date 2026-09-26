@@ -3,6 +3,8 @@
    These collections live in MongoDB; the API returns plain JSON.
    ────────────────────────────────────────────────────────────────────────── */
 
+import type { Focal } from './focal'
+
 export type ProductLabel = 'new' | 'bestseller' | 'limited edition' | 'featured' | null
 
 export interface ProductImages {
@@ -85,7 +87,7 @@ export interface HeroSlideSetting {
    * Where `image` is anchored when cropped, as percentages for CSS
    * object-position — set by dragging in the admin's preview frames.
    */
-  focal?: { x?: number; y?: number }
+  focal?: Focal
   /** Older left/centre/right setting, superseded by `focal`. */
   focus?: 'left' | 'center' | 'right'
   eyebrow?: string
@@ -109,12 +111,16 @@ export interface PromoBannerSetting {
   promo_code?: string
   /** Defaults to the product listing page when unset. */
   href?: string
+  /** Dragged image position (lib/focal.ts). */
+  focal?: Focal
 }
 
 export interface CompareSideSetting {
   image?: string
   label?: string
   href?: string
+  /** Dragged image position (lib/focal.ts). */
+  focal?: Focal
 }
 
 export interface HomeCompareSetting {
@@ -156,6 +162,10 @@ export interface SiteSettings {
   home_featured_bg?: string
   home_bestsellers_bg?: string
   home_collections_bg?: string
+  /** Dragged positions for the backdrops above (lib/focal.ts). */
+  home_featured_bg_focal?: Focal
+  home_bestsellers_bg_focal?: Focal
+  home_collections_bg_focal?: Focal
   home_hero_slides?: HeroSlideSetting[]
   promo_banners?: PromoBannerSetting[]
   /** Master switch — the strip is hidden entirely when this is not true. */
@@ -166,11 +176,13 @@ export interface SiteSettings {
   about_snippet?: string
   cta_message?: string
   about_hero_image?: string
+  about_hero_image_focal?: Focal
   /** Heading above the brand story. Falls back to brand_name when empty. */
   about_story_heading?: string
   brand_story?: string
   mission_statement?: string
   founder_photo?: string
+  founder_photo_focal?: Focal
   founder_bio?: string
 
   [key: string]: unknown

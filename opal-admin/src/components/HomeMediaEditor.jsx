@@ -2,7 +2,7 @@ import React from 'react'
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 
 import MediaField from './MediaField.jsx'
-import FocalPointPicker from './FocalPointPicker.jsx'
+import FocalPointPicker, { FRAMES } from './FocalPointPicker.jsx'
 import { UPLOADS_URL } from '../api/index.js'
 import { Button } from './ui/button.jsx'
 import { Input } from './ui/input.jsx'
@@ -37,6 +37,14 @@ function slideFocal(slide) {
 }
 
 const mediaUrl = (v) => (v && !v.startsWith('http') ? `${UPLOADS_URL}/${v}` : v)
+
+// The three backdropped home sections. `defaultFocal` mirrors the side the
+// storefront anchors each to until the admin drags it (app/page.tsx).
+const BACKDROPS = [
+  { key: 'home_featured_bg',    title: 'Featured Collection', defaultFocal: { x: 0,   y: 50 } },
+  { key: 'home_bestsellers_bg', title: 'Bestsellers',         defaultFocal: { x: 100, y: 50 } },
+  { key: 'home_collections_bg', title: 'Our Collections',     defaultFocal: { x: 100, y: 50 } },
+]
 const EMPTY_SIDE = { image: '', label: '', href: '/products' }
 const EMPTY_BANNER = { image: '', headline: '', subtext: '', promo_code: '', href: '/products' }
 
@@ -98,7 +106,13 @@ export default function HomeMediaEditor({ settings, onChange }) {
   const setList = (key, next) => onChange(key, next)
 
   const updateItem = (key, list, index, field, value) => {
-    const next = list.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    const next = list.map((item, i) => {
+      if (i !== index) return item
+      const updated = { ...item, [field]: value }
+      // A position chosen for one picture means nothing for another.
+      if (field === 'image') delete updated.focal
+      return updated
+    })
     setList(key, next)
   }
   const addItem = (key, list, blank, max) => {
@@ -117,10 +131,9 @@ export default function HomeMediaEditor({ settings, onChange }) {
   }
 
   const updateCompare = (side, field, value) => {
-    onChange('home_compare', {
-      ...compare,
-      [side]: { ...asObject(compare[side], { ...EMPTY_SIDE }), [field]: value },
-    })
+    const current = { ...asObject(compare[side], { ...EMPTY_SIDE }), [field]: value }
+    if (field === 'image') delete current.focal
+    onChange('home_compare', { ...compare, [side]: current })
   }
 
   return (
@@ -142,8 +155,7 @@ export default function HomeMediaEditor({ settings, onChange }) {
           for discounts and promotions. Banners rotate every 6 seconds and each
           one links to the product listing unless you point it somewhere
           narrower. Use <strong>16:9</strong> images — around 1920&times;1080.
-          Keep the important part of the picture near the middle; the edges are
-          cropped on narrow screens.
+          If the picture isn't 16:9, drag it into place under the upload.
         </p>
 
         {/* Master switch, so the strip disappears between promotions instead of
@@ -186,6 +198,14 @@ export default function HomeMediaEditor({ settings, onChange }) {
                     value={banner.image || ''}
                     onChange={(v) => updateItem('promo_banners', banners, i, 'image', v)}
                   />
+                  {banner.image && (
+                    <FocalPointPicker
+                      src={mediaUrl(banner.image)}
+                      value={banner.focal}
+                      onChange={(v) => updateItem('promo_banners', banners, i, 'focal', v)}
+                      frames={FRAMES.wide}
+                    />
+                  )}
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
                       <Label className="mb-1.5 block">Headline</Label>
@@ -311,6 +331,7 @@ export default function HomeMediaEditor({ settings, onChange }) {
                   <div className="mt-4">
                     <Label className="mb-1.5 block">Position</Label>
                     <FocalPointPicker
+                      frames={FRAMES.hero}
                       src={mediaUrl(slide.image)}
                       value={slideFocal(slide)}
                       onChange={(v) => updateItem('home_hero_slides', slides, i, 'focal', v)}
@@ -368,38 +389,36 @@ export default function HomeMediaEditor({ settings, onChange }) {
           heavily darkened so the titles stay readable, and product cards are
           transparent — so the image reads as texture behind and around everything
           on the section. Wide, dark images with the subject on one side and empty
-          space on the other work best; around 1600&times;900. Leave empty to use
-          the shipped defaults.
+          space on the other work best; around 1600&times;900. Drag the subject
+          clear of the product cards. Leave empty to use the shipped defaults.
         </p>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-border p-4">
-            <h4 className="mb-3 text-sm font-medium">Featured Collection</h4>
-            <MediaField
-              label="Background image"
-              value={settings.home_featured_bg || ''}
-              onChange={(v) => onChange('home_featured_bg', v)}
-              hint="Subject is anchored to the left of the frame."
-            />
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <h4 className="mb-3 text-sm font-medium">Bestsellers</h4>
-            <MediaField
-              label="Background image"
-              value={settings.home_bestsellers_bg || ''}
-              onChange={(v) => onChange('home_bestsellers_bg', v)}
-              hint="Subject is anchored to the right of the frame."
-            />
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <h4 className="mb-3 text-sm font-medium">Our Collections</h4>
-            <MediaField
-              label="Background image"
-              value={settings.home_collections_bg || ''}
-              onChange={(v) => onChange('home_collections_bg', v)}
-              hint="Subject is anchored to the right of the frame."
-            />
-          </div>
+        <div className="space-y-4">
+          {BACKDROPS.map(({ key, title, defaultFocal }) => (
+            <div key={key} className="rounded-lg border border-border p-4">
+              <h4 className="mb-3 text-sm font-medium">{title}</h4>
+              <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+                <MediaField
+                  label="Background image"
+                  value={settings[key] || ''}
+                  onChange={(v) => {
+                    onChange(key, v)
+                    // New picture: back to the section's default anchoring.
+                    onChange(`${key}_focal`, null)
+                  }}
+                />
+                {settings[key] && (
+                  <FocalPointPicker
+                    src={mediaUrl(settings[key])}
+                    value={settings[`${key}_focal`]}
+                    onChange={(v) => onChange(`${key}_focal`, v)}
+                    frames={FRAMES.backdrop}
+                    defaultValue={defaultFocal}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -427,6 +446,16 @@ export default function HomeMediaEditor({ settings, onChange }) {
                   value={data.image || ''}
                   onChange={(v) => updateCompare(side, 'image', v)}
                 />
+                {data.image && (
+                  <div className="mt-3">
+                    <FocalPointPicker
+                      src={mediaUrl(data.image)}
+                      value={data.focal}
+                      onChange={(v) => updateCompare(side, 'focal', v)}
+                      frames={FRAMES.wide}
+                    />
+                  </div>
+                )}
                 <div className="mt-3 space-y-3">
                   <div>
                     <Label className="mb-1.5 block">Label</Label>
