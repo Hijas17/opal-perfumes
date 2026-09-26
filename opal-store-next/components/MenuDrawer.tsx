@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils'
 import { authDisabled } from '@/lib/config'
 import type { Category } from '@/lib/types'
 import { useAuth } from './AuthProvider'
+import { useDeliveryLocation } from './LocationProvider'
+import { CountryLabel, LocationButton } from './DeliverTo'
 
 interface Props {
   open: boolean
@@ -32,6 +34,7 @@ const PAGES = [
 
 export default function MenuDrawer({ open, onClose, categories }: Props) {
   const { isLoggedIn, customer, logout } = useAuth()
+  const { openPicker } = useDeliveryLocation()
 
   // Lock scroll and close on Escape while open.
   useEffect(() => {
@@ -84,6 +87,14 @@ export default function MenuDrawer({ open, onClose, categories }: Props) {
         </header>
 
         <div className="flex-1 overflow-y-auto">
+          {/* The header's delivery controls have no room below md, so they
+              live here. The picker is a dialog of its own, so the drawer
+              closes first rather than stacking two overlays. */}
+          <div className="flex items-center gap-5 border-b border-line px-6 py-4">
+            <CountryLabel />
+            <LocationButton fullLabel onClick={() => { onClose(); openPicker() }} />
+          </div>
+
           <nav aria-label="Collections">
             <Link href="/products" onClick={onClose} className={rowClass}>
               All Products

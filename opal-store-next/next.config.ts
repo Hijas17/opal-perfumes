@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
    *
    * `'unsafe-inline'` on script-src is required by Next.js's inlined
    * hydration bootstrap; tightening it means moving to nonces.
+   *
+   * Nominatim (OpenStreetMap) is the reverse geocoder behind the delivery
+   * location picker's "Use my location".
    */
   async headers() {
     const csp = [
@@ -59,7 +62,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       `img-src 'self' data: blob: https:`,
-      `connect-src 'self' https://api.stripe.com https://*.stripe.com ${apiOrigin}`.trim(),
+      `connect-src 'self' https://api.stripe.com https://*.stripe.com https://nominatim.openstreetmap.org ${apiOrigin}`.trim(),
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://*.link.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",

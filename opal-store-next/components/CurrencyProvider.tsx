@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Display-currency selection, persisted per browser.
+ * Display currency for prices.
  *
  * Only affects what the shopper SEES. Cart contents, order payloads and the
  * WhatsApp inquiry keep using the stored AED amounts, so switching currency can
@@ -13,7 +13,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useState,
   type ReactNode,
 } from 'react'
 import {
@@ -23,11 +22,11 @@ import {
   type CurrencyCode,
 } from '@/lib/currency'
 
-const STORAGE_KEY = 'opal:currency:v1'
+// Where the removed header selector used to persist the shopper's choice.
+const LEGACY_STORAGE_KEY = 'opal:currency:v1'
 
 interface CurrencyState {
   currency: CurrencyCode
-  setCurrency: (c: CurrencyCode) => void
 }
 
 const Ctx = createContext<CurrencyState | null>(null)
@@ -35,13 +34,13 @@ const Ctx = createContext<CurrencyState | null>(null)
 export function useCurrency(): CurrencyState {
   // Forgiving default so any component rendered outside the provider (e.g. in
   // a test) still formats in the base currency rather than throwing.
-  return useContext(Ctx) ?? { currency: BASE_CURRENCY, setCurrency: () => {} }
+  return useContext(Ctx) ?? { currency: BASE_CURRENCY }
 }
 
 /**
  * Drop-in replacement for `formatPrice` inside client components: same
- * (amount, storedCurrency) signature, but formats in the shopper's selected
- * display currency and re-renders when they change it.
+ * (amount, storedCurrency) signature, but formats in the provider's display
+ * currency — kept so a currency choice can return without touching callers.
  */
 export function useMoney(): (
   amount: number | string | null | undefined,
@@ -56,36 +55,18 @@ export function useMoney(): (
 }
 
 export default function CurrencyProvider({ children }: { children: ReactNode }) {
-  // Always start from the base currency so server and client markup match;
-  // the stored preference is applied after mount.
-  const [currency, setCurrencyState] = useState<CurrencyCode>(BASE_CURRENCY)
-
+  // Fixed to the base currency while the header has no currency selector. A
+  // shopper who picked USD before the selector was removed would otherwise be
+  // stuck on it with no way back, so their old preference is discarded.
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY)
-      if (isCurrency(saved)) setCurrencyState(saved)
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY)
     } catch {
-      /* private mode / blocked storage — stay on the base currency */
+      /* private mode / blocked storage — nothing stored to clear */
     }
   }, [])
 
-  const setCurrency = useCallback((c: CurrencyCode) => {
-    setCurrencyState(c)
-    try {
-      window.localStorage.setItem(STORAGE_KEY, c)
-    } catch {
-      /* non-fatal: the choice just won't survive a reload */
-    }
-  }, [])
-
-  // Keep other tabs in sync, same as the cart does.
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && isCurrency(e.newValue)) setCurrencyState(e.newValue)
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [])
-
-  return <Ctx.Provider value={{ currency, setCurrency }}>{children}</Ctx.Provider>
+  return (
+    <Ctx.Provider value={{ currency: BASE_CURRENCY }}>{children}</Ctx.Provider>
+  )
 }

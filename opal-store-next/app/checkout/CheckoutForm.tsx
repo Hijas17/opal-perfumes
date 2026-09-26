@@ -10,6 +10,7 @@ import StripeCheckout from '@/components/StripeCheckout'
 import { checkCoupon, placeOrder } from '@/lib/customer-api'
 import { formatPrice } from '@/lib/format'
 import { useMoney } from '@/components/CurrencyProvider'
+import { useDeliveryLocation } from '@/components/LocationProvider'
 import {
   buildWhatsAppUrl,
   cardPaymentEnabled,
@@ -67,12 +68,16 @@ export default function CheckoutForm({ whatsappNumber, brandName }: Props) {
   const router = useRouter()
   const { customer, isLoggedIn, loading: authLoading } = useAuth()
   const { cart, clear: clearCart } = useCart()
+  const { location } = useDeliveryLocation()
 
   const [name,    setName]    = useState('')
   const [phone,   setPhone]   = useState('')
   const [email,   setEmail]   = useState('')
   const [address, setAddress] = useState('')
-  const [city,    setCity]    = useState('Dubai')
+  // Null until the customer types, so the field follows the emirate picked
+  // in the header's location dialog (which loads after mount) until then.
+  const [cityInput, setCity]  = useState<string | null>(null)
+  const city = cityInput ?? location.region ?? 'Dubai'
   const [country, setCountry] = useState('UAE')
   const [notes,   setNotes]   = useState('')
   const [submitting, setSubmitting] = useState(false)

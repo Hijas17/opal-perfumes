@@ -10,6 +10,7 @@ import CartProvider from '@/components/CartProvider'
 import Preloader from '@/components/Preloader'
 import CartDrawerProvider from '@/components/CartDrawerProvider'
 import CurrencyProvider from '@/components/CurrencyProvider'
+import LocationProvider from '@/components/LocationProvider'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { getCategories, getSettings } from '@/lib/api'
 
@@ -138,6 +139,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             UI on their own, and gated pages (e.g. /cart) still need them to
             prerender at build time (the proxy only redirects at runtime). */}
         <CurrencyProvider>
+        <LocationProvider>
         <AuthProvider>
           <CartProvider>
             <SearchProvider>
@@ -151,6 +153,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </SearchProvider>
           </CartProvider>
         </AuthProvider>
+        </LocationProvider>
         </CurrencyProvider>
       </body>
     </html>

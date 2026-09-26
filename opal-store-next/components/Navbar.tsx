@@ -9,7 +9,7 @@
  *
  * Follows the reference storefront's structure at desktop widths:
  *
- *   row 1 : currency (left) · centred logo · search / account / cart (right)
+ *   row 1 : UAE + delivery location (left) · centred logo · search / account / cart (right)
  *   row 2 : centred primary nav
  *
  * There is no announcement bar above this — it was removed and its height
@@ -34,7 +34,7 @@ import { useSearchOverlay } from './SearchProvider'
 import { useAuth } from './AuthProvider'
 import { useCart } from './CartProvider'
 import { useCartDrawer } from './CartDrawerProvider'
-import CurrencySelect from './CurrencySelect'
+import { CountryLabel, LocationButton } from './DeliverTo'
 import MenuDrawer from './MenuDrawer'
 
 interface NavbarProps {
@@ -98,9 +98,10 @@ export default function Navbar({ categories }: NavbarProps) {
     >
       {/* ── Row 1 ─────────────────────────────────────────────────────── */}
       <div className="container-page--xl mx-auto flex items-center justify-between px-4 py-4 md:px-12 md:py-6">
-        {/* Left cluster. Below md the currency selector gives way to the
-            hamburger + search, which is where the nav links live. */}
-        <div className="flex w-28 items-center gap-3 md:w-40">
+        {/* Left cluster. Below md the delivery controls give way to the
+            hamburger + search (they move into the menu drawer). Both side
+            clusters share a width so the logo stays centred. */}
+        <div className="flex w-28 items-center gap-3 md:w-60 lg:w-80">
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
@@ -119,8 +120,9 @@ export default function Navbar({ categories }: NavbarProps) {
             <Search className="h-5 w-5" />
           </button>
 
-          <div className="hidden md:block">
-            <CurrencySelect />
+          <div className="hidden min-w-0 items-center gap-5 md:flex">
+            <CountryLabel />
+            <LocationButton />
           </div>
         </div>
 
@@ -138,7 +140,7 @@ export default function Navbar({ categories }: NavbarProps) {
           />
         </Link>
 
-        <div className="flex w-28 items-center justify-end gap-4 md:w-40 md:gap-5">
+        <div className="flex w-28 items-center justify-end gap-4 md:w-60 md:gap-5 lg:w-80">
           {/* Search sits on the left below md, beside the hamburger. */}
           <button
             type="button"
