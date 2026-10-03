@@ -109,6 +109,9 @@ export const getOrders = (params) =>
 export const getOrder = (id) =>
   api.get(`/admin/orders/${id}`)
 
+export const refundOrder = (id, data) =>
+  api.post(`/admin/orders/${id}/refund`, data)
+
 export const updateOrderStatus = (id, data) =>
   api.put(`/admin/orders/${id}/status`, data)
 

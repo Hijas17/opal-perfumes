@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { getOrders, getOrder, updateOrderStatus } from '../api/index.js'
+import { getOrders, getOrder, updateOrderStatus, refundOrder } from '../api/index.js'
 import { Button } from '../components/ui/button.jsx'
 import { Badge } from '../components/ui/badge.jsx'
 import { Input } from '../components/ui/input.jsx'
@@ -46,6 +46,10 @@ function OrderModal({ orderId, open, onClose, onUpdated }) {
   const [note, setNote]       = useState('')
   const [notifyCustomer, setNotifyCustomer] = useState(true)
   const [toast, setToast]     = useState('')
+  const [refundOpen, setRefundOpen]     = useState(false)
+  const [refundAmount, setRefundAmount] = useState('')
+  const [refundNote, setRefundNote]     = useState('')
+  const [refunding, setRefunding]       = useState(false)
 
   useEffect(() => {
     if (!orderId) { setOrder(null); return }
@@ -53,6 +57,9 @@ function OrderModal({ orderId, open, onClose, onUpdated }) {
     setError('')
     setToast('')
     setNotifyCustomer(true)
+    setRefundOpen(false)
+    setRefundAmount('')
+    setRefundNote('')
     getOrder(orderId)
       .then((r) => {
         setOrder(r.data.data)
@@ -81,6 +88,33 @@ function OrderModal({ orderId, open, onClose, onUpdated }) {
       setSaving(false)
     }
   }
+
+  async function doRefund() {
+    setRefunding(true)
+    setError('')
+    try {
+      const r = await refundOrder(orderId, {
+        // Blank means the whole order; the API treats anything at or above
+        // the total as a full refund.
+        amount: refundAmount.trim(),
+        note: refundNote.trim(),
+      })
+      setOrder(r.data.data)
+      setToast(r.data.message || 'Refund issued.')
+      setRefundOpen(false)
+      setRefundAmount('')
+      setRefundNote('')
+      onUpdated?.()
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to issue the refund.')
+    } finally {
+      setRefunding(false)
+    }
+  }
+
+  // Only a card order that is actually paid can be refunded here. Cash on
+  // delivery has no Stripe payment to reverse, so it is cancelled instead.
+  const canRefund = order?.payment_method === 'card' && order?.payment_status === 'paid'
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
@@ -163,8 +197,79 @@ function OrderModal({ orderId, open, onClose, onUpdated }) {
                   {order.payment.payment_intent_id}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Use this in the Stripe Dashboard to refund or inspect the payment.
+                  Use this in the Stripe Dashboard to inspect the payment.
                 </p>
+              </div>
+            )}
+
+            {order.payment?.refunded_amount > 0 && (
+              <div className="rounded border border-amber-200 bg-amber-50 p-3 text-sm">
+                <span className="font-medium">
+                  Refunded {money(order.payment.refunded_amount, order.currency)}
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  {when(order.payment.refunded_at)}
+                  {order.payment.refund_id ? ` · ${order.payment.refund_id}` : ''}
+                </span>
+              </div>
+            )}
+
+            {canRefund && (
+              <div className="rounded border border-border p-4">
+                {!refundOpen ? (
+                  <>
+                    <p className="text-sm font-medium">Refund this order</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+                      Sends the money back to the customer's card and cancels the
+                      order. A full refund also frees up any promo code they used.
+                    </p>
+                    <Button variant="outline" onClick={() => setRefundOpen(true)}>
+                      Refund and cancel
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium mb-3">
+                      Refund {money(order.total, order.currency)}?
+                    </p>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground">Amount</label>
+                        <Input
+                          type="number" min="0" step="0.01"
+                          value={refundAmount}
+                          onChange={(e) => setRefundAmount(e.target.value)}
+                          placeholder={`Full - ${money(order.total, order.currency)}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground">Reason (sent to the customer)</label>
+                        <Input
+                          value={refundNote}
+                          onChange={(e) => setRefundNote(e.target.value)}
+                          placeholder="Out of stock"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Leave the amount blank to refund everything. A partial
+                      refund leaves the order open and does not release the code.
+                      <strong> Refunds cannot be undone.</strong>
+                    </p>
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setRefundOpen(false)}
+                        disabled={refunding}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={doRefund} disabled={refunding}>
+                        {refunding ? 'Refunding…' : 'Confirm refund'}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

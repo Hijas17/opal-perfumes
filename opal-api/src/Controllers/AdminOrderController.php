@@ -5,6 +5,7 @@ namespace Opal\Controllers;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Opal\Config\Database;
+use Opal\Config\Stripe as StripeConfig;
 use Opal\Helpers\OrderNotifier;
 use Opal\Helpers\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -191,6 +192,138 @@ class AdminOrderController
         }
     }
 
+    /**
+     * Refund a card payment and cancel the order.
+     *
+     * Deliberately one action rather than two. A refund without a cancellation
+     * leaves an order that looks live but has been paid back, and a
+     * cancellation without a refund leaves the customer out of pocket; together
+     * is the only combination that is ever correct here.
+     *
+     * Stripe is the source of truth for whether money moved, so the refund is
+     * created first and the order is rewritten only once Stripe confirms. A
+     * failure leaves the order exactly as it was.
+     */
+    public function refund(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $id = $args['id'] ?? '';
+        if ($id === '') return Response::error($response, 'Order id required.', 400);
+
+        $body = $request->getParsedBody();
+        $note = trim($body['note'] ?? '');
+
+        if (!StripeConfig::isConfigured()) {
+            return Response::error($response, 'Stripe is not configured, so no refund can be issued.', 503);
+        }
+
+        try {
+            $db    = Database::getInstance();
+            $order = $db->orders->findOne(
+                ['_id' => new ObjectId($id)],
+                ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
+            );
+            if (!$order) return Response::error($response, 'Order not found.', 404);
+
+            if (($order['payment_method'] ?? 'cod') !== 'card') {
+                return Response::error(
+                    $response,
+                    'This order was not paid by card. Cancel it instead and settle any money directly.',
+                    400
+                );
+            }
+            if (($order['payment_status'] ?? '') !== 'paid') {
+                return Response::error($response, 'Only a paid order can be refunded.', 400);
+            }
+
+            $payment = $order['payment'] ?? [];
+            if (!is_array($payment)) $payment = iterator_to_array($payment);
+            $intentId = $payment['payment_intent_id'] ?? null;
+            if (!$intentId) {
+                return Response::error(
+                    $response,
+                    'No Stripe payment is recorded against this order, so it cannot be refunded here.',
+                    400
+                );
+            }
+
+            $total = (float)($order['total'] ?? 0);
+
+            // Partial refunds are allowed, but anything at or above the total
+            // counts as a full one, so rounding can never leave a stray
+            // fraction behind and quietly block the coupon from being released.
+            $requested = $body['amount'] ?? null;
+            $amount    = ($requested === null || $requested === '')
+                ? $total
+                : round((float)$requested, 2);
+
+            if ($amount <= 0) {
+                return Response::error($response, 'The refund amount must be greater than zero.', 400);
+            }
+            if ($amount > $total) {
+                return Response::error($response, 'The refund cannot exceed the order total.', 400);
+            }
+            $isFull = $amount >= $total;
+
+            $refund = StripeConfig::getClient()->refunds->create([
+                'payment_intent' => $intentId,
+                'amount'         => (int) round($amount * 100),
+                'metadata'       => [
+                    'order_id'     => $id,
+                    'order_number' => $order['order_number'] ?? '',
+                ],
+            ]);
+
+            $now        = new UTCDateTime();
+            $currency   = $order['currency'] ?? 'AED';
+            $amountText = $currency . ' ' . number_format($amount, 2);
+            $historyNote = ($isFull ? 'Refunded ' : 'Partially refunded ') . $amountText
+                . ($note !== '' ? ' - ' . $note : '');
+
+            $set = [
+                'payment.refund_id'       => $refund->id,
+                'payment.refunded_amount' => $amount,
+                'payment.refunded_at'     => $now,
+                'updated_at'              => $now,
+            ];
+
+            // Only a full refund cancels the order and releases the coupon. A
+            // partial refund is an adjustment, not an undoing.
+            if ($isFull) {
+                $set['payment_status'] = 'refunded';
+                $set['status']         = 'cancelled';
+            }
+
+            $db->orders->updateOne(['_id' => new ObjectId($id)], [
+                '$set'  => $set,
+                '$push' => ['status_history' => [
+                    'status' => $isFull ? 'cancelled' : ($order['status'] ?? 'pending'),
+                    'note'   => $historyNote,
+                    'at'     => $now,
+                ]],
+            ]);
+
+            $fresh = $db->orders->findOne(
+                ['_id' => new ObjectId($id)],
+                ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]
+            );
+
+            OrderNotifier::refundedToCustomer($fresh, $amount, $isFull, $note);
+
+            return Response::json($response, [
+                'error'   => false,
+                'message' => $isFull
+                    ? "Refunded {$amountText} and cancelled the order."
+                    : "Refunded {$amountText}.",
+                'data'    => $this->serialize($fresh, true),
+            ]);
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            // Stripe refused, so no money moved and the order is untouched.
+            return Response::error($response, 'Stripe refused the refund: ' . $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return Response::error($response, 'Failed to refund: ' . $e->getMessage(), 500);
+        }
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────
 
     /**
@@ -269,10 +402,14 @@ class AdminOrderController
         $data['status_history'] = $history;
         // Admin sees the PaymentIntent id — it's the handle for refunds in the
         // Stripe Dashboard.
+        $refundedAt = $payment['refunded_at'] ?? null;
         $data['payment'] = $payment === null ? null : [
             'stripe_session_id' => $payment['stripe_session_id'] ?? null,
             'payment_intent_id' => $payment['payment_intent_id'] ?? null,
             'paid_at'           => $paidAt instanceof UTCDateTime ? $paidAt->toDateTime()->format(\DateTime::ATOM) : null,
+            'refund_id'         => $payment['refund_id'] ?? null,
+            'refunded_amount'   => isset($payment['refunded_amount']) ? (float)$payment['refunded_amount'] : null,
+            'refunded_at'       => $refundedAt instanceof UTCDateTime ? $refundedAt->toDateTime()->format(\DateTime::ATOM) : null,
         ];
 
         return $data;

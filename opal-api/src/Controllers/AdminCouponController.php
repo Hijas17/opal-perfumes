@@ -36,7 +36,9 @@ class AdminCouponController
             // row — thirty coupons would otherwise be thirty round trips.
             $usage = [];
             $agg = $db->orders->aggregate([
-                ['$match' => ['coupon.code' => ['$ne' => null], 'payment_status' => ['$ne' => 'failed']]],
+                // Must match the exclusions in Coupons::evaluate, or the
+                // usage shown here would disagree with what is enforced.
+                ['$match' => ['coupon.code' => ['$ne' => null], 'payment_status' => ['$nin' => ['failed', 'refunded']]]],
                 ['$group' => [
                     '_id'      => '$coupon.code',
                     'count'    => ['$sum' => 1],

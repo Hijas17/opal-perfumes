@@ -52,7 +52,7 @@ empties the cart.
 
 | Variable | Where | Value |
 |---|---|---|
-| `STRIPE_SECRET_KEY` | `/var/www/opal/.env` on the server | **Restricted** key `rk_…`. Two permissions: Checkout Sessions = **Write**, and Coupons = **Write** (needed only to pass a promo-code discount into a session) |
+| `STRIPE_SECRET_KEY` | `/var/www/opal/.env` on the server | **Restricted** key `rk_…`. Three permissions: Checkout Sessions = **Write**, Coupons = **Write** (to pass a promo-code discount into a session), Refunds = **Write** (for the admin's refund action) |
 | `STRIPE_WEBHOOK_SECRET` | `/var/www/opal/.env` on the server | `whsec_…` from the webhook endpoint |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `.env.production` (server) / `.env.local` (dev) | `pk_…` — public by design, ships in the browser bundle |
 | `STOREFRONT_URL` | `/var/www/opal/.env` on the server | Origin Stripe returns the customer to |

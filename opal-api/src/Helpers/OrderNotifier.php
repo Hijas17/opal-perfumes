@@ -118,6 +118,47 @@ class OrderNotifier
     }
 
     /**
+     * Tell the customer money is on its way back.
+     *
+     * Sent whether or not the order was cancelled, because the thing the
+     * customer cares about is the refund. The bank's own timing is mentioned
+     * up front: the money leaves Stripe immediately but takes days to appear,
+     * and not saying so produces a support email every single time.
+     */
+    public static function refundedToCustomer(array $order, float $amount, bool $isFull, string $note = ''): void
+    {
+        $shipping = self::shipping($order);
+        $to       = trim($shipping['email'] ?? '');
+        if ($to === '') return;
+
+        $number   = $order['order_number'] ?? '';
+        $currency = $order['currency'] ?? 'AED';
+        $amountText = $currency . ' ' . number_format($amount, 2);
+
+        $intro = $isFull
+            ? "Your order has been cancelled and {$amountText} has been refunded."
+            : "A refund of {$amountText} has been issued against your order.";
+
+        $body = "Hello " . ($shipping['name'] ?? 'there') . "," . "\n\n"
+            . $intro . "\n\n"
+            . ($note !== '' ? $note . "\n\n" : '')
+            . "The refund has been sent back to the card you paid with. Banks "
+            . "usually take a few working days to show it." . "\n\n"
+            . self::summary($order, false)
+            . "\n" . self::signoff();
+
+        $html = EmailTemplate::order($order, [
+            'heading'      => $isFull ? 'Your order has been refunded' : 'A refund has been issued',
+            'intro'        => $intro,
+            'show_address' => false,
+            'footer_note'  => trim($note . ' The refund has been sent back to the card you paid with. '
+                . 'Banks usually take a few working days to show it.'),
+        ]);
+
+        Mailer::send($to, "Refund for order {$number}", $body, null, null, $html);
+    }
+
+    /**
      * Tell the customer their order has moved to a new fulfilment status.
      *
      * @param string $note Optional free text from the admin — a tracking

@@ -85,12 +85,14 @@ class Coupons
         // ── Usage limits ─────────────────────────────────────────────────
         // Counted from the orders themselves rather than a stored counter, so
         // the number can't drift out of step with reality. Failed payments
-        // don't count — an abandoned card checkout shouldn't burn a redemption.
+        // don't count — an abandoned card checkout shouldn't burn a redemption
+        // — and neither do refunded ones: a refund undoes the order, so it
+        // gives the code back rather than leaving it spent on nothing.
         $maxRedemptions = isset($coupon['max_redemptions']) ? (int)$coupon['max_redemptions'] : 0;
         if ($maxRedemptions > 0) {
             $used = $db->orders->countDocuments([
                 'coupon.code'    => $code,
-                'payment_status' => ['$ne' => 'failed'],
+                'payment_status' => ['$nin' => ['failed', 'refunded']],
             ]);
             if ($used >= $maxRedemptions) {
                 return self::fail('That promo code has been fully redeemed.');
@@ -102,7 +104,7 @@ class Coupons
             $usedByCustomer = $db->orders->countDocuments([
                 'coupon.code'    => $code,
                 'customer_id'    => new ObjectId($customerId),
-                'payment_status' => ['$ne' => 'failed'],
+                'payment_status' => ['$nin' => ['failed', 'refunded']],
             ]);
             if ($usedByCustomer >= $maxPerCustomer) {
                 return self::fail('You have already used this promo code.');

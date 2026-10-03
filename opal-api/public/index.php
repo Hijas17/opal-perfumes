@@ -189,6 +189,7 @@ $app->group('/api', function (RouteCollectorProxy $api) {
         $admin->get('/orders',             [AdminOrderController::class, 'index']);
         $admin->get('/orders/{id}',        [AdminOrderController::class, 'show']);
         $admin->put('/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
+        $admin->post('/orders/{id}/refund', [AdminOrderController::class, 'refund']);
 
         // Products
         $admin->get('/products',         [ProductController::class, 'adminIndex']);
