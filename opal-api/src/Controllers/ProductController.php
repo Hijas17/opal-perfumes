@@ -257,6 +257,7 @@ class ProductController
                 'images'            => $images,
                 'label'             => $body['label'] ?? 'none',
                 'is_featured'       => filter_var($body['is_featured'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'out_of_stock'      => filter_var($body['out_of_stock'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'display_order'     => isset($body['display_order']) ? (int)$body['display_order'] : 0,
                 'status'            => in_array($body['status'] ?? '', ['published', 'draft']) ? $body['status'] : 'draft',
                 'created_at'        => $now,
@@ -352,6 +353,9 @@ class ProductController
             }
             if (isset($body['is_featured'])) {
                 $updateFields['is_featured'] = filter_var($body['is_featured'], FILTER_VALIDATE_BOOLEAN);
+            }
+            if (isset($body['out_of_stock'])) {
+                $updateFields['out_of_stock'] = filter_var($body['out_of_stock'], FILTER_VALIDATE_BOOLEAN);
             }
             if (isset($body['status']) && in_array($body['status'], ['published', 'draft'], true)) {
                 $updateFields['status'] = $body['status'];
@@ -888,6 +892,9 @@ class ProductController
             ],
             'label'             => $product['label']              ?? 'none',
             'is_featured'       => (bool)($product['is_featured'] ?? false),
+            // Absent on every product created before the flag existed, which
+            // all count as in stock.
+            'out_of_stock'      => (bool)($product['out_of_stock'] ?? false),
             'display_order'     => (int)($product['display_order'] ?? 0),
             'status'            => $product['status']             ?? 'draft',
             'created_at'        => isset($product['created_at'])  ? (string)$product['created_at']  : null,

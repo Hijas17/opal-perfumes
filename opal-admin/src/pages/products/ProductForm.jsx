@@ -189,6 +189,7 @@ export default function ProductForm() {
     size_volume:       '',
     label:             'none',
     is_featured:       false,
+    out_of_stock:      false,
     display_order:     '',
     status:            'draft',
     slug:              '',
@@ -230,6 +231,7 @@ export default function ProductForm() {
           size_volume:       p.size_volume || '',
           label:             p.label       || 'none',
           is_featured:       p.is_featured || false,
+          out_of_stock:      p.out_of_stock || false,
           display_order:     p.display_order != null ? String(p.display_order) : '',
           status:            p.status      || 'draft',
           slug:              p.slug             || '',
@@ -278,6 +280,7 @@ export default function ProductForm() {
     fd.append('size_volume',  form.size_volume)
     fd.append('label',        form.label)
     fd.append('is_featured',  form.is_featured ? '1' : '0')
+    fd.append('out_of_stock', form.out_of_stock ? '1' : '0')
     if (form.display_order !== '') fd.append('display_order', form.display_order)
     fd.append('status', form.status)
     fd.append('slug',             form.slug)
@@ -461,6 +464,23 @@ export default function ProductForm() {
               Show on home page (Featured)
             </label>
           </div>
+        </div>
+
+        <div className="flex items-start gap-3 rounded-md border border-border p-3">
+          <input
+            type="checkbox"
+            id="out_of_stock"
+            name="out_of_stock"
+            checked={form.out_of_stock}
+            onChange={handleChange}
+            className="mt-0.5 w-4 h-4 accent-gold"
+          />
+          <label htmlFor="out_of_stock" className="cursor-pointer">
+            <span className="block text-sm font-medium text-foreground">Out of stock</span>
+            <span className="block text-xs text-muted-foreground">
+              Stays visible on the storefront as “Coming back soon”, but can't be added to the cart or ordered.
+            </span>
+          </label>
         </div>
       </SectionCard>
 

@@ -9,6 +9,7 @@ import { showPrices, buildWhatsAppUrl, whatsappFallback } from '@/lib/config'
 import ProductGallery from '@/components/ProductGallery'
 import SocialShare from '@/components/SocialShare'
 import ProductBuyBlock from '@/components/ProductBuyBlock'
+import ComingBackSoon from '@/components/ComingBackSoon'
 import ComplementaryProducts from '@/components/ComplementaryProducts'
 import Price from '@/components/Price'
 import Accordion from '@/components/Accordion'
@@ -104,6 +105,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const waHref = waNumber
     ? buildWhatsAppUrl(waNumber, `Hi! I'd like to inquire about ${p.name}.\n${productPageUrl}`)
     : null
+  const notifyHref = waNumber
+    ? buildWhatsAppUrl(waNumber, `Hi! Please let me know when ${p.name} is back in stock.\n${productPageUrl}`)
+    : null
 
   const labelKey = p.label?.toLowerCase()
   const labelClass = labelKey ? LABEL_CLASS[labelKey] : null
@@ -160,7 +164,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             '@type': 'Offer',
             'priceCurrency': p.currency || 'AED',
             'price': parseFloat(String(p.price)).toFixed(2),
-            'availability': p.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            'availability': p.status === 'published' && !p.out_of_stock
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
             'url': productPageUrl,
             'seller': { '@type': 'Organization', 'name': brandName },
           },
@@ -298,7 +304,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
 
                 <div className="mt-2">
-                  <ProductBuyBlock product={p} whatsappHref={waHref} />
+                  {p.out_of_stock
+                    ? <ComingBackSoon productName={p.name} notifyHref={notifyHref} />
+                    : <ProductBuyBlock product={p} whatsappHref={waHref} />}
                 </div>
 
                 {purchaseLinks.length > 0 && (

@@ -99,6 +99,8 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const add = useCallback(async (product: Product, quantity = 1) => {
+    // Every add button is hidden for these already; this is the backstop.
+    if (product.out_of_stock) throw new Error(`${product.name} is coming back soon.`)
     const item = productToCartItem(product, quantity)
     const items = readStorage()
     const idx = items.findIndex((i) => i.product_id === item.product_id)

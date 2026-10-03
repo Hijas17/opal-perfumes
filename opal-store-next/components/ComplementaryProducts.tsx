@@ -54,18 +54,24 @@ export default function ComplementaryProducts({ products, heading = 'Complete wi
                   {p.name}
                 </Link>
                 {price && <span className="text-xs text-gold">{price}</span>}
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await add(p, 1)
-                      openCart()
-                    } catch { /* CartProvider reports its own failures */ }
-                  }}
-                  className="mt-1 self-start text-[0.6875rem] uppercase tracking-[0.18em] text-gold underline underline-offset-4"
-                >
-                  Add to cart
-                </button>
+                {p.out_of_stock ? (
+                  <span className="shimmer-text mt-1 self-start text-[0.6875rem] uppercase tracking-[0.18em]">
+                    Coming back soon
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await add(p, 1)
+                        openCart()
+                      } catch { /* CartProvider reports its own failures */ }
+                    }}
+                    className="mt-1 self-start text-[0.6875rem] uppercase tracking-[0.18em] text-gold underline underline-offset-4"
+                  >
+                    Add to cart
+                  </button>
+                )}
               </div>
             </li>
           )

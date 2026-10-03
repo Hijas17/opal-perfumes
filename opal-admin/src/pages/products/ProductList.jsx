@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAdminProducts, deleteProduct, getAdminCategories, getImageUrl, reorderProducts } from '../../api/index.js'
+import { getAdminProducts, deleteProduct, getAdminCategories, getImageUrl, reorderProducts, updateProduct } from '../../api/index.js'
 import { Button } from '../../components/ui/button.jsx'
 import { Badge } from '../../components/ui/badge.jsx'
 import { Alert, AlertDescription } from '../../components/ui/alert.jsx'
@@ -126,6 +126,29 @@ export default function ProductList() {
     fetchProducts()
   }, [statusFilter, categoryFilter])
 
+  const [stockBusy, setStockBusy] = useState(null)
+
+  // Flips one product between in stock and "Coming back soon" without opening
+  // the full edit form. The update endpoint only touches fields it is sent.
+  const toggleStock = async (product) => {
+    const next = !product.out_of_stock
+    const fd = new FormData()
+    fd.append('out_of_stock', next ? '1' : '0')
+    setStockBusy(product.id)
+    try {
+      await updateProduct(product.id, fd)
+      const apply = (list) => list.map((p) => (p.id === product.id ? { ...p, out_of_stock: next } : p))
+      setProducts(apply)
+      // Keep a pending reorder's snapshot in step, or cancelling the drag
+      // would put the old stock state back on screen.
+      setOriginalOrder((prev) => (prev ? apply(prev) : prev))
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to update stock.')
+    } finally {
+      setStockBusy(null)
+    }
+  }
+
   const handleDelete = async (id, name) => {
     try {
       await deleteProduct(id)
@@ -231,13 +254,14 @@ export default function ProductList() {
                   <TableHead>Price</TableHead>
                   <TableHead>Label</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Stock</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {products.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                       No products found.
                     </TableCell>
                   </TableRow>
@@ -294,6 +318,24 @@ export default function ProductList() {
                         <Badge variant={product.status === 'published' ? 'success' : 'warning'}>
                           {product.status === 'published' ? 'Published' : 'Draft'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => toggleStock(product)}
+                          disabled={stockBusy === product.id}
+                          title={product.out_of_stock
+                            ? 'Shown as “Coming back soon”. Click to mark in stock.'
+                            : 'Click to mark out of stock'}
+                          className="disabled:opacity-50"
+                        >
+                          <Badge
+                            variant="success"
+                            className={`cursor-pointer whitespace-nowrap ${product.out_of_stock ? 'bg-red-100 text-red-700' : ''}`}
+                          >
+                            {product.out_of_stock ? 'Out of stock' : 'In stock'}
+                          </Badge>
+                        </button>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

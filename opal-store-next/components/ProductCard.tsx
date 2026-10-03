@@ -85,6 +85,7 @@ export default function ProductCard({ product, priority = false, vendor, suppres
   const categorySlug = product.subcategory_slug || product.category?.slug || 'all'
   const detailPath = `/products/${categorySlug}/${product.slug}`
   const price = showPrices ? money(product.price, product.currency) : null
+  const soon = Boolean(product.out_of_stock)
 
   async function quickAdd(e: React.MouseEvent) {
     // The card is a link — don't navigate when the quick-add is clicked.
@@ -101,7 +102,7 @@ export default function ProductCard({ product, priority = false, vendor, suppres
   }
 
   return (
-    <Link href={detailPath} className="product-card group block" prefetch>
+    <Link href={detailPath} className={cn('product-card group block', soon && 'product-card--soon')} prefetch>
       {/* The well is transparent so cut-out product PNGs sit on whatever is
           behind the card; a card with no image at all gets a solid fill so it
           does not read as a hole. */}
@@ -141,14 +142,20 @@ export default function ProductCard({ product, priority = false, vendor, suppres
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={quickAdd}
-          aria-label={`Add ${product.name} to cart`}
-          className="product-card__quick-add"
-        >
-          {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        </button>
+        {soon ? (
+          <p className="product-card__soon">
+            <span className="shimmer-text">Coming back soon</span>
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={quickAdd}
+            aria-label={`Add ${product.name} to cart`}
+            className="product-card__quick-add"
+          >
+            {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </button>
+        )}
       </div>
 
       <div className="mt-5 flex flex-col items-center gap-1 text-center">

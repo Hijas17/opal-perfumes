@@ -56,6 +56,8 @@ export interface Product {
 
   label?: ProductLabel
   is_featured?: boolean
+  /** Shown as "Coming back soon" and kept out of the cart. Absent = in stock. */
+  out_of_stock?: boolean
   display_order?: number
   status?: 'published' | 'draft'
 

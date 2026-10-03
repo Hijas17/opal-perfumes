@@ -276,6 +276,23 @@ h6 { font-size: var(--text-h6); }
 .badge--sale       { background: var(--color-sale); color: #fff; }
 .badge--sold-out   { background: #1a1a1a; color: var(--color-muted-2); border-color: var(--color-line); }
 
+/* Out of stock, worded as a promise rather than a dead end. A slow band of
+   light sweeps across the gold text so it reads as "on its way", not "gone".
+   Applied to an inline element so the clipped gradient never takes a
+   container's own fill with it. */
+.shimmer-text {
+  color: var(--color-gold);
+  background: linear-gradient(100deg, var(--color-gold) 35%, #f6e7bd 50%, var(--color-gold) 65%) 0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 3.2s ease-in-out infinite;
+}
+@keyframes shimmer-text {
+  from { background-position: 100% 0; }
+  to   { background-position: -150% 0; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Accordion — native details. The reference does NOT animate height; it snaps
    open. Only the chevron rotates.
@@ -422,6 +439,52 @@ h6 { font-size: var(--text-h6); }
 .product-card__quick-add svg { transition: transform 0.2s ease; }
 .product-card__quick-add:hover svg { transform: rotate(90deg); }
 
+/* Coming back soon: the bottle steps back a little but stays recognisable,
+   and comes forward again on hover so the card still invites a look. */
+.product-card--soon .product-img-primary { filter: grayscale(0.45) brightness(0.7); }
+@media (pointer: fine) {
+  .product-card--soon:hover .product-img-primary { filter: none; }
+}
+
+/* A strip across the foot of the image rather than a corner badge: it spans
+   whatever width the card has, so the words never crowd the bottle. */
+.product-card__soon {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 1;
+  padding: 0.55rem 0.5rem;
+  text-align: center;
+  text-wrap: balance;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.55));
+  border-block-start: 1px solid var(--color-gold-deep);
+}
+
+/* The product page's stand-in for the buy buttons. */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  border: 1px solid var(--color-gold-deep);
+  background: radial-gradient(120% 90% at 50% 0%, var(--color-gold-soft), transparent 70%);
+}
+.coming-soon__icon {
+  color: var(--color-gold);
+  animation: coming-soon-turn 4s ease-in-out infinite;
+}
+@keyframes coming-soon-turn {
+  0%, 40%   { transform: rotate(0deg); }
+  50%, 90%  { transform: rotate(180deg); }
+  100%      { transform: rotate(360deg); }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Rich text (admin-authored HTML) + prose
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -566,6 +629,8 @@ html.preloader-active body { overflow: hidden; }
   }
   .preloader { transition-duration: 0.01ms !important; }
   .product-card:hover .product-card__media { transform: none; }
+  .shimmer-text,
+  .coming-soon__icon { animation: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -16,7 +16,8 @@ use Opal\Config\Database;
  *
  * Unpublished or deleted products are dropped rather than silently priced at
  * zero, and a cart left holding nothing but those is reported as an error so
- * the customer is told instead of being handed a free order.
+ * the customer is told instead of being handed a free order. A product the
+ * admin has marked out of stock fails the whole cart with a message naming it.
  */
 class CartResolver
 {
@@ -71,8 +72,18 @@ class CartResolver
         );
 
         $items = [];
+        $unavailable = [];
         foreach ($cursor as $product) {
             $id = (string)$product['_id'];
+
+            // Out of stock is refused outright rather than dropped like a
+            // deleted product: it is still on the site, so the customer would
+            // otherwise check out without it and never be told why.
+            if (!empty($product['out_of_stock'])) {
+                $unavailable[] = $product['name'] ?? 'An item';
+                continue;
+            }
+
             $images = $product['images'] ?? [];
             if (!is_array($images)) $images = iterator_to_array($images);
 
@@ -85,6 +96,15 @@ class CartResolver
                 'currency'         => $product['currency'] ?? 'AED',
                 'image'            => $images['primary'] ?? null,
                 'quantity'         => $quantities[$id],
+            ];
+        }
+
+        if ($unavailable !== []) {
+            $names = implode(', ', $unavailable);
+            [$verb, $them] = count($unavailable) === 1 ? ['is', 'it'] : ['are', 'them'];
+            return [
+                'items' => [],
+                'error' => "{$names} {$verb} coming back soon and can't be ordered just yet. Please remove {$them} from your cart to continue.",
             ];
         }
 
