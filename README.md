@@ -82,6 +82,23 @@ then `docker compose up -d` to pick it up. Pay with card `4242 4242 4242 4242`,
 any future expiry and any CVC. To exercise the delayed-payment path, trigger
 `stripe trigger checkout.session.async_payment_succeeded`.
 
+### Refunds
+
+**Always refund from the admin portal, never the Stripe Dashboard.**
+
+Open the order under Orders (search by order number) and use **Refund and
+cancel**. That refunds through Stripe, marks the order refunded and cancelled,
+emails the customer, and — on a full refund — releases any promo code they
+used so they can use it again.
+
+A Dashboard-issued refund does none of that. There is no `charge.refunded`
+webhook, so the order would go on claiming it was paid and the coupon would
+stay spent. The money would move; the records would not.
+
+A partial refund is treated as an adjustment: the order stays open and the
+code stays spent. Cash-on-delivery orders have no Stripe payment to reverse —
+cancel them instead and settle directly.
+
 ### Before going live
 
 1. Swap test keys for live ones in `/var/www/opal/.env` on the server — never a committed file. See [DEPLOYMENT.md](DEPLOYMENT.md).
