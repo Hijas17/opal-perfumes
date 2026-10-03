@@ -337,7 +337,10 @@ class OrderController
 
         $params = [
             'mode'                   => 'payment',
-            'ui_mode'                => 'embedded',
+            // 'embedded_page', not 'embedded': Stripe renamed the value and
+            // now rejects the old one outright. The client side is unaffected —
+            // it still mounts through EmbeddedCheckoutProvider.
+            'ui_mode'                => 'embedded_page',
             'line_items'             => $lineItems,
             'return_url'             => StripeConfig::storefrontUrl()
                 . '/checkout/success?session_id={CHECKOUT_SESSION_ID}',
