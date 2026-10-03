@@ -79,6 +79,7 @@ class OrderNotifier
                 $customerEmail !== '' ? $customerEmail : null,
                 $shipping['name'] ?? null,
                 $html,
+                Mailer::senderName(Mailer::AUDIENCE_ORDERS),
             );
         }
     }
@@ -114,7 +115,15 @@ class OrderNotifier
             'footer_note' => 'We will email you as your order progresses.',
         ]);
 
-        Mailer::send($to, "Your order {$number}", $body, null, null, $html);
+        Mailer::send(
+            $to,
+            "Your order {$number}",
+            $body,
+            null,
+            null,
+            $html,
+            Mailer::senderName(Mailer::AUDIENCE_CUSTOMER),
+        );
     }
 
     /**
@@ -155,7 +164,15 @@ class OrderNotifier
                 . 'Banks usually take a few working days to show it.'),
         ]);
 
-        Mailer::send($to, "Refund for order {$number}", $body, null, null, $html);
+        Mailer::send(
+            $to,
+            "Refund for order {$number}",
+            $body,
+            null,
+            null,
+            $html,
+            Mailer::senderName(Mailer::AUDIENCE_CUSTOMER),
+        );
     }
 
     /**
@@ -196,6 +213,7 @@ class OrderNotifier
             null,
             null,
             $html,
+            Mailer::senderName(Mailer::AUDIENCE_CUSTOMER),
         );
     }
 

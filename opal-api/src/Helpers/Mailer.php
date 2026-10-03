@@ -18,9 +18,41 @@ use PHPMailer\PHPMailer\Exception as MailException;
 class Mailer
 {
     /**
+     * Sender names by message type.
+     *
+     * Staff receive orders and contact-form enquiries in the same inbox, so
+     * the two must be distinguishable at a glance and filterable without
+     * reading the subject. Customers see only the brand — internal routing
+     * labels are not their business.
+     *
+     * Each is suffixed onto the brand from MAIL_FROM_NAME, so renaming the
+     * brand renames all of them.
+     */
+    public const AUDIENCE_ORDERS    = 'Orders';
+    public const AUDIENCE_ENQUIRIES = 'Enquiries';
+    public const AUDIENCE_CUSTOMER  = '';
+
+    /** Brand portion of the sender name, from MAIL_FROM_NAME. */
+    public static function brand(): string
+    {
+        $name = trim($_ENV['MAIL_FROM_NAME'] ?? getenv('MAIL_FROM_NAME') ?: '');
+        return $name !== '' ? $name : 'Opal Perfumes';
+    }
+
+    /** e.g. "Opal Perfume Orders", or just "Opal Perfume" for customers. */
+    public static function senderName(string $audience): string
+    {
+        $brand = self::brand();
+        return $audience === '' ? $brand : $brand . ' ' . $audience;
+    }
+
+    /**
      * @param string      $to        Recipient address. A blank address is a no-op.
      * @param string|null $replyTo   Reply-To address — lets the recipient answer
      *                               the customer directly rather than the noreply box.
+     * @param string|null $fromName  Overrides the sender name for this one
+     *                               message. Pass Mailer::senderName(...) so
+     *                               every type stays derived from the brand.
      * @return bool                  True when the message was handed off successfully.
      */
     public static function send(
@@ -30,6 +62,7 @@ class Mailer
         ?string $replyTo = null,
         ?string $replyToName = null,
         ?string $html = null,
+        ?string $fromName = null,
     ): bool {
         if (trim($to) === '') {
             error_log("Mailer: no recipient configured; dropping message: {$subject}");
@@ -37,7 +70,7 @@ class Mailer
         }
 
         $fromEmail = $_ENV['MAIL_FROM']      ?? 'noreply@opalperfumes.com';
-        $fromName  = $_ENV['MAIL_FROM_NAME'] ?? 'Opal Perfumes Website';
+        $fromName  = $fromName !== null && $fromName !== '' ? $fromName : self::brand();
         $smtpHost  = $_ENV['SMTP_HOST']      ?? '';
 
         if ($smtpHost !== '') {

@@ -275,7 +275,14 @@ class InquiryController
 ";
 
         // Reply-To is the customer, so the handler can answer them directly.
-        Mailer::send($adminEmail, $emailSubject, $emailBody, $email, $name);
+        Mailer::send(
+            $adminEmail,
+            $emailSubject,
+            $emailBody,
+            $email,
+            $name,
+            fromName: Mailer::senderName(Mailer::AUDIENCE_ENQUIRIES),
+        );
     }
 
     private function csvEscape(string $value): string
